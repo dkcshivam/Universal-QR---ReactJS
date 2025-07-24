@@ -14,115 +14,81 @@ const Login = () => {
     }
 
     console.log('Login attempt:', { email, password });
-
-    navigate('/'); // or navigate('/dashboard') if index.html is home
+    navigate('/');
   };
 
   return (
-    <div style={styles.body}>
-      <div style={styles.container}>
-        <div style={styles.header}>
-          <h1 style={styles.title}>Universal QR</h1>
-          <p style={styles.subtitle}>Please login to your account</p>
+    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br font-sans">
+      <div className="bg-white w-full max-w-md p-8 sm:p-10 rounded-xl shadow-[0_15px_35px_rgba(0,0,0,0.1)]">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Universal QR</h1>
+          <p className="text-sm text-gray-600">Please login to your account</p>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div style={styles.formGroup}>
-            <label htmlFor="email" style={styles.label}>Email Address</label>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label htmlFor="email" className="block text-m font-bold text-gray-800 mb-1">
+              Email Address
+            </label>
             <input
               type="email"
               id="email"
               name="email"
               placeholder="Enter your email address"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-indigo-500 transition-colors"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={styles.input}
             />
           </div>
 
-          <div style={styles.formGroup}>
-            <label htmlFor="password" style={styles.label}>Password</label>
+          <div>
+            <label htmlFor="password" className="block text-m font-bold text-gray-800 mb-1">
+              Password
+            </label>
             <input
               type="password"
               id="password"
               name="password"
               placeholder="Enter your password"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-indigo-500 transition-colors"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={styles.input}
             />
           </div>
 
-          <button type="submit" style={styles.button}>Login</button>
+          <button
+            type="submit"
+            className="w-full py-3 bg-indigo-400 hover:bg-indigo-500 text-white font-bold rounded-md text-base transition-all transform hover:-translate-y-1 hover:shadow-lg"
+          >
+            Login
+          </button>
         </form>
+
+        {/* Footer */}
+        <div className="text-center mt-4 text-sm flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-0">
+          <a
+            href="#"
+            onClick={() => alert('Forgot Password feature - TBD')}
+            className="text-indigo-500 hover:underline"
+          >
+            Forgot Password?
+          </a>
+          <span className="text-gray-300 hidden sm:inline mx-2">|</span>
+          <a
+            href="#"
+            onClick={() => alert('Reset Password feature - TBD')}
+            className="text-indigo-500 hover:underline"
+          >
+            Reset Password
+          </a>
+        </div>
       </div>
     </div>
   );
-};
-
-const styles = {
-  body: {
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    minHeight: '100vh',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  container: {
-    background: '#fff',
-    padding: '40px',
-    borderRadius: '10px',
-    boxShadow: '0 15px 35px rgba(0, 0, 0, 0.1)',
-    maxWidth: '450px',
-    width: '100%',
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: '30px',
-  },
-  title: {
-    color: '#333',
-    fontSize: '28px',
-    marginBottom: '10px',
-  },
-  subtitle: {
-    color: '#666',
-    fontSize: '14px',
-  },
-  formGroup: {
-    marginBottom: '20px',
-  },
-  label: {
-    display: 'block',
-    marginBottom: '5px',
-    color: '#333',
-    fontWeight: 'bold',
-    fontSize: '14px',
-  },
-  input: {
-    width: '100%',
-    padding: '12px 15px',
-    border: '2px solid #ddd',
-    borderRadius: '5px',
-    fontSize: '14px',
-    outline: 'none',
-    transition: 'border-color 0.3s',
-  },
-  button: {
-    width: '100%',
-    padding: '12px',
-    background: 'rgb(163, 163, 223)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    fontSize: '16px',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-    transition: 'transform 0.2s, box-shadow 0.2s',
-    marginBottom: '20px',
-  },
 };
 
 export default Login;
