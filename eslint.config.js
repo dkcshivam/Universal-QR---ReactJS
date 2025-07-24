@@ -23,7 +23,13 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // Essential rule for catching undeclared variables and functions
+      'no-undef': 'error',
+      'no-unused-vars': ['error', { 
+        varsIgnorePattern: '^_',
+        argsIgnorePattern: '^_'
+      }],
+      'no-console': 'warn',
     },
   },
 ])

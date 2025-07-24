@@ -7,7 +7,6 @@ function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<HomePage />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
