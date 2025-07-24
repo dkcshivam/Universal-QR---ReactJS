@@ -7,8 +7,8 @@ import Login from "./components/Auth/Login";
 import AddProductPage from "./components/Core/Product/AddNewProduct";
 import ProductGrid from "./components/Core/Product/ProductDisplay";
 import QRScanner from "./components/Core/Product/ScanQR";
-import AddNewProduct from "./components/Core/Product/AddNewProduct";
 
+import AddProduct from "./components/Core/Product/AddNewProduct"
 function App() {
   const handleQRResult = (result) => {
     console.log("QR Code detected:", result);
@@ -21,7 +21,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/scan" element={<QRScanner onResult={handleQRResult} />} />
-        <Route path="/add-new-product" element={<AddNewProduct />} />
+      <Route path="/add-product" element={<AddProduct />} />
         <Route path="/product-display" element={<ProductGrid />} />
         <Route path="*" element={<NotFound />} />
       </Route>
