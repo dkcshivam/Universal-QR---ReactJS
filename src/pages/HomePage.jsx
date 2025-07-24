@@ -1,12 +1,13 @@
-import React from 'react'
-import Header from '../components/Header/Header'
+import SearchFilter from "../components/Core/Filter";
+import ProductGrid from "../components/Core/Product/ProductDisplay";
 
 const HomePage = () => {
   return (
     <div>
-      <Header/>
+      <SearchFilter />
+      <ProductGrid />
     </div>
-  )
-}
+  );
+};
 
-export default HomePage
+export default HomePage;
