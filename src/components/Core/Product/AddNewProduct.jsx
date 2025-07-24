@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   FaArrowLeft,
   FaCheckCircle,
@@ -16,6 +16,10 @@ export default function AddNewProduct() {
   const [productImages, setProductImages] = useState([]);
   const [remarksCount, setRemarksCount] = useState(0);
 
+  const saveProduct = () => {
+    console.log("Saving product...");
+  };
+
   const handleCoverUpload = (e) => {
     if (e.target.files && e.target.files[0]) {
       setCoverImage(URL.createObjectURL(e.target.files[0]));
@@ -32,9 +36,9 @@ export default function AddNewProduct() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
+    <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="sticky top-0 bg-white shadow-md py-4 px-4 flex items-center gap-4">
+      <header className="bg-white shadow-md rounded-lg py-4 px-4 flex items-center gap-4">
         <button className="flex items-center text-blue-500 hover:text-blue-700">
           <FaArrowLeft className="mr-2" />
           <span>Back</span>
@@ -45,7 +49,7 @@ export default function AddNewProduct() {
       {/* Main content */}
       <main className="mt-6 max-w-3xl mx-auto">
         {/* Success message */}
-        <div className="hidden bg-green-100 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
+        <div className="hidden text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
           <FaCheckCircle />
           <span>Product saved successfully!</span>
         </div>
