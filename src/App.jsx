@@ -1,12 +1,17 @@
-import { Route, Routes } from "react-router-dom"
-import HomePage from "./pages/HomePage"
+import { Route, Routes } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import Layout from "./Layout";
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
+      <Route element={<Layout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;
