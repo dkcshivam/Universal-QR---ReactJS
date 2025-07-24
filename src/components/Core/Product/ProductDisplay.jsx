@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import Pagination from "../../Pagination";
 import { demoProducts } from "../../../utils/data";
+
 
 const ProductGrid = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -11,12 +12,13 @@ const ProductGrid = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentProducts = demoProducts.slice(indexOfFirstItem, indexOfLastItem);
   return (
-    <div className="p-5 min-h-screen">
+    <div className="p-3 min-h-screen">
+    
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-5">
         {currentProducts.map((product, index) => (
           <div
             key={index}
-            className="bg-white rounded-lg shadow border border-gray-200 p-[20px] flex flex-col justify-between hover:border-indigo-400"
+            className="bg-white rounded-lg shadow border border-gray-200 p-[10px] sm:p-[20px] flex flex-col justify-between hover:border-indigo-400"
           >
             <div className="w-full h-[220px] rounded-none mb-[15px] overflow-hidden relative">
               <img

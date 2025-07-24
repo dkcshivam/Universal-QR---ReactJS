@@ -12,7 +12,7 @@ const Layout = () => {
 
       {/* main content */}
 
-      <main className="flex-grow mx-auto py-4 px-16">
+      <main className="flex-grow mx-auto py-4 px-0 sm:px-16 mt-12 sm:mt-auto">
         <Outlet />
       </main>
 

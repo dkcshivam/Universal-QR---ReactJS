@@ -21,7 +21,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-100 relative">
+    <header className="bg-white shadow-sm border-b border-gray-100 sm:relative fixed z-999">
       <div className="w-full px-4 sm:px-6 lg:px-15">
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Mobile Layout */}

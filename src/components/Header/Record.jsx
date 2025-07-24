@@ -66,7 +66,7 @@ const Record = ({ isExpanded, isCollapsed }) => {
         // Voice Record button - Responsive design based on state
         <button
           onClick={startRecording}
-          className={`flex items-center justify-center space-x-3 py-3 bg-white border-2 border-gray-200 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-gray-700 hover:text-gray-900 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer ${
+          className={`flex items-center justify-center w-auto space-x-3 py-3 bg-white border-2 border-gray-200 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-gray-700 hover:text-gray-900 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer ${
             isCollapsed 
               ? 'w-12 px-3' // Icon only when collapsed
               : isExpanded 
