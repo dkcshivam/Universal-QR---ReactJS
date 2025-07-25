@@ -20,7 +20,7 @@ const Header = () => {
   const handleCollapse = () => setExpanded(null);
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
+    <header className="bg-white sticky top-0 z-20 shadow-sm border-b border-gray-100">
       {/* Desktop */}
       <div className="hidden md:flex items-center justify-between max-w-7xl mx-auto px-8 py-4">
         {/* Left: Voice Record */}

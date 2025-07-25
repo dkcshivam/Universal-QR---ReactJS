@@ -7,7 +7,7 @@ const NotFound = () => {
 
   const handleGoHome = () => {
     navigate("/");
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4 sm:p-6 lg:p-8">
@@ -27,7 +27,8 @@ const NotFound = () => {
               Page Not Found
             </h2>
             <p className="text-base sm:text-lg text-gray-600 mx-auto leading-relaxed max-w-sm sm:max-w-lg break-words">
-              Sorry, the page you're looking for doesn't exist or has been moved to another location.
+              Sorry, the page you're looking for doesn't exist or has been moved
+              to another location.
             </p>
           </div>
         </div>
@@ -55,9 +56,9 @@ const NotFound = () => {
         <div className="border-t border-gray-200 pt-6 sm:pt-8 px-4">
           <p className="text-xs sm:text-sm text-gray-500 break-words">
             Need help? Contact the{" "}
-              <span className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
-                AI Team
-              </span>
+            <span className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+              AI Team
+            </span>
           </p>
         </div>
       </div>

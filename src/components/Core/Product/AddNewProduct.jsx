@@ -1,256 +1,352 @@
-import React, { useState } from "react";
-import {
-  FaArrowLeft,
-  FaCheckCircle,
-  FaImage,
-  FaUpload,
-  FaCamera,
-  FaPlus,
-  FaSave,
-  FaPlusCircle,
-  FaTimes,
-} from "react-icons/fa";
-
-export default function AddNewProduct() {
+import { useRef, useState } from "react";
+import { Save, Plus } from "lucide-react";
+import { FiUpload, FiCamera } from "react-icons/fi";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
+const AddProduct = () => {
+  const [productName, setProductName] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [location, setLocation] = useState("");
+  const [department, setDepartment] = useState("");
+  const [remarks, setRemarks] = useState("");
   const [coverImage, setCoverImage] = useState(null);
   const [productImages, setProductImages] = useState([]);
-  const [remarksCount, setRemarksCount] = useState(0);
 
-  const handleCoverUpload = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setCoverImage(URL.createObjectURL(e.target.files[0]));
+  const coverFileInputRef = useRef(null);
+  const coverCameraInputRef = useRef(null);
+  const productFileInputRef = useRef(null);
+  const productCameraInputRef = useRef(null);
+
+  const navigate = useNavigate();
+
+  const handleCoverChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const imageObj = {
+        file,
+        url: URL.createObjectURL(file),
+      };
+      setCoverImage(imageObj);
     }
   };
 
-  const handleProductImagesUpload = (e) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files).map((file) =>
-        URL.createObjectURL(file)
-      );
-      setProductImages((prev) => [...prev, ...files]);
-    }
+  const handleProductImagesChange = (e) => {
+    const files = Array.from(e.target.files);
+    const imagePreviews = files.map((file) => ({
+      file,
+      url: URL.createObjectURL(file),
+    }));
+    setProductImages((prev) => [...prev, ...imagePreviews]);
   };
+
+  const handleRemoveCover = () => {
+    if (coverImage?.url) URL.revokeObjectURL(coverImage.url);
+    setCoverImage(null);
+  };
+
+  const handleRemoveProductImage = (index) => {
+    const updated = [...productImages];
+    URL.revokeObjectURL(updated[index].url);
+    updated.splice(index, 1);
+    setProductImages(updated);
+  };
+  async function handlesubmit() {
+    if (!productName || !quantity || !location || !department) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    const productData = {
+      name: productName,
+      cover_image: coverImage ? coverImage.file : null,
+      product_images: productImages.map((img) => img.file),
+      quantity: quantity,
+      department: department,
+      remark: remarks,
+      location: location,
+    };
+    console.log(productData);
+    const res = await axios.post(
+      "http://shivam-mac.local:8000/api/v1.0/qr/products/create/",
+      {
+        name: productName,
+        cover_image: coverImage ? coverImage.file : null,
+        product_images: productImages.map((img) => img.file),
+        quantity: quantity,
+        department: department,
+        remark: remarks,
+        location: location,
+      },
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+    console.log(res);
+    console.log("Product Data Submitted:", productData);
+    // Reset form after submission
+    setProductName("");
+    setQuantity("");
+    setLocation("");
+    setDepartment("");
+    setRemarks("");
+    setCoverImage(null);
+    setProductImages([]);
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      {/* Header */}
-      <header className="sticky top-0 bg-white shadow-md py-4 px-4 flex items-center gap-4">
-        <button className="flex items-center text-blue-500 hover:text-blue-700">
-          <FaArrowLeft className="mr-2" />
-          <span>Back</span>
+    <div className="min-h-screen bg-gray-50 space-y-4">
+      <div className="flex items-center justify-start bg-white rounded-2xl shadow-md gap-2 p-4">
+        <button
+          onClick={() => window.history.back()}
+          className="flex items-center justify-center px-4 py-2 bg-blue-500 rounded-lg cursor-pointer"
+        >
+          <FaArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
+          <span className="text-sm sm:text-base">Go Back</span>
         </button>
-        <h1 className="text-xl font-bold text-gray-800">Add New Product</h1>
-      </header>
-
-      {/* Main content */}
-      <main className="mt-6 max-w-3xl mx-auto">
-        {/* Success message */}
-        <div className="hidden bg-green-100 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
-          <FaCheckCircle />
-          <span>Product saved successfully!</span>
+        <div className="flex justify-center flex-1 gap-2">
+          <h1 className="text-xl font-bold text-gray-800">Add New Product</h1>
+        </div>
+      </div>
+      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-3 sm:p-6 space-y-3 sm:space-y-6">
+        {/* Product Name */}
+        <div>
+          <label className="block font-medium text-gray-700 mb-1">
+            Product Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={productName}
+            onChange={(e) => setProductName(e.target.value)}
+            placeholder="Enter product name..."
+            className="w-full px-4 py-2 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 shadow-sm"
+          />
         </div>
 
-        {/* Form */}
-        <form className="bg-white p-6 rounded-xl shadow space-y-6">
-          {/* Product Name */}
+        {/* Quantity & Location */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block font-semibold mb-1">
-              Product Name <span className="text-red-500">*</span>
-            </label>
+            <label className="block font-semibold mb-1">Quantity</label>
+            <input
+              type="number"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              placeholder="Enter quantity..."
+              className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label className="block font-semibold mb-1">Location</label>
             <input
               type="text"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-              placeholder="Enter product name..."
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Enter location..."
+              className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
-            <p className="text-red-500 text-sm mt-1 hidden">
-              Product name is required
-            </p>
           </div>
+        </div>
 
-          {/* Cover Image */}
-          <div>
-            <label className="block font-semibold mb-1">Cover Image</label>
-            <div
-              className="border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50"
-              onClick={() => document.getElementById("coverInput").click()}
+        {/* Department */}
+        <div>
+          <label className="block font-semibold mb-1">Department</label>
+          <select
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
+            className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="">Select department...</option>
+            <option value="Production">Production</option>
+            <option value="Quality">Quality</option>
+            <option value="Dispatch">Dispatch</option>
+          </select>
+        </div>
+
+        {/* Remarks */}
+        <div>
+          <label className="block font-semibold mb-1">Remarks</label>
+          <textarea
+            value={remarks}
+            onChange={(e) => setRemarks(e.target.value)}
+            placeholder="Add any additional notes or remarks..."
+            // maxLength={500}
+            className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+            rows={4}
+          />
+          {/* <div className="text-sm text-gray-400 text-right mt-1">
+            {remarks.length}/500 characters
+          </div> */}
+        </div>
+
+        {/* Cover Image */}
+        <div>
+          <label className="block font-medium text-gray-700">Cover Image</label>
+          {!coverImage ? (
+            <label className="border-2 border-dashed border-indigo-300 rounded-md bg-gray-50 flex flex-col items-center justify-center h-52 text-center px-4 py-6 text-gray-500 cursor-pointer transition">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleCoverChange}
+                className="hidden"
+              />
+              <span className="text-3xl font-bold text-gray-400">+</span>
+              <p className="mt-1 font-medium text-gray-600">
+                Upload cover image
+              </p>
+            </label>
+          ) : (
+            <div className="relative w-full max-w-lg">
+              <img
+                src={coverImage.url}
+                alt="cover preview"
+                className="w-full h-52 object-cover rounded-lg border border-indigo-200"
+              />
+              <button
+                type="button"
+                onClick={handleRemoveCover}
+                className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
+          <div className="flex gap-4 mt-3">
+            <button
+              type="button"
+              onClick={() => coverFileInputRef.current.click()}
+              className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md"
             >
-              {coverImage ? (
-                <img
-                  src={coverImage}
-                  alt="Cover"
-                  className="w-full h-48 object-cover rounded-lg"
-                />
-              ) : (
-                <>
-                  <FaImage className="text-4xl text-gray-400 mb-2" />
-                  <p className="text-gray-500">Click to add cover image</p>
-                  <small className="text-gray-400">
-                    Supports JPG, PNG, WebP (Max 5MB)
-                  </small>
-                </>
-              )}
-            </div>
-            <div className="flex gap-4 mt-3">
-              <button
-                type="button"
-                className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
-                onClick={() => document.getElementById("coverInput").click()}
-              >
-                <FaUpload /> Upload Cover
-              </button>
-              <button
-                type="button"
-                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
-              >
-                <FaCamera /> Take Photo
-              </button>
-            </div>
+              <FiUpload />
+              Upload Cover
+            </button>
+            <button
+              type="button"
+              onClick={() => coverCameraInputRef.current.click()}
+              className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md"
+            >
+              <FiCamera />
+              Take Photo
+            </button>
+
             <input
-              id="coverInput"
               type="file"
               accept="image/*"
+              onChange={handleCoverChange}
+              ref={coverFileInputRef}
               className="hidden"
-              onChange={handleCoverUpload}
             />
-            <p className="text-red-500 text-sm mt-1 hidden">
-              Cover image is required
-            </p>
-          </div>
-
-          {/* Product Images */}
-          <div>
-            <label className="block font-semibold mb-1">Product Images</label>
-            <div
-              className="border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50"
-              onClick={() =>
-                document.getElementById("productImagesInput").click()
-              }
-            >
-              <FaPlus className="text-2xl text-gray-400 mb-2" />
-              <p className="text-gray-500">Add product images</p>
-              <small className="text-gray-400">Multiple images allowed</small>
-            </div>
-            <div className="flex gap-4 mt-3">
-              <button
-                type="button"
-                className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
-                onClick={() =>
-                  document.getElementById("productImagesInput").click()
-                }
-              >
-                <FaUpload /> Upload Images
-              </button>
-              <button
-                type="button"
-                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
-              >
-                <FaCamera /> Take Photo
-              </button>
-            </div>
             <input
-              id="productImagesInput"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleCoverChange}
+              ref={coverCameraInputRef}
+              className="hidden"
+            />
+          </div>
+        </div>
+
+        {/* Product Images */}
+        <div>
+          <label className="block font-medium text-gray-700">
+            Product Images
+          </label>
+
+          {productImages.length === 0 ? (
+            <label className="border-2 border-dashed border-indigo-300 rounded-md bg-gray-50 flex flex-col items-center justify-center h-52 text-center px-4 py-6 text-gray-500 cursor-pointer transition">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleProductImagesChange}
+                className="hidden"
+              />
+              <span className="text-3xl font-bold text-gray-400">+</span>
+              <p className="mt-1 font-medium text-gray-600">
+                Add product images
+              </p>
+              <p className="text-sm text-gray-400">Multiple images allowed</p>
+            </label>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {productImages.map((img, index) => (
+                <div key={index} className="relative">
+                  <img
+                    src={img.url}
+                    alt={`preview-${index}`}
+                    className="w-full h-52 object-cover rounded-lg border border-indigo-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveProductImage(index)}
+                    className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-4 mt-3">
+            <button
+              type="button"
+              onClick={() => productFileInputRef.current.click()}
+              className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md"
+            >
+              <FiUpload />
+              Upload Images
+            </button>
+            <button
+              type="button"
+              onClick={() => productCameraInputRef.current.click()}
+              className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md"
+            >
+              <FiCamera />
+              Take Photo
+            </button>
+
+            <input
               type="file"
               accept="image/*"
               multiple
+              onChange={handleProductImagesChange}
+              ref={productFileInputRef}
               className="hidden"
-              onChange={handleProductImagesUpload}
             />
-            {productImages.length > 0 && (
-              <div className="mt-4">
-                <div className="font-semibold mb-2">Uploaded Images:</div>
-                <div className="grid grid-cols-3 gap-2">
-                  {productImages.map((img, idx) => (
-                    <img
-                      key={idx}
-                      src={img}
-                      alt={`Product ${idx}`}
-                      className="w-full h-24 object-cover rounded-lg"
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-            <p className="text-red-500 text-sm mt-1 hidden">
-              At least one product image is required
-            </p>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              multiple
+              onChange={handleProductImagesChange}
+              ref={productCameraInputRef}
+              className="hidden"
+            />
           </div>
+        </div>
 
-          {/* Quantity and Location */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block font-semibold mb-1">Quantity</label>
-              <input
-                type="number"
-                min="1"
-                max="10000"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                placeholder="Enter quantity..."
-              />
-              <p className="text-red-500 text-sm mt-1 hidden">
-                Please enter a valid quantity
-              </p>
-            </div>
-            <div>
-              <label className="block font-semibold mb-1">Location</label>
-              <input
-                type="text"
-                maxLength="50"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                placeholder="Enter location..."
-              />
-              <p className="text-red-500 text-sm mt-1 hidden">
-                Please enter a location
-              </p>
-            </div>
-          </div>
-
-          {/* Department */}
-          <div>
-            <label className="block font-semibold mb-1">Department</label>
-            <select className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-200">
-              <option value="">Select department...</option>
-              <option value="sampling">Sampling</option>
-              <option value="production">Production</option>
-              <option value="tech">Tech</option>
-              <option value="hardgoods">Hard Goods</option>
-            </select>
-            <p className="text-red-500 text-sm mt-1 hidden">
-              Please select a department
-            </p>
-          </div>
-
-          {/* Remarks */}
-          <div>
-            <label className="block font-semibold mb-1">Remarks</label>
-            <textarea
-              maxLength="500"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-200 resize-y"
-              placeholder="Add any additional notes or remarks..."
-              onChange={(e) => setRemarksCount(e.target.value.length)}
-            ></textarea>
-            <div className="text-right text-gray-400 text-xs mt-1">
-              {remarksCount}/500 characters
-            </div>
-          </div>
-
-          {/* Submit Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <button
-              type="button"
-              className="flex-1 flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-3 rounded-lg shadow"
-              onClick={() => saveProduct()}
-            >
-              <FaSave /> Save
-            </button>
-            <button
-              type="button"
-              className="flex-1 flex items-center justify-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-3 rounded-lg shadow"
-            >
-              <FaPlusCircle /> Save & Create New
-            </button>
-          </div>
-        </form>
-      </main>
+        {/* Save Buttons */}
+        <div className="flex gap-4">
+          <button
+            onClick={handlesubmit}
+            className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg shadow hover:bg-emerald-600 transition"
+          >
+            <Save size={18} />
+            Save
+          </button>
+          <button
+            onClick={handlesubmit}
+            className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg shadow hover:bg-emerald-600 transition"
+          >
+            <Plus size={18} />
+            Save & Create New
+          </button>
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default AddProduct;
