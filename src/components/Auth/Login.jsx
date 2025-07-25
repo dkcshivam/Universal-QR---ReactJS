@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
 const handleSubmit = async (e) => {
@@ -39,21 +39,26 @@ const handleSubmit = async (e) => {
       <div className="bg-white w-full max-w-md p-8 sm:p-10 rounded-xl shadow-[0_15px_35px_rgba(0,0,0,0.1)]">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Universal QR</h1>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">
+            Universal QR
+          </h1>
           <p className="text-sm text-gray-600">Please login to your account</p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="email" className="block text-m font-bold text-gray-800 mb-1">
-              Email Address
+            <label
+              htmlFor="email"
+              className="block text-m font-bold text-gray-800 mb-1"
+            >
+              Enter User Name
             </label>
             <input
               type="text"
               id="email"
               name="email"
-              placeholder="Enter your email address"
+              placeholder="Enter User Name"
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-indigo-500 transition-colors"
               required
               value={email}
@@ -62,7 +67,10 @@ const handleSubmit = async (e) => {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-m font-bold text-gray-800 mb-1">
+            <label
+              htmlFor="password"
+              className="block text-m font-bold text-gray-800 mb-1"
+            >
               Password
             </label>
             <input
@@ -89,7 +97,7 @@ const handleSubmit = async (e) => {
         <div className="text-center mt-4 text-sm flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-0">
           <a
             href="#"
-            onClick={() => alert('Forgot Password feature - TBD')}
+            onClick={() => alert("Forgot Password feature - TBD")}
             className="text-indigo-500 hover:underline"
           >
             Forgot Password?
@@ -97,7 +105,7 @@ const handleSubmit = async (e) => {
           <span className="text-gray-300 hidden sm:inline mx-2">|</span>
           <a
             href="#"
-            onClick={() => alert('Reset Password feature - TBD')}
+            onClick={() => alert("Reset Password feature - TBD")}
             className="text-indigo-500 hover:underline"
           >
             Reset Password

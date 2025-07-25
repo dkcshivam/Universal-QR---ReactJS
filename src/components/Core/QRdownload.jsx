@@ -110,7 +110,7 @@ function QRdownload() {
         quantity: 300,
         shipingdate: "20-06-2025",
       }`;
-      
+
       if (product) {
         // The data to be encoded in the QR code. Could be a URL, product ID, etc.
         const qrData = dummy;
