@@ -27,6 +27,8 @@ function ProductDetail() {
   const [isSubmittingRemark, setIsSubmittingRemark] = useState(false);
   const [remarkError, setRemarkError] = useState(null);
 
+  const token = localStorage.getItem("access_token");
+
   const getProductDetail = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/products/${code}/`);
@@ -68,7 +70,16 @@ function ProductDetail() {
         product_code: code,
       };
 
-      const res = await axios.post(`${API_BASE_URL}/remarks/${code}/`, payload);
+      const res = await axios.post(
+        `${API_BASE_URL}/remarks/${code}/`,
+        payload,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (res.status === 200 || res.status === 201) {
         console.log("Text remark created:", res.data);
@@ -93,17 +104,17 @@ function ProductDetail() {
 
       // Create FormData for file upload
       const formData = new FormData();
-      formData.append("remark_type", "voice");
-      formData.append(
-        "remark",
-        remarkText ||
-          `Voice note (${Math.floor(audioData.duration / 60)}:${(
-            audioData.duration % 60
-          )
-            .toString()
-            .padStart(2, "0")})`
-      );
-      formData.append("product_code", code);
+      // formData.append("remark_type", "voice");
+      // formData.append(
+      //   "remark",
+      //   remarkText ||
+      //     `Voice note (${Math.floor(audioData.duration / 60)}:${(
+      //       audioData.duration % 60
+      //     )
+      //       .toString()
+      //       .padStart(2, "0")})`
+      // );
+      // formData.append("product_code", code);
 
       // Convert blob to file and append
       const audioFile = new File(
@@ -113,7 +124,7 @@ function ProductDetail() {
           type: audioData.mimeType || "audio/webm",
         }
       );
-      formData.append("audio_file", audioFile);
+      formData.append("remark_audio", audioFile);
 
       const res = await axios.post(
         `${API_BASE_URL}/remarks/${code}/`,
@@ -121,6 +132,7 @@ function ProductDetail() {
         {
           headers: {
             "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
           },
         }
       );
