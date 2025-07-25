@@ -27,7 +27,7 @@ const Profile = ({ isMobile, onClose }) => {
   };
 
   const handleSettingsClick = () => {
-    setShowSettings(!showSettings);
+    setShowSettings((prev) => !prev);
   };
 
   const handleEditProfile = () => {
@@ -39,7 +39,6 @@ const Profile = ({ isMobile, onClose }) => {
   if (isMobile) {
     return (
       <div className="flex flex-col items-center space-y-6 py-4">
-        {/* User Avatar */}
         <div className="flex flex-col items-center">
           <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-semibold shadow-lg mb-4">
             {user.avatar ? (
@@ -68,7 +67,6 @@ const Profile = ({ isMobile, onClose }) => {
           </div>
         </div>
 
-        {/* Logout Button */}
         <div className="w-full pt-8">
           <button
             onClick={handleLogout}
@@ -88,7 +86,7 @@ const Profile = ({ isMobile, onClose }) => {
     <div className="relative">
       <button
         onClick={handleSettingsClick}
-        className="flex items-center space-x-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        className="flex items-center space-x-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors"
       >
         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-sm">
           {user.avatar ? (
@@ -111,9 +109,10 @@ const Profile = ({ isMobile, onClose }) => {
         </div>
       </button>
 
-      {/* Desktop Dropdown Menu */}
+      {/* Dropdown */}
       {showSettings && (
         <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+          {/* Just 'My Profile' label */}
           <div className="p-4 border-b border-gray-100">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">

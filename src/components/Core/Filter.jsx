@@ -1,18 +1,22 @@
 import React, { useState } from "react";
 import { FiFilter, FiPlus, FiChevronDown } from "react-icons/fi";
-import { IoCreateSharp } from "react-icons/io5";
+import { IoIosCreate } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
+import { IoMdDownload } from "react-icons/io";
 
 const SearchFilter = ({ onSearch, onFilterChange, onAddProduct }) => {
   const [activeTab, setActiveTab] = useState("mine");
   const navigate=useNavigate();
-
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     onFilterChange(tab);
   };
 
+  const onBulkCreate = () => {
+
+  }
+``
   return (
     <div className="items-center justify-between w-full bg-white rounded-lg hidden sm:flex p-2 mb-4">
       {/* Left side - Mine/All tabs */}
@@ -52,34 +56,26 @@ const SearchFilter = ({ onSearch, onFilterChange, onAddProduct }) => {
 
         <button
           onClick={() => navigate("/add-product")}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
         >
           <FiPlus className="w-4 h-4" />
           <span className="text-sm font-medium">Add New Product</span>
         </button>
          <button
           onClick={onAddProduct}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
         >
-          <FiPlus className="w-4 h-4" />
-          <span className="text-sm font-medium cursor-pointer" onClick={()=>navigate("/upload-multiple-product")}>Add Multiple Product</span>
+          <IoIosCreate className="w-4 h-4" />
+          <span className="text-sm font-medium" onClick={()=>navigate("/upload-multiple-product")}>Bulk Create</span>
         </button>
            <button
           onClick={onAddProduct}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
         >
-          <FiPlus className="w-4 h-4" />
+          <IoMdDownload className="w-4 h-4" />
           <span className="text-sm font-medium cursor-pointer" onClick={()=>navigate("/download-qr")}>Download QR Code</span>
         </button>
 
-            {/* Bulk Create */}
-
-        <button
-          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
-        >
-          <IoCreateSharp className="w-4 h-4" />
-          <span className="text-sm font-medium">Bulk Create</span>
-        </button>
       </div>
     </div>
   );

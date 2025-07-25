@@ -1,4 +1,6 @@
 /* eslint-disable no-unused-vars */
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { Route, Routes, useNavigate } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import Layout from "./Layout";
@@ -23,7 +25,8 @@ function App() {
   };
 
   return (
-    <Routes>
+    <>
+      <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
@@ -40,6 +43,8 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
+    <ToastContainer position='top-right' autoClose={3000}/>
+    </>
   );
 }
 

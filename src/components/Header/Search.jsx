@@ -95,14 +95,16 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
                 ? 'border-blue-500 shadow-lg' 
                 : 'border-gray-300 hover:border-gray-400'
             }`}
-            onClick={handleContainerClick}
+            onClick={() => {
+              if(!isExpanded) handleContainerClick() ; 
+            }}
           >
             <div className="pl-3 pr-2">
               <FaSearch className="h-4 w-4 text-gray-400" />
             </div>
             {!isExpanded && (
-              <span className="flex-1 text-gray-500 text-xs font-normal pr-3 truncate">
-                Search products
+              <span className="flex-1 text-gray-700 text-base font-semibold pr-3 truncate">
+                Search products by name or number
               </span>
             )}
             {isExpanded && (
