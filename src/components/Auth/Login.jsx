@@ -1,3 +1,4 @@
+import axios from 'axios';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -6,16 +7,32 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!email || !password) {
-      alert('Please fill in all fields');
-      return;
-    }
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!email || !password) {
+    alert('Please fill in all fields');
+    return;
+  }
 
-    console.log('Login attempt:', { email, password });
-    navigate('/');
-  };
+  try {
+    const res = await axios.post('http://shivam-mac.local:8000/api/v1.0/login/', {
+      username: email,
+      password,
+    });
+
+    if (res.data.status === 200) {
+      const { access, refresh } = res.data.data;
+      localStorage.setItem('access_token', access);
+      localStorage.setItem('refresh_token', refresh);
+      navigate('/');
+    } else {
+      alert(res.data.message || 'Login failed');
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    alert('Login failed. Please check your credentials.');
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br font-sans">
@@ -33,7 +50,7 @@ const Login = () => {
               Email Address
             </label>
             <input
-              type="email"
+              type="text"
               id="email"
               name="email"
               placeholder="Enter your email address"

@@ -99,7 +99,7 @@ function QRdownload() {
     }
 
     const zip = new JSZip();
-    const qrCodePromises: Promise<void>[] = [];
+    const qrCodePromises= [];
 
     selectedProducts.forEach((id) => {
       const product = productGrid.find((p) => p.id === id);
