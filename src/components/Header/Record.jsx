@@ -319,7 +319,7 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
           {/* Label Text */}
           {!isExpanded && (
             <span className="flex-1 text-gray-500 text-xs font-normal pr-3 truncate">
-              Voice Record
+              Help Desk
             </span>
           )}
 

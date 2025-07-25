@@ -142,7 +142,7 @@ const Header = () => {
                     {/* You can add email and department here if available in localStorage */}
                   </div>
                   <button
-                    className="w-full mt-auto bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-semibold transition-colors"
+                    className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-semibold transition-colors"
                     onClick={handleLogout}
                   >
                     Logout
