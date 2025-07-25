@@ -43,9 +43,9 @@ const Header = () => {
   return (
     <header className="bg-white sticky top-0 z-30 shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 gap-4">
+        <div className="flex items-center justify-between h-20 gap-2 sm:gap-4">
           {/* Left & Center Combined: Record and Search */}
-          <div className="flex-1 flex items-center gap-4 min-w-0">
+          <div className="flex-1 flex items-center gap-2 sm:gap-4 min-w-0">
             <div
               className={recordContainerClass}
               onClick={() => handleExpand("record")}
