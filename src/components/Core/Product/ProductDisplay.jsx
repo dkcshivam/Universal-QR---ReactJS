@@ -11,7 +11,7 @@ const ProductGrid = ({ product }) => {
   const currentProducts = product?.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
-    <div className="sm:p-3 min-h-screen box-border">
+    <div className="min-h-screen box-border">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-5">
         {currentProducts?.map((product, index) => (
           <ProductCard key={index} product={product} index={index} />
