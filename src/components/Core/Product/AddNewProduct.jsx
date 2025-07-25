@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Save, Plus } from "lucide-react";
 import { FiUpload, FiCamera } from "react-icons/fi";
 import axios from "axios";
@@ -12,7 +12,6 @@ const AddProduct = () => {
   const [remarks, setRemarks] = useState("");
   const [coverImage, setCoverImage] = useState(null);
   const [productImages, setProductImages] = useState([]);
-
   const coverFileInputRef = useRef(null);
   const coverCameraInputRef = useRef(null);
   const productFileInputRef = useRef(null);
@@ -51,6 +50,20 @@ const AddProduct = () => {
     updated.splice(index, 1);
     setProductImages(updated);
   };
+  useEffect(() => {
+      const token = localStorage.getItem("access_token");
+      const res = axios.get(
+        "http://shivam-mac.local:8000/api/v1.0/qr/departments/",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        }
+      );
+      console.log(res.data)
+
+  }, [])
+  
   async function handlesubmit() {
     if (!productName ) {
       alert("Please fill in all required fields");
@@ -128,7 +141,7 @@ const AddProduct = () => {
           <div>
             <label className="block font-semibold mb-1">Quantity</label>
             <input
-              type="number"
+              type="text"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
               placeholder="Enter quantity..."

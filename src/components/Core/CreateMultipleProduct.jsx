@@ -9,7 +9,7 @@ function CreateMultipleProduct() {
     name: '',
     location: '',
     department: '',
-    quantity: 0,
+    quantity: '',
     coverImage: null, // File object
     coverImageUrl: '', // Preview URL
     productImages: [], // Array of File objects
@@ -21,7 +21,7 @@ function CreateMultipleProduct() {
   const handleInputChange = (index, event) => {
     const { name, value } = event.target;
     const updatedRows = [...productRows];
-    updatedRows[index] = { ...updatedRows[index], [name]: name === 'quantity' ? Number(value) : value };
+    updatedRows[index] = { ...updatedRows[index], [name]: value };
     setProductRows(updatedRows);
 
     // Auto-add new row if editing the last row and any field is changed
@@ -202,7 +202,7 @@ function CreateMultipleProduct() {
               </td>
               <td style={{ width: '70px', textAlign: 'center' }}>
                 <input
-                  type="number"
+                  type="text"
                   name="quantity"
                   value={row.quantity}
                   min={1}
