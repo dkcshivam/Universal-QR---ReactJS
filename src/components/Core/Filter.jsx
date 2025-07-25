@@ -6,6 +6,8 @@ const SearchFilter = ({ onSearch, onFilterChange, onAddProduct }) => {
   const [activeTab, setActiveTab] = useState("mine");
   const navigate=useNavigate();
 
+  const navigate = useNavigate();
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     onFilterChange(tab);
@@ -48,7 +50,7 @@ const SearchFilter = ({ onSearch, onFilterChange, onAddProduct }) => {
 
         {/* Add New Product Button */}
         <button
-          onClick={onAddProduct}
+          onClick={() => navigate("/add-product")}
           className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
         >
           <FiPlus className="w-4 h-4" />
