@@ -41,7 +41,6 @@ const SearchFilter = ({ onAddProduct, activeTab, setActiveTab }) => {
           <div></div>
         )}
 
-        {/* Right side - Action buttons (Hidden on mobile, visible on sm and up) */}
         <div className="hidden sm:flex items-center gap-3">
           {token && (
             <>
