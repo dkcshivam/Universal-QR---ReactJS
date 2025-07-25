@@ -1,23 +1,142 @@
-import React from 'react'
-import { FaUser } from 'react-icons/fa'
+import React, { useState } from 'react';
+import { FaUser, FaCog, FaSignOutAlt, FaBell, FaEdit, FaKey, FaQuestionCircle } from 'react-icons/fa';
 
-const Profile = () => {
-  return (
-    <div className="flex items-center">
-      {/* Profile Section - Fixed hover background overflow */}
-      <div className="flex flex-col items-center cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-all duration-200 group overflow-hidden">
-        {/* User Icon */}
-        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-200">
-          <FaUser className="w-5 h-5 text-white" />
+const Profile = ({ isMobile, onClose }) => {
+  const [user, setUser] = useState({
+    name: 'John Doe',
+    email: 'john.doe@example.com',
+    avatar: null,
+    role: 'Product Manager',
+    department: 'Engineering'
+  });
+
+  const [showSettings, setShowSettings] = useState(false);
+
+  const handleLogout = () => {
+    // Implement logout logic here
+    console.log('Logging out...');
+    if (onClose) onClose();
+  };
+
+  const handleSettingsClick = () => {
+    setShowSettings(!showSettings);
+  };
+
+  const handleEditProfile = () => {
+    // Implement edit profile logic here
+    console.log('Edit profile...');
+    if (onClose) onClose();
+  };
+
+  if (isMobile) {
+    return (
+      <div className="flex flex-col items-center space-y-6 py-4">
+        {/* User Avatar */}
+        <div className="flex flex-col items-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-semibold shadow-lg mb-4">
+            {user.avatar ? (
+              <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+            ) : (
+              user.name.split(' ').map(n => n[0]).join('').toUpperCase()
+            )}
+          </div>
+          
+          {/* User Info */}
+          <div className="text-center space-y-2">
+            <h3 className="text-xl font-bold text-gray-900">{user.name}</h3>
+            <p className="text-sm text-gray-600 font-medium">{user.email}</p>
+            <p className="text-sm text-gray-500">{user.department}</p>
+            <span className="inline-block px-3 py-1 text-sm bg-blue-500 text-white rounded-full font-medium">
+              {user.role}
+            </span>
+          </div>
         </div>
-        
-        {/* My Profile Text */}
-        <div className="mt-1">
-          <p className="text-sm font-semibold text-gray-700 group-hover:text-blue-600 transition-colors duration-200 whitespace-nowrap">My Profile</p>
+
+        {/* Logout Button */}
+        <div className="w-full pt-8">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center space-x-3 p-4 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-red-600 group border border-red-200"
+          >
+            <FaSignOutAlt className="h-5 w-5 group-hover:text-red-700 transition-colors" />
+            <span className="font-semibold group-hover:text-red-700 transition-colors">Logout</span>
+          </button>
         </div>
       </div>
-    </div>
-  )
-}
+    );
+  }
 
-export default Profile
+  return (
+    <div className="relative">
+      <button 
+        onClick={handleSettingsClick}
+        className="flex items-center space-x-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      >
+        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-sm">
+          {user.avatar ? (
+            <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+          ) : (
+            user.name.split(' ').map(n => n[0]).join('').toUpperCase()
+          )}
+        </div>
+        <div className="hidden lg:block text-left">
+          <p className="text-sm font-semibold text-gray-900">{user.name}</p>
+          <p className="text-xs text-gray-600">{user.role}</p>
+        </div>
+      </button>
+
+      {/* Desktop Dropdown Menu */}
+      {showSettings && (
+        <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+          <div className="p-4 border-b border-gray-100">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                ) : (
+                  user.name.split(' ').map(n => n[0]).join('').toUpperCase()
+                )}
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                <p className="text-xs text-gray-500">{user.email}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-2">
+            <button
+              onClick={handleEditProfile}
+              className="w-full flex items-center space-x-3 p-2 text-left hover:bg-gray-50 rounded transition-colors"
+            >
+              <FaEdit className="h-4 w-4 text-gray-400" />
+              <span className="text-sm text-gray-700">Edit Profile</span>
+            </button>
+
+            <button className="w-full flex items-center space-x-3 p-2 text-left hover:bg-gray-50 rounded transition-colors">
+              <FaCog className="h-4 w-4 text-gray-400" />
+              <span className="text-sm text-gray-700">Settings</span>
+            </button>
+
+            <button className="w-full flex items-center space-x-3 p-2 text-left hover:bg-gray-50 rounded transition-colors">
+              <FaBell className="h-4 w-4 text-gray-400" />
+              <span className="text-sm text-gray-700">Notifications</span>
+            </button>
+
+            <hr className="my-2" />
+
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center space-x-3 p-2 text-left hover:bg-red-50 rounded transition-colors text-red-600"
+            >
+              <FaSignOutAlt className="h-4 w-4" />
+              <span className="text-sm">Logout</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Profile;
