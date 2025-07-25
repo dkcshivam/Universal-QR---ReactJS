@@ -51,21 +51,20 @@ const AddProduct = () => {
     setProductImages(updated);
   };
   useEffect(() => {
-      const token = localStorage.getItem("access_token");
-      const res = axios.get(
-        "http://shivam-mac.local:8000/api/v1.0/qr/departments/",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          }
-        }
-      );
-      console.log(res.data)
+    const token = localStorage.getItem("access_token");
+    const res = axios.get(
+      "http://shivam-mac.local:8000/api/v1.0/qr/departments/",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    console.log(res.data);
+  }, []);
 
-  }, [])
-  
   async function handlesubmit() {
-    if (!productName ) {
+    if (!productName) {
       alert("Please fill in all required fields");
       return;
     }

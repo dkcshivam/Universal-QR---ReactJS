@@ -15,7 +15,7 @@ import CreateMultipleProduct from "./components/Core/CreateMultipleProduct";
 import QRScanner from "./components/Core/Product/ScanQR";
 
 import AddProduct from "./components/Core/Product/AddNewProduct";
-import { useState } from 'react';
+import { useState } from "react";
 function App() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("mine");
@@ -28,25 +28,33 @@ function App() {
   return (
     <>
       <Routes>
-      <Route element={<Layout />}>
-        <Route path="/" element={<HomePage activeTab={activeTab} setActiveTab={setActiveTab} />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/scan" element={<QRScanner onResult={handleQRResult} />} />
-        <Route path="/add-product" element={<AddProduct />} />
-        <Route path="/product-display" element={<ProductGrid />} />
-        <Route path="/download-qr" element={<QRdownload />} />
-        <Route
-          path="/upload-multiple-product"
-          element={<CreateMultipleProduct />}
-        />
-        {/* ProductDetail */}
-        <Route path="/product-detail/:code" element={<ProductDetail />} />
-        <Route path="*" element={<NotFound />} />
-      </Route>
-    </Routes>
-    <ToastContainer position='top-right' autoClose={3000}/>
+        <Route element={<Layout />}>
+          <Route
+            path="/"
+            element={
+              <HomePage activeTab={activeTab} setActiveTab={setActiveTab} />
+            }
+          />
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/scan"
+            element={<QRScanner onResult={handleQRResult} />}
+          />
+          <Route path="/add-product" element={<AddProduct />} />
+          <Route path="/product-display" element={<ProductGrid />} />
+          <Route path="/download-qr" element={<QRdownload />} />
+          <Route
+            path="/upload-multiple-product"
+            element={<CreateMultipleProduct />}
+          />
+          {/* ProductDetail */}
+          <Route path="/product-detail/:code" element={<ProductDetail />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+      <ToastContainer position="top-right" autoClose={3000} />
     </>
-  );  
+  );
 }
 
 export default App;
