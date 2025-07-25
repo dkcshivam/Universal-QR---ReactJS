@@ -46,7 +46,7 @@ function App() {
     </Routes>
     <ToastContainer position='top-right' autoClose={3000}/>
     </>
-  );
+  );  
 }
 
 export default App;
