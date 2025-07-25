@@ -15,7 +15,10 @@ import CreateMultipleProduct from "./components/Core/CreateMultipleProduct";
 import QRScanner from "./components/Core/Product/ScanQR";
 
 import AddProduct from "./components/Core/Product/AddNewProduct";
+import { useState } from 'react';
+
 function App() {
+
   const navigate = useNavigate();
 
   const handleQRResult = (result) => {

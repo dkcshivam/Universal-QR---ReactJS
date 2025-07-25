@@ -28,6 +28,8 @@
 
  - mobile responsiveness (hide qr download and bulk create in mobile view) ✅ 
 
-- header section redesign for larger screen 
+- header section redesign for larger screen ✅
 
-- search backend 
+- search implement ✅  
+
+- update ✅ 
