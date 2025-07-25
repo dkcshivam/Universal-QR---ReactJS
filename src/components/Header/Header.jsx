@@ -21,10 +21,14 @@ const Header = () => {
 
   return (
     <header className="bg-white sticky top-0 z-20 shadow-sm border-b border-gray-100">
+      
       {/* Desktop */}
+      
       <div className="hidden md:flex items-center justify-between max-w-7xl mx-auto px-8 py-4">
+
         {/* Left: Voice Record */}
-        <div className="flex-shrink-0 w-72" onClick={() => handleExpand('record')}>
+        
+        <div className="flex-shrink-0" style={{marginLeft: "16px"}} onClick={() => handleExpand('record')} >
           <Record
             isExpanded={expanded === "record"}
             isCollapsed={expanded === "search"}
@@ -32,17 +36,25 @@ const Header = () => {
             onToggle={(expand) => setExpanded(expand ? "record" : null)}
           />
         </div>
+
         {/* Center: Search */}
-        <div className="flex-grow mx-8 max-w-2xl" onClick={() => handleExpand('search')}>
-          <Search
-            isExpanded={expanded === "search"}
-            isCollapsed={expanded === "record"}
-            isMobile={false}
-            onToggle={(expand) => setExpanded(expand ? "search" : null)}
-          />
+        
+        <div className="flex-grow flex justify-center items-center mx-8 max-w-2xl"
+          onClick={() => handleExpand('search')}
+        >
+          <div className="w-full">
+            <Search
+              isExpanded={expanded === "search"}
+              isCollapsed={expanded === "record"}
+              isMobile={false}
+              onToggle={(expand) => setExpanded(expand ? "search" : null)}
+            />
+          </div>
         </div>
+
         {/* Right: Profile */}
-        <div className="flex-shrink-0">
+        
+        <div className="flex-shrink-0 flex items-center" style={{marginRight: '16px'}}>
           <Profile />
         </div>
       </div>

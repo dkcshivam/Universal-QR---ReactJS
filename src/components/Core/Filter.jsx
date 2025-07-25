@@ -7,7 +7,6 @@ const SearchFilter = ({ onSearch, onFilterChange, onAddProduct }) => {
   const [activeTab, setActiveTab] = useState("mine");
   const navigate=useNavigate();
 
-
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     onFilterChange(tab);
@@ -66,7 +65,11 @@ const SearchFilter = ({ onSearch, onFilterChange, onAddProduct }) => {
           className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
         >
           <FiPlus className="w-4 h-4" />
+<<<<<<< Updated upstream
           <span className="text-sm font-medium cursor-pointer" onClick={()=>navigate("/upload-multiple-product")}>Add Multiple Product</span>
+=======
+          <span className="text-sm font-medium" onClick={()=>navigate("/upload-multiple-product")}>Bulk Create</span>
+>>>>>>> Stashed changes
         </button>
            <button
           onClick={onAddProduct}
@@ -76,14 +79,6 @@ const SearchFilter = ({ onSearch, onFilterChange, onAddProduct }) => {
           <span className="text-sm font-medium cursor-pointer" onClick={()=>navigate("/download-qr")}>Download QR Code</span>
         </button>
 
-            {/* Bulk Create */}
-
-        <button
-          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
-        >
-          <IoCreateSharp className="w-4 h-4" />
-          <span className="text-sm font-medium">Bulk Create</span>
-        </button>
       </div>
     </div>
   );
