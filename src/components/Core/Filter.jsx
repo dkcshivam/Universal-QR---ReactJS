@@ -4,8 +4,7 @@ import { IoIosCreate } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import { IoMdDownload } from "react-icons/io";
 
-const SearchFilter = ({ onSearch, onFilterChange, onAddProduct }) => {
-  const [activeTab, setActiveTab] = useState("mine");
+const SearchFilter = ({ onSearch, onFilterChange, onAddProduct , activeTab, setActiveTab }) => {
   const navigate=useNavigate();
 
   const handleTabChange = (tab) => {
@@ -13,16 +12,14 @@ const SearchFilter = ({ onSearch, onFilterChange, onAddProduct }) => {
     onFilterChange(tab);
   };
 
-  const onBulkCreate = () => {
 
-  }
-``
+
   return (
     <div className="items-center justify-between w-full bg-white rounded-lg hidden sm:flex p-2 mb-4">
       {/* Left side - Mine/All tabs */}
       <div className="flex items-center gap-1">
         <button
-          onClick={() => handleTabChange("mine")}
+          onClick={() => setActiveTab("mine")}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             activeTab === "mine"
               ? "bg-blue-500 text-white"
@@ -32,7 +29,7 @@ const SearchFilter = ({ onSearch, onFilterChange, onAddProduct }) => {
           Mine
         </button>
         <button
-          onClick={() => handleTabChange("all")}
+          onClick={() => setActiveTab("all")}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             activeTab === "all"
               ? "bg-blue-500 text-white"

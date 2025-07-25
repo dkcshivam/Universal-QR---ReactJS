@@ -3,13 +3,23 @@ import ProductGrid from "../components/Core/Product/ProductDisplay";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-const HomePage = () => {
+const HomePage = ({ activeTab, setActiveTab }) => {
   const [product, setProduct] = useState([]);
 
   const productList = async () => {
+    let token = localStorage.getItem("access_token");
     try {
+      console.log(activeTab)
+      const url = activeTab === "mine"
+        ? "http://shivam-mac.local:8000/api/v1.0/qr/products/?q=mine"
+        : "http://shivam-mac.local:8000/api/v1.0/qr/products/";
       const { data } = await axios.get(
-        "http://shivam-mac.local:8000/api/v1.0/qr/products/"
+        url,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        }
       );
       if (data?.status === 200) {
         setProduct(data?.data);
@@ -21,11 +31,11 @@ const HomePage = () => {
 
   useEffect(() => {
     productList();
-  }, []);
+  }, [activeTab]);
   return (
     <div>
-      <SearchFilter />
-      <ProductGrid product={product} />
+      <SearchFilter activeTab={activeTab} setActiveTab={setActiveTab} />
+      <ProductGrid product={product}  />
     </div>
   );
 };

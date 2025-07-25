@@ -15,9 +15,10 @@ import CreateMultipleProduct from "./components/Core/CreateMultipleProduct";
 import QRScanner from "./components/Core/Product/ScanQR";
 
 import AddProduct from "./components/Core/Product/AddNewProduct";
+import { useState } from 'react';
 function App() {
   const navigate = useNavigate();
-
+  const [activeTab, setActiveTab] = useState("mine");
   const handleQRResult = (result) => {
     console.log("QR Code detected:", result);
     alert(`QR Code detected at App.jsx: ${result}`);
@@ -28,7 +29,7 @@ function App() {
     <>
       <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<HomePage activeTab={activeTab} setActiveTab={setActiveTab} />} />
         <Route path="/login" element={<Login />} />
         <Route path="/scan" element={<QRScanner onResult={handleQRResult} />} />
         <Route path="/add-product" element={<AddProduct />} />
