@@ -15,8 +15,8 @@ const SearchFilter = ({ onSearch, onFilterChange, onAddProduct , activeTab, setA
 
 
   return (
-    <div className="items-center justify-between w-full bg-white rounded-lg hidden sm:flex p-2 mb-4">
-      {/* Left side - Mine/All tabs */}
+    <div className="flex items-center justify-between w-full bg-white rounded-lg p-2 mb-4">
+      {/* Left side - Mine/All tabs (Visible on all screens) */}
       <div className="flex items-center gap-1">
         <button
           onClick={() => setActiveTab("mine")}
@@ -40,15 +40,8 @@ const SearchFilter = ({ onSearch, onFilterChange, onAddProduct , activeTab, setA
         </button>
       </div>
 
-      {/* Right side - Filter and Add New Product buttons */}
-      <div className="flex items-center gap-3">
-        {/* Filter Button */}
-        <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-          <FiFilter className="w-4 h-4" />
-          <span className="text-sm font-medium">Filter</span>
-          <FiChevronDown className="w-4 h-4" />
-        </button>
-
+      {/* Right side - Action buttons (Hidden on mobile, visible on sm and up) */}
+      <div className="hidden sm:flex items-center gap-3">
         {/* Add New Product Button - Single */}
 
         <button
@@ -58,21 +51,30 @@ const SearchFilter = ({ onSearch, onFilterChange, onAddProduct , activeTab, setA
           <FiPlus className="w-4 h-4" />
           <span className="text-sm font-medium">Add New Product</span>
         </button>
-         <button
+        <button
           onClick={onAddProduct}
           className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
         >
           <IoIosCreate className="w-4 h-4" />
-          <span className="text-sm font-medium" onClick={()=>navigate("/upload-multiple-product")}>Bulk Create</span>
+          <span
+            className="text-sm font-medium"
+            onClick={() => navigate("/upload-multiple-product")}
+          >
+            Bulk Create
+          </span>
         </button>
-           <button
+        <button
           onClick={onAddProduct}
           className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
         >
           <IoMdDownload className="w-4 h-4" />
-          <span className="text-sm font-medium cursor-pointer" onClick={()=>navigate("/download-qr")}>Download QR Code</span>
+          <span
+            className="text-sm font-medium cursor-pointer"
+            onClick={() => navigate("/download-qr")}
+          >
+            Download QR Code
+          </span>
         </button>
-
       </div>
     </div>
   );
