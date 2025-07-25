@@ -15,11 +15,13 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
   const [audioBlob, setAudioBlob] = useState(null);
   const [audioUrl, setAudioUrl] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
 
   const mediaRecorderRef = useRef(null);
   const audioRef = useRef(null);
   const timerRef = useRef(null);
   const chunksRef = useRef([]);
+  const audioContextRef = useRef(null);
 
   useEffect(() => {
     return () => {
@@ -73,17 +75,20 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
         }
       };
 
-      mediaRecorder.onstop = () => {
+      mediaRecorder.onstop = async () => {
         console.log("Recording stopped, chunks:", chunksRef.current.length);
         const blob = new Blob(chunksRef.current, {
           type: mimeType || "audio/wav",
         });
         console.log("Created blob:", blob.size, "bytes, type:", blob.type);
 
-        const url = URL.createObjectURL(blob);
+        // Convert to MP3
+        const mp3Blob = await convertToMp3(blob);
+
+        const url = URL.createObjectURL(mp3Blob);
         console.log("Created URL:", url);
 
-        setAudioBlob(blob);
+        setAudioBlob(mp3Blob);
         setAudioUrl(url);
 
         // Stop all tracks to release microphone
@@ -103,6 +108,82 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
       console.error("Error accessing microphone:", error);
       alert("Could not access microphone. Please check permissions.");
     }
+  };
+
+  const convertToMp3 = async (audioBlob) => {
+    setIsConverting(true);
+    try {
+      // Import lamejs dynamically
+      const lamejs = await import("lamejs");
+
+      // Convert blob to ArrayBuffer
+      const arrayBuffer = await audioBlob.arrayBuffer();
+
+      // Create audio context for decoding
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext ||
+          window.webkitAudioContext)();
+      }
+
+      // Decode audio data
+      const audioBuffer = await audioContextRef.current.decodeAudioData(
+        arrayBuffer
+      );
+
+      // Convert to mono if stereo
+      const samples =
+        audioBuffer.numberOfChannels === 2
+          ? convertStereoToMono(audioBuffer)
+          : audioBuffer.getChannelData(0);
+
+      // Convert float samples to 16-bit PCM
+      const pcmSamples = new Int16Array(samples.length);
+      for (let i = 0; i < samples.length; i++) {
+        pcmSamples[i] = Math.max(-32768, Math.min(32767, samples[i] * 32767));
+      }
+
+      // Initialize MP3 encoder
+      const mp3encoder = new lamejs.Mp3Encoder(1, audioBuffer.sampleRate, 128);
+      const mp3Data = [];
+
+      // Encode in chunks
+      const sampleBlockSize = 1152;
+      for (let i = 0; i < pcmSamples.length; i += sampleBlockSize) {
+        const sampleChunk = pcmSamples.subarray(i, i + sampleBlockSize);
+        const mp3buf = mp3encoder.encodeBuffer(sampleChunk);
+        if (mp3buf.length > 0) {
+          mp3Data.push(mp3buf);
+        }
+      }
+
+      // Finalize encoding
+      const mp3buf = mp3encoder.flush();
+      if (mp3buf.length > 0) {
+        mp3Data.push(mp3buf);
+      }
+
+      // Create MP3 blob
+      const mp3Blob = new Blob(mp3Data, { type: "audio/mp3" });
+      setIsConverting(false);
+      return mp3Blob;
+    } catch (error) {
+      console.error("MP3 conversion failed:", error);
+      setIsConverting(false);
+      // Fallback to original blob
+      return audioBlob;
+    }
+  };
+
+  const convertStereoToMono = (audioBuffer) => {
+    const left = audioBuffer.getChannelData(0);
+    const right = audioBuffer.getChannelData(1);
+    const mono = new Float32Array(left.length);
+
+    for (let i = 0; i < left.length; i++) {
+      mono[i] = (left[i] + right[i]) / 2;
+    }
+
+    return mono;
   };
 
   const stopRecording = () => {
@@ -196,6 +277,18 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="bg-gray-50 rounded-lg p-4 border">
       {/* Recording State */}
@@ -212,6 +305,12 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
                 <span className="text-sm">
                   {isPaused ? "Paused" : "Recording"}
                 </span>
+              </div>
+            )}
+            {isConverting && (
+              <div className="flex items-center justify-center gap-2 text-blue-500">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <span className="text-sm">Converting to MP3...</span>
               </div>
             )}
           </div>
