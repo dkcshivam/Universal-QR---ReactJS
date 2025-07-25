@@ -16,8 +16,6 @@ import QRScanner from "./components/Core/Product/ScanQR";
 
 import AddProduct from "./components/Core/Product/AddNewProduct";
 import { useState } from 'react';
-
-import { useState } from 'react';
 import ProductDetail from "./components/Core/Product/ProductDetail";
 
 

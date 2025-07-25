@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
-
+import { FaPlus } from "react-icons/fa";
 import {
   FaQrcode,
   FaCommentAlt,
@@ -17,6 +17,9 @@ import { toast } from "react-toastify";
 const API_BASE_URL = "http://shivam-mac.local:8000/api/v1.0/qr";
 
 function ProductDetail() {
+
+  const token = localStorage.getItem("access_token");
+
   const { code } = useParams();
 
   const [data, setData] = useState("");
@@ -29,7 +32,79 @@ function ProductDetail() {
   const [isSubmittingRemark, setIsSubmittingRemark] = useState(false);
   const [remarkError, setRemarkError] = useState(null);
 
-  const token = localStorage.getItem("access_token");
+  // edit mode 
+
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editFields, setEditFields] = useState({
+    name: "",
+    department: "",
+    quantity: "",
+    location: "",
+    cover_image: null
+  })
+
+  const [departments, setDepartments] = useState([]);
+
+  useEffect(() => {
+    axios.get(`${API_BASE_URL}/departments/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).then(res => {
+      setDepartments(res.data.data || []);
+    }).catch(err => {
+      setDepartments([]);
+    });
+  }, [token]);
+
+  const handleEditClick = () => {
+    if (!token) {
+      toast.error("Please login again");
+      return;
+    }
+    setEditFields({
+      name: data?.name || "",
+      department: data?.belongs_to_department || "",
+      quantity: data?.quantity || "",
+      location: data?.location || "",
+      cover_image: null
+    });
+    setIsEditMode(true);
+  };
+
+  const handleFieldChange = (e) => {
+    setEditFields({
+      ...editFields,
+      [e.target.name]: e.target.value
+    })
+  }
+
+  const handleUpdateProduct = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("name", editFields.name);
+      formData.append("belongs_to_department", editFields.department);
+      formData.append("quantity", editFields.quantity);
+      formData.append("location", editFields.location);
+      if (editFields.cover_image) {
+        formData.append("cover_image", editFields.cover_image);
+      }
+
+      await axios.put(`${API_BASE_URL}/products/${code}/edit/`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`
+        },
+      });
+
+      await getProductDetail();
+      setIsEditMode(false);
+      toast.success("Product updated successfully!");
+    } catch (error) {
+      console.log("handle update product failed: ", error);
+      toast.error("Product update failed! Please try again.");
+    }
+  };
 
   const getProductDetail = async () => {
     try {
@@ -241,64 +316,166 @@ function ProductDetail() {
 
               {/* Action Buttons */}
               <div className="flex flex-row items-stretch sm:items-center gap-2 lg:gap-4">
-                <button className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 md:flex-none lg:text-base">
+                <button className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 md:flex-none lg:text-base hover:bg-[#7594c7]">
                   <FaQrcode className="text-white" />
                   <span className="hidden sm:inline">Download QR</span>
                   <span className="sm:hidden">QR Code</span>
                 </button>
 
-                <button className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base">
-                  <Edit className="text-white w-4 h-4" />
-                  <span className="hidden sm:inline">Edit Product</span>
-                  <span className="sm:hidden">Edit</span>
-                </button>
+                {/* Edit product  */}
+
+                {isEditMode ? (
+                  <button
+                    className="inline-flex items-center justify-center gap-2 bg-green-600 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-green-700"
+                    onClick={handleUpdateProduct}
+                  >
+                    <Edit className="text-white w-4 h-4" />
+                    <span className="hidden sm:inline">Update Product</span>
+                    <span className="sm:hidden">Update</span>
+                  </button>
+                ) : (
+                  <button
+                    className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-[#7594c7]"
+                    onClick={handleEditClick}
+                  >
+                    <Edit className="text-white w-4 h-4" />
+                    <span className="hidden sm:inline">Edit Product</span>
+                    <span className="sm:hidden">Edit</span>
+                  </button>
+                )}
+
               </div>
             </div>
 
-            {/* Product Info Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="flex flex-col gap-2">
+            {/* Name */}
+            {isEditMode && (
+              <div className="flex flex-col gap-2 mb-2">
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
-                  DEPARTMENT
+                  PRODUCT NAME
                 </div>
+                <input
+                  name="name"
+                  value={editFields.name}
+                  onChange={handleFieldChange}
+                  placeholder="Enter product name here"
+                  className="bg-[#f8fafc] text-[#374151] px-3 py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base"
+                />
+              </div>
+            )}
+
+            {/* Cover Image */}
+
+            {isEditMode && (
+              <div className="flex flex-col gap-2 mb-2">
+                <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
+                  COVER IMAGE
+                </div>
+                {editFields.cover_image ? (
+                  <div className="relative w-32 h-32">
+                    <img
+                      src={URL.createObjectURL(editFields.cover_image)}
+                      alt="Preview"
+                      className="w-full h-full object-cover rounded"
+                    />
+                    <button
+                      className="absolute top-1 right-1 bg-white rounded-full p-1 shadow"
+                      onClick={() => setEditFields({ ...editFields, cover_image: null })}
+                      type="button"
+                    >
+                      <FaTimes className="text-red-500" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-indigo-300 rounded-md bg-gray-50 w-32 h-32 cursor-pointer hover:bg-indigo-50 transition">
+                    <FaPlus className="text-indigo-400 text-2xl mb-1" />
+                    <span className="text-gray-500 text-xs">Upload Cover Image</span>
+                    <input
+                      type="file"
+                      name="cover_image"
+                      accept="image/*"
+                      onChange={e =>
+                        setEditFields({ ...editFields, cover_image: e.target.files[0] })
+                      }
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+            )}
+
+            {/* Product Info Grid */}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+              {/* Department */}
+
+              {isEditMode ? (
+                <select
+                  name="department"
+                  value={editFields.department}
+                  onChange={handleFieldChange}
+                  className="bg-transparent outline-none flex-1"
+                >
+                  <option value="">Select Department</option>
+                  {departments.map((dep, idx) => (
+                    <option key={dep.id || idx} value={dep.name || ""}>
+                      {dep.name || "Unknown"}
+                    </option>
+                  ))}
+                </select>
+              ) : (
                 <div className="inline-flex items-center gap-2 bg-[#f8fafc] text-[#374151] px-3 py-2 lg:px-4 lg:py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base">
                   <span>
-                    {!data?.belongs_to_department ? (
-                      <span>N/A</span>
-                    ) : (
-                      <span>{data?.belongs_to_department}</span>
-                    )}
+                    {!data?.belongs_to_department ? "N/A" : data?.belongs_to_department}
                   </span>
                 </div>
-              </div>
+              )}
+
+              {/* quantity */}
 
               <div className="flex flex-col gap-2">
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
                   QUANTITY
                 </div>
                 <div className="inline-flex items-center gap-2 bg-[#f8fafc] text-[#374151] px-3 py-2 lg:px-4 lg:py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base">
-                  <span>
-                    {!data?.quantity ? (
-                      <span>N/A</span>
-                    ) : (
-                      <span>{data?.quantity} Items</span>
-                    )}
-                  </span>
+                  {isEditMode ? (
+                    <input
+                      name="quantity"
+                      type="number"
+                      value={editFields.quantity}
+                      onChange={handleFieldChange}
+                      className="bg-transparent outline-none flex-1"
+                    />
+                  ) : (
+                    <span>
+                      {!data?.quantity ? "N/A" : `${data?.quantity} Items`}
+                    </span>
+                  )}
                 </div>
               </div>
+
+              {/* location */}
 
               <div className="flex flex-col gap-2 sm:col-span-2 lg:col-span-1">
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
                   LOCATION
                 </div>
                 <div className="inline-flex items-center gap-2 bg-[#f8fafc] text-[#374151] px-3 py-2 lg:px-4 lg:py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base">
-                  {!data?.location ? (
-                    <span>N/A</span>
+                  {isEditMode ? (
+                    <input
+                      name="location"
+                      value={editFields.location}
+                      onChange={handleFieldChange}
+                      className="bg-transparent outline-none flex-1"
+                    />
                   ) : (
-                    <span>{data?.location}</span>
+                    <span>
+                      {!data?.location ? "N/A" : data?.location}
+                    </span>
                   )}
                 </div>
               </div>
+
             </div>
 
             {/* Remarks Section */}

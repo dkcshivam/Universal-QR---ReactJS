@@ -32,4 +32,6 @@
 
 - search implement ✅  
 
-- update ✅ 
+- update ✅ (name, quantity, belong to department, cover image and location )
+
+- after search result, it should be redirecting to that particular page 
