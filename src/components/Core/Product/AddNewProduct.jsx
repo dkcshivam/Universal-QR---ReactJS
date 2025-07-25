@@ -96,10 +96,10 @@ const AddProduct = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 space-y-4">
-      <div className="flex items-center justify-start bg-white rounded-2xl shadow-md gap-2 p-4">
+      <div className="flex items-center justify-start bg-white w-full md:max-w-4xl rounded-2xl mx-auto shadow-md gap-2 p-4">
         <button
           onClick={() => window.history.back()}
-          className="flex items-center justify-center px-4 py-2 bg-blue-500 rounded-lg cursor-pointer"
+          className="flex items-center justify-center p-2 bg-blue-500 rounded-lg cursor-pointer"
         >
           <FaArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
           <span className="text-sm sm:text-base">Go Back</span>
