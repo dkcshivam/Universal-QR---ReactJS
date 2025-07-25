@@ -331,16 +331,6 @@ body {
 
 /* ...existing styles... */
 
-/* Product Table Styles */
-.product-table-container {
-  padding: 24px;
-  max-width: 1200px;
-  margin: 20px auto;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
 .table-header {
   display: flex;
   justify-content: space-between;
