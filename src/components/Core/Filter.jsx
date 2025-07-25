@@ -43,27 +43,30 @@ const SearchFilter = ({ onAddProduct, activeTab, setActiveTab }) => {
 
         {/* Right side - Action buttons (Hidden on mobile, visible on sm and up) */}
         <div className="hidden sm:flex items-center gap-3">
-          {/* Add New Product Button - Single */}
+          {token && (
+            <>
+              <button
+                onClick={() => navigate("/add-product")}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
+              >
+                <FiPlus className="w-4 h-4" />
+                <span className="text-sm font-medium">Add New Product</span>
+              </button>
+              <button
+                onClick={onAddProduct}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
+              >
+                <IoIosCreate className="w-4 h-4" />
+                <span
+                  className="text-sm font-medium"
+                  onClick={() => navigate("/upload-multiple-product")}
+                >
+                  Bulk Create
+                </span>
+              </button>
+            </>
+          )}
 
-          <button
-            onClick={() => navigate("/add-product")}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
-          >
-            <FiPlus className="w-4 h-4" />
-            <span className="text-sm font-medium">Add New Product</span>
-          </button>
-          <button
-            onClick={onAddProduct}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
-          >
-            <IoIosCreate className="w-4 h-4" />
-            <span
-              className="text-sm font-medium"
-              onClick={() => navigate("/upload-multiple-product")}
-            >
-              Bulk Create
-            </span>
-          </button>
           <button
             onClick={onAddProduct}
             className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
