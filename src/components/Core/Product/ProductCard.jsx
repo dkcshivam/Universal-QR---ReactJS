@@ -14,19 +14,19 @@ const ProductCard = ({ product, index }) => {
         onClick={() => navigate(`/product-detail/${product?.code}`)}
       >
         <img
-          src={product.cover_image}
-          alt={product.name}
+          src={product?.cover_image}
+          alt={product?.name}
           className="w-full h-full object-cover"
         />
       </div>
 
       <h3 className="text-[16px] font-bold text-[#333] mb-[15px] leading-[1.3]">
-        {product.name}
+        {product?.name}
       </h3>
       <div className="flex justify-between items-center gap-[10px] mt-2">
         <div className="flex items-center gap-[5px] text-[14px] text-[#666]">
           <FaMapMarkerAlt className="text-blue-600" />
-          {product.location}
+          {product?.location}
         </div>
 
         <div className="flex flex-wrap gap-1">

@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { FaSearch, FaTimes } from 'react-icons/fa';
+import React, { useState, useRef, useEffect } from "react";
+import { FaSearch, FaTimes } from "react-icons/fa";
 
 const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef(null);
 
@@ -27,16 +27,9 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
     }
   };
 
-  const handleSearchIconClick = (e) => {
-    e.stopPropagation();
-    if (!isExpanded) {
-      onToggle(true);
-    }
-  };
-
   const handleClose = () => {
     onToggle(false);
-    setSearchQuery('');
+    setSearchQuery("");
     setIsFocused(false);
   };
 
@@ -49,7 +42,7 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       // Handle search functionality here
-      console.log('Searching for:', searchQuery);
+      console.log("Searching for:", searchQuery);
       // You can implement your search logic here
     }
   };
@@ -58,27 +51,19 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
     setSearchQuery(e.target.value);
   };
 
-  const baseClasses = isMobile 
+  const baseClasses = isMobile
     ? "transition-all duration-300 ease-in-out"
     : "transition-all duration-300 ease-in-out";
 
   const containerClasses = isMobile
     ? `${baseClasses} ${
-        isCollapsed 
-          ? 'w-12 h-12' 
-          : isExpanded 
-            ? 'w-72' 
-            : 'w-40'
+        isCollapsed ? "w-12 h-12" : isExpanded ? "w-72" : "w-40"
       }`
-    : `${baseClasses} ${
-        isCollapsed 
-          ? 'w-12 h-12' 
-          : 'w-full'
-      }`;
+    : `${baseClasses} ${isCollapsed ? "w-12 h-12" : "w-full"}`;
 
   return (
     <div className={containerClasses}>
-      {(isCollapsed && !isExpanded) ? (
+      {isCollapsed && !isExpanded ? (
         /* Collapsed Icon State */
         <button
           onClick={handleContainerClick}
@@ -89,20 +74,22 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
       ) : (
         /* Normal/Expanded State */
         <div className="relative h-12">
-          <div 
+          <div
             className={`relative flex items-center h-full bg-white rounded-lg border transition-all duration-300 ${
-              isFocused || isExpanded 
-                ? 'border-blue-500 shadow-lg' 
-                : 'border-gray-300 hover:border-gray-400'
+              isFocused || isExpanded
+                ? "border-blue-500 shadow-lg"
+                : "border-gray-300 hover:border-gray-400"
             }`}
-            onClick={handleContainerClick}
+            onClick={() => {
+              if (!isExpanded) handleContainerClick();
+            }}
           >
             <div className="pl-3 pr-2">
               <FaSearch className="h-4 w-4 text-gray-400" />
             </div>
             {!isExpanded && (
-              <span className="flex-1 text-gray-500 text-xs font-normal pr-3 truncate">
-                Search products
+              <span className="flex-1 text-gray-700 text-base font-semibold pr-3 truncate">
+                Search
               </span>
             )}
             {isExpanded && (
@@ -114,7 +101,7 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
                   onChange={handleInputChange}
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
-                  onClick={e => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
                   placeholder="Search products..."
                   className="flex-1 h-full bg-transparent border-none outline-none text-gray-900 placeholder-gray-400 text-sm px-2"
                 />
@@ -132,7 +119,9 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
           {isExpanded && searchQuery && (
             <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto z-50">
               <div className="p-3">
-                <p className="text-sm text-gray-500 mb-2">Search results for "{searchQuery}"</p>
+                <p className="text-sm text-gray-500 mb-2">
+                  Search results for "{searchQuery}"
+                </p>
                 <div className="space-y-2">
                   <div className="p-2 hover:bg-gray-50 rounded cursor-pointer">
                     <p className="text-sm text-gray-700">Example result 1</p>
