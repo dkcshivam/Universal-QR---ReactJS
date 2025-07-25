@@ -9,16 +9,16 @@ const HomePage = ({ activeTab, setActiveTab }) => {
   const productList = async () => {
     let token = localStorage.getItem("access_token");
     try {
-      console.log(activeTab)
-      const url = activeTab === "mine"
-        ? "http://shivam-mac.local:8000/api/v1.0/qr/products/?q=mine"
-        : "http://shivam-mac.local:8000/api/v1.0/qr/products/";
+      const url =
+        activeTab === "mine"
+          ? "http://shivam-mac.local:8000/api/v1.0/qr/products/?q=mine"
+          : "http://shivam-mac.local:8000/api/v1.0/qr/products/";
       const { data } = await axios.get(
         url,
-        {
+        token && {
           headers: {
             Authorization: `Bearer ${token}`,
-          }
+          },
         }
       );
       if (data?.status === 200) {
@@ -35,7 +35,7 @@ const HomePage = ({ activeTab, setActiveTab }) => {
   return (
     <div>
       <SearchFilter activeTab={activeTab} setActiveTab={setActiveTab} />
-      <ProductGrid product={product}  />
+      <ProductGrid product={product} />
     </div>
   );
 };

@@ -4,6 +4,8 @@ import { FiUpload, FiCamera } from "react-icons/fi";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
+import { toast } from "react-toastify";
+
 const AddProduct = () => {
   const [productName, setProductName] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -64,47 +66,83 @@ const AddProduct = () => {
   }, []);
 
   async function handlesubmit() {
-    if (!productName) {
-      alert("Please fill in all required fields");
+    if (!productName.trim()) {
+      toast.error("Please fill in all required fields");
       return;
     }
-      const token = localStorage.getItem("access_token");
 
-    const productData = {
-      name: productName,
-      cover_image: coverImage ? coverImage.file : null,
-      product_images: productImages.map((img) => img.file),
-      quantity: quantity,
-      department: department,
-      remark: remarks,
-      location: location,
-    };
-    console.log(productData);
-    const res = await axios.post(
-      "http://shivam-mac.local:8000/api/v1.0/qr/products/create/",
-      {
-        name: productName,
-        cover_image: coverImage ? coverImage.file : null,
-        product_images: productImages.map((img) => img.file),
-        quantity: quantity,
-        department: department,
-        remark: remarks,
-        location: location,
-      },
-      {
-        headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}`, },
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      toast.error("Please first login after then create a product");
+      return;
+    }
+
+    if (!token) {
+      toast.error("Authentication token not found. Please login again.");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const productData = new FormData();
+      productData.append("name", productName);
+      productData.append("quantity", quantity || "");
+      productData.append("department", department || "");
+      productData.append("remark", remarks || "");
+      productData.append("location", location || "");
+
+      if (coverImage) {
+        productData.append("cover_image", coverImage.file);
       }
-    );
-    console.log(res);
-    console.log("Product Data Submitted:", productData);
-    // Reset form after submission
-    setProductName("");
-    setQuantity("");
-    setLocation("");
-    setDepartment("");
-    setRemarks("");
-    setCoverImage(null);
-    setProductImages([]);
+
+      productImages.forEach((img, index) => {
+        productData.append("product_images", img.file);
+      });
+
+      const res = await axios.post(
+        "http://shivam-mac.local:8000/api/v1.0/qr/products/create/",
+        productData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (res.status === 201) {
+        toast.success(res.data.message || "Product created successfully!");
+
+        // Reset form only on success
+        setProductName("");
+        setQuantity("");
+        setLocation("");
+        setDepartment("");
+        setRemarks("");
+        setCoverImage(null);
+        setProductImages([]);
+
+        navigate(-1);
+      }
+    } catch (error) {
+      console.error("Error creating product:", error);
+
+      if (error.response) {
+        // Server responded with error status
+        const errorMessage =
+          error.response.data.message ||
+          error.response.data.error ||
+          "Failed to create product";
+        toast.error(errorMessage);
+      } else if (error.request) {
+        // Request was made but no response received
+        toast.error("Network error. Please check your connection.");
+      } else {
+        // Something else happened
+        toast.error("An unexpected error occurred");
+      }
+    }
   }
 
   return (
@@ -186,9 +224,6 @@ const AddProduct = () => {
             className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
             rows={4}
           />
-          {/* <div className="text-sm text-gray-400 text-right mt-1">
-            {remarks.length}/500 characters
-          </div> */}
         </div>
 
         {/* Cover Image */}

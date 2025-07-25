@@ -11,6 +11,7 @@ import {
 import { Edit } from "lucide-react";
 import VoiceRecorder from "../Remarks/VoiceRecorder";
 import AudioPlayer from "../Remarks/AudioPlayer";
+import { toast } from "react-toastify";
 
 const API_BASE_URL = "http://shivam-mac.local:8000/api/v1.0/qr";
 
@@ -64,6 +65,11 @@ function ProductDetail() {
       setIsSubmittingRemark(true);
       setRemarkError(null);
 
+      if (!token) {
+        toast.error("First login after then write a reviews");
+        return;
+      }
+
       const payload = {
         remark_type: "text",
         remark: remarkText,
@@ -101,6 +107,11 @@ function ProductDetail() {
     try {
       setIsSubmittingRemark(true);
       setRemarkError(null);
+
+      if (!token) {
+        toast.error("First login after then write a reviews");
+        return;
+      }
 
       // Create FormData for file upload
       const formData = new FormData();
@@ -163,10 +174,6 @@ function ProductDetail() {
 
   const openModal = (imageSrc) => {
     setSelectedImage(imageSrc);
-  };
-
-  const closeModal = () => {
-    setSelectedImage(null);
   };
 
   const handleAddTextRemark = async () => {
@@ -532,7 +539,7 @@ function ProductDetail() {
                     onClick={() => openModal(src)}
                   >
                     <img
-                      src={src}
+                      src={src?.image}
                       alt={`Product Image ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
