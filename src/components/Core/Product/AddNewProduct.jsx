@@ -52,7 +52,7 @@ const AddProduct = () => {
     setProductImages(updated);
   };
   async function handlesubmit() {
-    if (!productName || !quantity || !location || !department) {
+    if (!productName ) {
       alert("Please fill in all required fields");
       return;
     }

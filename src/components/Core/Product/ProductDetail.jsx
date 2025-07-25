@@ -34,7 +34,7 @@ function ProductDetail() {
       const { data } = await axios.get(
         `http://shivam-mac.local:8000/api/v1.0/qr/products/${code}/`
       );
-      if ((data.status = 200)) {
+      if (data.status == 200) {
         setData(data?.data);
       }
     } catch (error) {
@@ -90,7 +90,7 @@ function ProductDetail() {
     <div className="page-container">
       <main className="main-content">
         <div className="product-name-header">
-          <h1 className="product-name">{product.name}</h1>
+          <h1 className="product-name">{data.name}</h1>
         </div>
 
         <div className="product-layout">
@@ -100,22 +100,21 @@ function ProductDetail() {
               <div className="info-item">
                 <div className="info-label">DEPARTMENT</div>
                 <div className="info-value">
-                  <FaBuilding color="blue" />
-                  <span>{product.department}</span>
+                  <span>{data.belongs_to_department}</span>
                 </div>
               </div>
               <div className="info-item">
                 <div className="info-label">QUANTITY</div>
                 <div className="info-value">
-                  <FaWarehouse color="blue" />
-                  <span>{product.quantity} Items</span>
+                  <span>{data.quantity} Items</span>
                 </div>
               </div>
               <div className="info-item">
                 <div className="info-label">LOCATION</div>
                 <div className="info-value">
-                  <FaMapMarkerAlt color="blue" />
-                  <span>{product.location}</span>
+                  <span>
+                    {data.location ? data.location : "Location is not Found"}
+                  </span>
                 </div>
               </div>
             </div>

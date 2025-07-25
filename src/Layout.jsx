@@ -2,12 +2,16 @@ import React from "react";
 import { Outlet } from "react-router-dom";
 import Header from "./components/Header/Header";
 import MobileFooter from "./components/Footer/MobileFooter";
+import { useLocation } from "react-router-dom";
 
 const Layout = () => {
+  const { pathname } = useLocation();
+  console.log(pathname, " jai maa kali");
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 overflow-x-hidden">
       {/* Header at the top */}
-      <Header />
+
+      {pathname === "/login" ? "" : <Header />}
 
       {/* main content */}
       <main className="flex-grow w-full py-2 px-4 sm:py-4 box-border sm:px-16">
@@ -22,7 +26,8 @@ const Layout = () => {
       </footer>
 
       {/* Mobile Footer - only on mobile */}
-      <MobileFooter />
+
+      {pathname === "/login" ? "" : <MobileFooter />}
     </div>
   );
 };
