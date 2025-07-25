@@ -10,13 +10,11 @@ const Layout = () => {
 
       <Header />
 
-      {/* main content */}
-
-      <main className="flex-grow mx-auto py-4 px-0 sm:px-16 mt-12 sm:mt-auto">
+      <main className="flex-grow mx-0 py-4 px-0 sm:px-16 mt-12 sm:mt-auto">
         <Outlet />
       </main>
 
-      {/* footer */}
+
 
       <footer className="bg-gray-100 mt-4">
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">

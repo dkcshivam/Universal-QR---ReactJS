@@ -2,11 +2,13 @@ import { useState } from "react";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import Pagination from "../../Pagination";
 import { demoProducts } from "../../../utils/data";
+import { useNavigate } from "react-router-dom";
 
 
 const ProductGrid = () => {
+  const nagicate=useNavigate()
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -20,7 +22,7 @@ const ProductGrid = () => {
             key={index}
             className="bg-white rounded-lg shadow border border-gray-200 p-[10px] sm:p-[20px] flex flex-col justify-between hover:border-indigo-400"
           >
-            <div className="w-full h-[220px] rounded-none mb-[15px] overflow-hidden relative">
+            <div className="w-full h-[220px] rounded-none mb-[15px] overflow-hidden relative cursor-pointer" onClick={()=>nagicate(`/product-detail/${product?.name}`)}>
               <img
                 src={product.coverImage}
                 alt={product.name}

@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { FiFilter, FiPlus, FiChevronDown } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
 const SearchFilter = ({ onSearch, onFilterChange, onAddProduct }) => {
   const [activeTab, setActiveTab] = useState("mine");
+  const navigate=useNavigate();
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -51,6 +53,20 @@ const SearchFilter = ({ onSearch, onFilterChange, onAddProduct }) => {
         >
           <FiPlus className="w-4 h-4" />
           <span className="text-sm font-medium">Add New Product</span>
+        </button>
+         <button
+          onClick={onAddProduct}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+        >
+          <FiPlus className="w-4 h-4" />
+          <span className="text-sm font-medium" onClick={()=>navigate("/upload-multiple-product")}>Add Multiple Product</span>
+        </button>
+           <button
+          onClick={onAddProduct}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+        >
+          <FiPlus className="w-4 h-4" />
+          <span className="text-sm font-medium cursor-pointer" onClick={()=>navigate("/download-qr")}>Download QR Code</span>
         </button>
       </div>
     </div>
