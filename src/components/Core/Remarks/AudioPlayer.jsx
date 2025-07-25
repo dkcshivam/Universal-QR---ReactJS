@@ -4,10 +4,33 @@ import { FiPlay, FiPause, FiVolume2 } from "react-icons/fi";
 const AudioPlayer = ({ audioUrl, duration }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [audioDuration, setAudioDuration] = useState(duration || 0);
+  const [audioDuration, setAudioDuration] = useState(
+    parseDuration(duration) || 0
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const audioRef = useRef(null);
+
+  // Helper function to parse duration string (e.g., "0:2" or "1:30") to seconds
+  function parseDuration(durationStr) {
+    if (!durationStr || typeof durationStr === "number") {
+      return durationStr || 0;
+    }
+
+    const parts = durationStr.toString().split(":");
+    if (parts.length === 2) {
+      const minutes = parseInt(parts[0], 10) || 0;
+      const seconds = parseInt(parts[1], 10) || 0;
+      return minutes * 60 + seconds;
+    }
+
+    return 0;
+  }
+
+  useEffect(() => {
+    // Update duration when prop changes
+    setAudioDuration(parseDuration(duration) || 0);
+  }, [duration]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -147,7 +170,6 @@ const AudioPlayer = ({ audioUrl, duration }) => {
       </div>
 
       <FiVolume2 className="w-4 h-4 text-gray-400" />
-
     </div>
   );
 };

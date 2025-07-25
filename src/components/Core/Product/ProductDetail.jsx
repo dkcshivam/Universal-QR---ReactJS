@@ -115,7 +115,7 @@ function ProductDetail() {
 
       // Create FormData for file upload
       const formData = new FormData();
-      // formData.append("remark_type", "voice");
+      // formData.append("remark_type", "audio");
       // formData.append(
       //   "remark",
       //   remarkText ||
@@ -126,13 +126,17 @@ function ProductDetail() {
       //       .padStart(2, "0")})`
       // );
       // formData.append("product_code", code);
+      formData.append(
+        "audio_duration",
+        `${Math.floor(audioData.duration / 60)}:${audioData.duration % 60}`
+      );
 
       // Convert blob to file and append
       const audioFile = new File(
         [audioData.audioBlob],
-        `voice_remark_${Date.now()}.webm`,
+        `voice_remark_${Date.now()}.mp3`,
         {
-          type: audioData.mimeType || "audio/webm",
+          type: audioData.mimeType || "audio/mp3",
         }
       );
       formData.append("remark_audio", audioFile);
@@ -204,7 +208,7 @@ function ProductDetail() {
     setRemarkType(type);
     setShowRemarkForm(true);
     setRemarkError(null);
-    if (type === "voice") {
+    if (type === "audio") {
       setShowVoiceRecorder(true);
     } else {
       setShowVoiceRecorder(false);
@@ -236,8 +240,9 @@ function ProductDetail() {
           {/* Left Side: Product Info */}
           <div className="flex flex-1 flex-col gap-6 p-8 bg-white rounded-md shadow-md">
             <div className="flex justify-between items-center mb-4">
-              <h1 className=" text-3xl text-[#1e293b] font-bold">
-                {data.name}
+              <h1 className=" text-3xl text-[#1e293b] font-bold capitalize">
+                {data.name}{" "}
+                <span className="text-lg text-gray-400">(#{data.code})</span>
               </h1>
 
               <div className="flex items-center gap-4">
@@ -317,7 +322,7 @@ function ProductDetail() {
 
                   <button
                     className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
-                    onClick={() => handleShowRemarkForm("voice")}
+                    onClick={() => handleShowRemarkForm("audio")}
                     disabled={isSubmittingRemark}
                   >
                     <FaMicrophone className="w-4 h-4" />
@@ -439,13 +444,13 @@ function ProductDetail() {
                       >
                         {/* <div className="flex items-start justify-between mb-2"> */}
                         {/* <div className="flex items-center gap-2">
-                          {remark.type === "voice" ? (
+                          {remark.remark_type === "audio" ? (
                             <FaMicrophone className="text-green-500 w-4 h-4" />
                           ) : (
                             <FaCommentAlt className="text-blue-500 w-4 h-4" />
                           )}
                           <span className="text-sm font-medium text-gray-700">
-                            {remark.type === "voice"
+                            {remark.remark_type === "audio"
                               ? "Voice Remark"
                               : "Text Remark"}
                           </span>
@@ -461,12 +466,12 @@ function ProductDetail() {
                         </div>
                         {/* </div> */}
 
-                        {remark.type === "voice" ? (
+                        {remark.remark_type === "audio" ? (
                           <div className="space-y-2">
-                            {remark.audioUrl && (
+                            {remark.audio_url && (
                               <AudioPlayer
-                                audioUrl={remark.audioUrl}
-                                duration={remark.duration}
+                                audioUrl={remark.audio_url}
+                                duration={remark.audio_duration}
                                 mimeType={remark.mimeType}
                               />
                             )}
