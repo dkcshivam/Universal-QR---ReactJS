@@ -95,14 +95,6 @@ function CreateMultipleProduct() {
         toast.error('Product name must be at least 3 characters.');
         return;
       }
-      if (!product.location.trim()) {
-        toast.error("Location is required");
-        return;
-      }
-      if (!product.department.trim()) {
-        toast.error('Department is required.');
-        return;
-      }
     }
 
     // remove empty last row if present 
@@ -146,11 +138,9 @@ function CreateMultipleProduct() {
             </th>
             <th>
               Location
-              <span style={{ color: 'red' }}>*</span>
             </th>
             <th>
               Department
-              <span style={{ color: 'red' }}>*</span>
             </th>
             <th style={{ width: '70px' }}>Quantity</th>
             <th style={{ width: '110px' }}>Cover Image</th>
@@ -181,7 +171,6 @@ function CreateMultipleProduct() {
                   onChange={e => handleInputChange(index, e)}
                   placeholder="e.g., Factory"
                   className="form-input"
-                  required
                   style={{ width: '100%' }}
                 />
               </td>
@@ -191,7 +180,6 @@ function CreateMultipleProduct() {
                   value={row.department}
                   onChange={e => handleInputChange(index, e)}
                   className="form-input"
-                  required
                   style={{ width: '100%' }}
                 >
                   <option value="">Select Department</option>

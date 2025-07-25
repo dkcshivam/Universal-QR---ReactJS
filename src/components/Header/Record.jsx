@@ -27,7 +27,6 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
           setHasPermission(true);
           // Immediately stop the stream since we're just checking permission
           stream.getTracks().forEach(track => {
-            console.log('Stopping track:', track.label);
             track.stop();
           });
         } else {
@@ -83,7 +82,6 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
         
         // Stop all tracks
         stream.getTracks().forEach(track => {
-          console.log('Stopping track on recording stop:', track.label);
           track.stop();
         });
       };
@@ -254,15 +252,6 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
     console.log('Permission still being checked, showing loading state');
   }
 
-  console.log('Rendering Record component with state:', {
-    isRecording,
-    isPaused,
-    hasPermission,
-    isExpanded,
-    isCollapsed,
-    isMobile
-  });
-
   const baseClasses = isMobile 
     ? "transition-all duration-300 ease-in-out"
     : "transition-all duration-300 ease-in-out";
@@ -330,7 +319,7 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
           {/* Label Text */}
           {!isExpanded && (
             <span className="flex-1 text-gray-500 text-xs font-normal pr-3 truncate">
-              Voice Record
+              Help Desk
             </span>
           )}
 

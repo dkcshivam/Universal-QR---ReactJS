@@ -1,86 +1,29 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
 
 // Sample product data based on your image
 
-const productGrid = [
-  {
-    id: 1,
-    product_code: "100000000103",
-    name: "Designer Silk Evening Dress",
-    quantity: '10',
-    location: "Showroom",
-    department: "PRODUCTION",
-    image: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=150&h=100&fit=crop",
-  },
-  {
-    id: 2,
-    product_code: "100000000002",
-    name: "Luxury Leather Handbag",
-    quantity: '20',
-    location: "Inventory",
-    department: "SAMPLING",
-    image: "https://images.unsplash.com/photo-1579338908476-3a3a1d7193e0?w=150&h=100&fit=crop",
-  },
-  {
-    id: 3,
-    product_code: "100000000003",
-    name: "Swiss Automatic Watch",
-    quantity: '13',
-    location: "Hard Goods",
-    department: "TECH",
-    image: "https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=150&h=100&fit=crop",
-  },
-  {
-    id: 4,
-    product_code: "100000000004",
-    name: "Italian Leather Loafers",
-    quantity: '5',
-    location: "Showroom",
-    department: "PRODUCTION",
-    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=150&h=100&fit=crop",
-  },
-  {
-    id: 5,
-    product_code: "100000000005",
-    name: "Premium Leather Jacket",
-    quantity: '8',
-    location: "Factory",
-    department: "HARD GOODS",
-    image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=150&h=100&fit=crop",
-  },
-  {
-    id: 6,
-    product_code: "100000000006",
-    name: "iPhone 15 Pro Max",
-    quantity: '15',
-    location: "Hard Goods",
-    department: "TECH",
-    image: "https://images.unsplash.com/photo-1695026149383-49769a1f7243?w=150&h=100&fit=crop",
-  },
-  {
-    id: 7,
-    product_code: "100000000007",
-    name: "Couture Evening Gown",
-    quantity: '7',
-    location: "Inventory",
-    department: "SAMPLING",
-    image: "https://images.unsplash.com/photo-1598190910533-69b990b43b44?w=150&h=100&fit=crop",
-  },
-  {
-    id: 8,
-    product_code: "100000000008",
-    name: "Wireless Noise Cancelling Headphones",
-    quantity: '25',
-    location: "Hard Goods",
-    department: "TECH",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=150&h=100&fit=crop",
-  },
-];
-
 function QRdownload() {
+
+  const [products, setProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState(new Set());
+
+  // fetch all products from the backend 
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/qr/products`);
+
+        setProducts(response.data.data);
+      } catch (error) {
+        console.log("Error in fetching all products:", error);
+        toast.error("Failed to fetch all products");
+      }
+    }
+    fetchProducts();
+  }, [])
 
   const handleSelectOne = (productId) => {
     const newSelection = new Set(selectedProducts);
@@ -99,13 +42,20 @@ function QRdownload() {
     }
 
     // Map selected IDs to product codes
+
     const selectedCodes = Array.from(selectedProducts)
-      .map(id => productGrid.find(p => p.id === id)?.product_code)
-      .filter(Boolean); // Remove undefined if any
+      .map(id => products.find(p => p.id === id)?.code)
+      .filter(Boolean);
+
+    console.log("Selected IDs:", Array.from(selectedProducts));
+    console.log("All products:", products);
+    console.log("Selected codes:", selectedCodes);
 
     const payload = {
       product_codes: selectedCodes,
     };
+
+    console.log("Payload sent to backend:", payload)
 
     try {
       const response = await axios.post(
@@ -120,18 +70,31 @@ function QRdownload() {
       const blob = response.data;
       const link = document.createElement("a");
       link.href = window.URL.createObjectURL(blob);
-      link.download = "QR_Codes.zip";
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
-      toast.success("QR codes downloaded successfully!") ; 
+      toast.success("QR codes downloaded successfully!");
 
     } catch (error) {
       console.log("handle download error: ", error);
       toast.error(error.message || "Something went wrong");
     }
   };
+
+  const now = new Date();
+
+  // formatted date and time for QR Zip naming 
+
+  const formattedDate = now.toLocaleDateString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric'
+  }).replace(/ /g, '-'); // e.g., 25-Jul-2025
+  const formattedTime = now.toLocaleTimeString('en-US', {
+    hour: '2-digit', minute: '2-digit'
+  }).replace(/:/g, '-').replace(/ /g, ''); // e.g., 04-02PM
+
+  const fileName = `QR_Codes_${formattedDate}_${formattedTime}.zip`;
 
   return (
     <div className="">
@@ -149,7 +112,7 @@ function QRdownload() {
         <thead>
           <tr>
             <th></th>
-            <th>Image</th>
+            <th>Cover Image</th>
             <th>Product Name</th>
             <th>Quantity</th>
             <th>Location</th>
@@ -157,7 +120,7 @@ function QRdownload() {
           </tr>
         </thead>
         <tbody>
-          {productGrid.map((product) => (
+          {products.map((product) => (
             <tr key={product.id}>
               <td>
                 <input
@@ -168,22 +131,27 @@ function QRdownload() {
                 />
               </td>
               <td>
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="product-table-img"
-                />
+                {
+                  product.cover_image ? (
+                    <img
+                      src={product.cover_image}
+                      alt={product.name}
+                      className="product-table-img"
+                      style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 1 }}
+                    />
+                  ) : (
+                    <span className="text-gray-400 text-xs">
+                      No Image
+                    </span>
+                  )
+                }
               </td>
               <td>{product.name}</td>
               <td>{product.quantity}</td>
-              <td>{product.location}</td>
+              <td>{product.location || <span className="text-gray-400 text-xs">N/A</span>}</td>
               <td>
-                <span
-                  className={`department-tag ${product.department
-                    .toLowerCase()
-                    .replace(" ", "-")}`}
-                >
-                  {product.department}
+                {product.belongs_to_department} || <span className="text-gray-400 text-xs">
+                  N/A
                 </span>
               </td>
             </tr>
