@@ -11,7 +11,7 @@ const ProductGrid = ({ product }) => {
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentProducts = demoProducts.slice(indexOfFirstItem, indexOfLastItem);
+  const currentProducts = product?.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
     <div className="sm:p-3 min-h-screen box-border">
