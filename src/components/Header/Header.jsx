@@ -4,7 +4,15 @@ import Profile from "./Profile";
 import Search from "./Search";
 import Record from "./Record";
 import { useNavigate } from "react-router-dom";
-import { remove } from "jszip";
+import {
+  FaUser,
+  FaCog,
+  FaSignOutAlt,
+  FaBell,
+  FaEdit,
+  FaKey,
+  FaQuestionCircle,
+} from "react-icons/fa";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -14,7 +22,6 @@ const Header = () => {
   const toggleMobileMenu = () => setIsMobileMenuOpen((v) => !v);
 
   const handleExpand = (type) => {
-    // If something is already expanded, clicking the other one should just switch, not collapse.
     setExpanded(type);
   };
 
@@ -30,7 +37,7 @@ const Header = () => {
       if (isMobileMenuOpen) {
         toggleMobileMenu();
       }
-    }, 2000);
+    }, 200);
   };
 
   return (
@@ -75,12 +82,31 @@ const Header = () => {
           </div>
 
           {/* Right: Profile (Desktop) / Hamburger (Mobile) */}
-          <div className="flex-shrink-0 flex items-center">
-            {/* Desktop Profile */}
-            <div className="hidden md:block">
-              <Profile />
+          <div className="flex-shrink-0 flex items-center gap-4">
+            {/* Desktop Profile & Actions */}
+            <div className="hidden md:flex items-center gap-4">
+              {localStorage.getItem("access_token") ? (
+                <>
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <FaUser />
+                    <span>{localStorage.getItem("user")}</span>
+                  </div>
+                  <button
+                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                  onClick={() => navigate("/login")}
+                >
+                  Login
+                </button>
+              )}
             </div>
-            {/* Mobile Hamburger */}
             <div className="md:hidden">
               <button
                 onClick={toggleMobileMenu}
@@ -119,34 +145,45 @@ const Header = () => {
             </div>
 
             {/* Panel Content */}
-            <div className="flex flex-col items-center py-6 px-6 flex-grow">
-              {localStorage.getItem("user") && (
+            <div className="flex flex-col items-center py-6 px-6 flex-grow w-full">
+              {localStorage.getItem("access_token") ? (
                 <>
                   <FaUserCircle className="w-20 h-20 text-gray-300 mb-3" />
-
                   <div className="text-center mb-8">
                     <div className="font-bold text-xl text-gray-800">
                       {localStorage.getItem("user")}
                     </div>
                   </div>
+                  <button
+                    className="w-full mt-auto bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-semibold transition-colors"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </button>
                 </>
-              )}
-
-              {/* You can add more navigation links here if needed */}
-              {localStorage.getItem("access_token") ? (
-                <button
-                  className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-semibold transition-colors"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </button>
               ) : (
-                <button
-                  className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-semibold transition-colors"
-                  onClick={handleLogout}
-                >
-                  LogIn
-                </button>
+                <>
+                  <div className="flex-grow flex flex-col  w-full">
+                    <button
+                      className="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-3 rounded-lg font-semibold transition-colors"
+                      onClick={() => {
+                        navigate("/login");
+                        toggleMobileMenu();
+                      }}
+                    >
+                      Login
+                    </button>
+                    <button
+                      className="w-full mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-semibold transition-colors"
+                      onClick={() => {
+                        navigate("/");
+                        toggleMobileMenu();
+                      }}
+                    >
+                      Home Page
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           </div>

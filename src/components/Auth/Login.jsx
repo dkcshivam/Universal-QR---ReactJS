@@ -92,30 +92,19 @@ const Login = () => {
 
           <button
             type="submit"
-            className="w-full py-3 bg-indigo-400 hover:bg-indigo-500 text-white font-bold rounded-md text-base transition-all transform hover:-translate-y-1 hover:shadow-lg"
+            className="w-full py-3 bg-indigo-400 hover:bg-indigo-500 text-white font-bold rounded-md text-base transition-all transform hover:-translate-y-1 hover:shadow-lg   cursor-pointer"
           >
             Login
           </button>
-        </form>
 
-        {/* Footer */}
-        <div className="text-center mt-4 text-sm flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-0">
-          <a
-            href="#"
-            onClick={() => alert("Forgot Password feature - TBD")}
-            className="text-indigo-500 hover:underline"
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="w-full py-3 bg-indigo-400 hover:bg-indigo-500 text-white font-bold rounded-md text-base transition-all transform hover:-translate-y-1 hover:shadow-lg cursor-pointer"
           >
-            Forgot Password?
-          </a>
-          <span className="text-gray-300 hidden sm:inline mx-2">|</span>
-          <a
-            href="#"
-            onClick={() => alert("Reset Password feature - TBD")}
-            className="text-indigo-500 hover:underline"
-          >
-            Reset Password
-          </a>
-        </div>
+            Home
+          </button>
+        </form>
       </div>
     </div>
   );

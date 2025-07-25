@@ -11,7 +11,11 @@ import {
 
 const Profile = ({ isMobile, onClose }) => {
   const [user, setUser] = useState({
-    name: localStorage.getItem("user"),
+    name: "John Doe",
+    email: "john.doe@example.com",
+    avatar: null,
+    role: "Product Manager",
+    department: "Engineering",
   });
 
   const [showSettings, setShowSettings] = useState(false);
