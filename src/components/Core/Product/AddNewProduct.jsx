@@ -14,6 +14,8 @@ const AddProduct = () => {
   const [remarks, setRemarks] = useState("");
   const [coverImage, setCoverImage] = useState(null);
   const [productImages, setProductImages] = useState([]);
+  const [departments, setDepartments] = useState([]);
+
   const coverFileInputRef = useRef(null);
   const coverCameraInputRef = useRef(null);
   const productFileInputRef = useRef(null);
@@ -52,19 +54,23 @@ const AddProduct = () => {
     updated.splice(index, 1);
     setProductImages(updated);
   };
-  useEffect(() => {
+  async function fetchDepartments() {
     const token = localStorage.getItem("access_token");
-    const res = axios.get(
-      "http://shivam-mac.local:8000/api/v1.0/qr/departments/",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    console.log(res.data);
-  }, []);
+      const res = await axios.get(
+        "http://shivam-mac.local:8000/api/v1.0/qr/departments/",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        }
+      );
+      setDepartments(res.data.data);
+  }
+  useEffect(() => {
+      fetchDepartments();
 
+  }, [])
+  
   async function handlesubmit() {
     if (!productName.trim()) {
       toast.error("Please fill in all required fields");
@@ -206,10 +212,9 @@ const AddProduct = () => {
             onChange={(e) => setDepartment(e.target.value)}
             className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
-            <option value="">Select department...</option>
-            <option value="Production">Production</option>
-            <option value="Quality">Quality</option>
-            <option value="Dispatch">Dispatch</option>
+            {departments.map((dept) => (
+              <option key={dept.key} value={dept.key}>{dept.label}</option>
+            ))}
           </select>
         </div>
 
