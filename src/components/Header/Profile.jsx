@@ -1,20 +1,24 @@
-import React, { useState } from 'react';
-import { FaUser, FaCog, FaSignOutAlt, FaBell, FaEdit, FaKey, FaQuestionCircle } from 'react-icons/fa';
+import React, { useState } from "react";
+import {
+  FaUser,
+  FaCog,
+  FaSignOutAlt,
+  FaBell,
+  FaEdit,
+  FaKey,
+  FaQuestionCircle,
+} from "react-icons/fa";
 
 const Profile = ({ isMobile, onClose }) => {
   const [user, setUser] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    avatar: null,
-    role: 'Product Manager',
-    department: 'Engineering'
+    name: localStorage.getItem("user"),
   });
 
   const [showSettings, setShowSettings] = useState(false);
 
   const handleLogout = () => {
     // Implement logout logic here
-    console.log('Logging out...');
+    console.log("Logging out...");
     if (onClose) onClose();
   };
 
@@ -24,7 +28,7 @@ const Profile = ({ isMobile, onClose }) => {
 
   const handleEditProfile = () => {
     // Implement edit profile logic here
-    console.log('Edit profile...');
+    console.log("Edit profile...");
     if (onClose) onClose();
   };
 
@@ -35,12 +39,20 @@ const Profile = ({ isMobile, onClose }) => {
         <div className="flex flex-col items-center">
           <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-semibold shadow-lg mb-4">
             {user.avatar ? (
-              <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="w-full h-full rounded-full object-cover"
+              />
             ) : (
-              user.name.split(' ').map(n => n[0]).join('').toUpperCase()
+              user.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase()
             )}
           </div>
-          
+
           {/* User Info */}
           <div className="text-center space-y-2">
             <h3 className="text-xl font-bold text-gray-900">{user.name}</h3>
@@ -59,7 +71,9 @@ const Profile = ({ isMobile, onClose }) => {
             className="w-full flex items-center justify-center space-x-3 p-4 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-red-600 group border border-red-200"
           >
             <FaSignOutAlt className="h-5 w-5 group-hover:text-red-700 transition-colors" />
-            <span className="font-semibold group-hover:text-red-700 transition-colors">Logout</span>
+            <span className="font-semibold group-hover:text-red-700 transition-colors">
+              Logout
+            </span>
           </button>
         </div>
       </div>
@@ -68,15 +82,23 @@ const Profile = ({ isMobile, onClose }) => {
 
   return (
     <div className="relative">
-      <button 
+      <button
         onClick={handleSettingsClick}
         className="flex items-center space-x-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
       >
         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-sm">
           {user.avatar ? (
-            <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+            <img
+              src={user.avatar}
+              alt={user.name}
+              className="w-full h-full rounded-full object-cover"
+            />
           ) : (
-            user.name.split(' ').map(n => n[0]).join('').toUpperCase()
+            user.name
+              .split(" ")
+              .map((n) => n[0])
+              .join("")
+              .toUpperCase()
           )}
         </div>
         <div className="hidden lg:block text-left">
@@ -92,9 +114,17 @@ const Profile = ({ isMobile, onClose }) => {
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
                 {user.avatar ? (
-                  <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-full h-full rounded-full object-cover"
+                  />
                 ) : (
-                  user.name.split(' ').map(n => n[0]).join('').toUpperCase()
+                  user.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()
                 )}
               </div>
               <div>

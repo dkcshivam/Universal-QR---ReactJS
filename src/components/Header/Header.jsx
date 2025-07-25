@@ -3,8 +3,11 @@ import { FaBars, FaTimes, FaUserCircle } from "react-icons/fa";
 import Profile from "./Profile";
 import Search from "./Search";
 import Record from "./Record";
+import { useNavigate } from "react-router-dom";
+import { remove } from "jszip";
 
 const Header = () => {
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expanded, setExpanded] = useState(null); // 'record', 'search', or null
 
@@ -17,6 +20,17 @@ const Header = () => {
 
   const handleCollapse = () => {
     setExpanded(null);
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+
+    setTimeout(() => {
+      navigate("/login");
+      if (isMobileMenuOpen) {
+        toggleMobileMenu();
+      }
+    }, 2000);
   };
 
   return (
@@ -106,21 +120,34 @@ const Header = () => {
 
             {/* Panel Content */}
             <div className="flex flex-col items-center py-6 px-6 flex-grow">
-              <FaUserCircle className="w-20 h-20 text-gray-300 mb-3" />
+              {localStorage.getItem("user") && (
+                <>
+                  <FaUserCircle className="w-20 h-20 text-gray-300 mb-3" />
 
-              <div className="text-center mb-8">
-                <div className="font-bold text-xl text-gray-800">Shivam</div>
-                <div className="text-gray-500 text-sm">shivam@example.com</div>
-                <div className="text-gray-400 text-xs mt-2 bg-gray-100 px-2 py-1 rounded-full">
-                  Development
-                </div>
-              </div>
+                  <div className="text-center mb-8">
+                    <div className="font-bold text-xl text-gray-800">
+                      {localStorage.getItem("user")}
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* You can add more navigation links here if needed */}
-
-              <button className="mt-auto w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-semibold transition-colors">
-                Logout
-              </button>
+              {localStorage.getItem("access_token") ? (
+                <button
+                  className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-semibold transition-colors"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
+              ) : (
+                <button
+                  className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-semibold transition-colors"
+                  onClick={handleLogout}
+                >
+                  LogIn
+                </button>
+              )}
             </div>
           </div>
         </div>
