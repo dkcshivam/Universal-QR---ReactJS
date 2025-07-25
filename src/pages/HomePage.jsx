@@ -4,8 +4,8 @@ import ProductGrid from "../components/Core/Product/ProductDisplay";
 const HomePage = () => {
   return (
     <div>
-      <SearchFilter />
-      <ProductGrid />
+       <SearchFilter />
+      <ProductGrid /> 
     </div>
   );
 };

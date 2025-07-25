@@ -13,7 +13,6 @@ import CreateMultipleProduct from "./components/Core/CreateMultipleProduct";
 import QRScanner from "./components/Core/Product/ScanQR";
 
 import AddProduct from "./components/Core/Product/AddNewProduct";
-import ProductDetail from "./components/Core/Product/ProductDetail";
 function App() {
   const navigate = useNavigate();
 
