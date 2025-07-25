@@ -4,7 +4,7 @@ import HomePage from "./pages/HomePage";
 import Layout from "./Layout";
 import NotFound from "./pages/NotFound";
 import Login from "./components/Auth/Login";
-import "./App.css"
+import "./App.css";
 // import AddProductPage from "./components/Core/Product/AddNewProduct";
 import ProductGrid from "./components/Core/Product/ProductDisplay";
 import ProductDetail from "./components/Core/Product/ProductDetail";
@@ -31,7 +31,10 @@ function App() {
         <Route path="/add-product" element={<AddProduct />} />
         <Route path="/product-display" element={<ProductGrid />} />
         <Route path="/download-qr" element={<QRdownload />} />
-        <Route path="/upload-multiple-product" element={<CreateMultipleProduct />} />
+        <Route
+          path="/upload-multiple-product"
+          element={<CreateMultipleProduct />}
+        />
         {/* ProductDetail */}
         <Route path="/product-detail/:code" element={<ProductDetail />} />
         <Route path="*" element={<NotFound />} />
