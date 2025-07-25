@@ -21,6 +21,9 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
   const handleContainerClick = () => {
     if (!isExpanded) {
       onToggle(true);
+    } else {
+      // If already expanded, allow click to collapse
+      onToggle(false);
     }
   };
 
@@ -97,13 +100,11 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
             <div className="pl-3 pr-2">
               <FaSearch className="h-4 w-4 text-gray-400" />
             </div>
-            
             {!isExpanded && (
               <span className="flex-1 text-gray-500 text-xs font-normal pr-3 truncate">
                 Search products
               </span>
             )}
-            
             {isExpanded && (
               <>
                 <input
@@ -113,7 +114,7 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
                   onChange={handleInputChange}
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={e => e.stopPropagation()}
                   placeholder="Search products..."
                   className="flex-1 h-full bg-transparent border-none outline-none text-gray-900 placeholder-gray-400 text-sm px-2"
                 />
@@ -127,7 +128,6 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
               </>
             )}
           </div>
-          
           {/* Search Results Dropdown */}
           {isExpanded && searchQuery && (
             <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto z-50">
