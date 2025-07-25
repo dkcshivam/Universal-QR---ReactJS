@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FaPlus, FaTrash, FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { FaSave } from 'react-icons/fa';
-
+import axios from 'axios';
 function CreateMultipleProduct() {
   const createNewProductRow = () => ({
     id: Date.now() + Math.random(),
@@ -11,7 +11,7 @@ function CreateMultipleProduct() {
     department: '',
     quantity: '',
     coverImage: null, // File object
-    coverImageUrl: '', // Preview URL
+    coverImageUrl: {}, // Preview URL
     productImages: [], // Array of File objects
     productImageUrls: [], // Array of preview URLs
   });
@@ -84,9 +84,9 @@ function CreateMultipleProduct() {
     }
   };
 
-  const handleSaveAll = () => {
+  const handleSaveAll = async () => {
 
-    for (const product of productRows) {
+    for (const product of productRows.slice(0, -1)) {
       if (!product.name.trim()) {
         toast.error("Product name is required.");
         return;
@@ -110,10 +110,33 @@ function CreateMultipleProduct() {
     const filteredRows = productRows.filter(
       row => row.name.trim() !== '' || row.location.trim() !== '' || row.department.trim() !== ''
     )
+    let data = [];
+    for (const product of productRows.slice(0, -1)) {
+      data.push({
+        name: product.name,
+        location: product.location,
+        department: product.department,
+        quantity: product.quantity || 1,
+        cover_image: product.coverImage,
+        product_images: product.productImages
+      });
+    }
+    console.log('Saving the following products: ', data);
 
-    console.log('Saving the following products: ', filteredRows);
+    const token = localStorage.getItem("access_token");
+    const res = await axios.post(
+      "http://shivam-mac.local:8000/api/v1.0/qr/products/bulk-create/",
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    console.log('Saving the following products: ', res);
 
-    toast.success(`${filteredRows.length} products saved successfully!`);
+    toast.success(`${data.length} products saved successfully!`);
     setProductRows([createNewProductRow()]);
   };
 

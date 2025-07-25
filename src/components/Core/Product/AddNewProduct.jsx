@@ -12,6 +12,8 @@ const AddProduct = () => {
   const [remarks, setRemarks] = useState("");
   const [coverImage, setCoverImage] = useState(null);
   const [productImages, setProductImages] = useState([]);
+  const [departments, setDepartments] = useState([]);
+
   const coverFileInputRef = useRef(null);
   const coverCameraInputRef = useRef(null);
   const productFileInputRef = useRef(null);
@@ -50,9 +52,9 @@ const AddProduct = () => {
     updated.splice(index, 1);
     setProductImages(updated);
   };
-  useEffect(() => {
-      const token = localStorage.getItem("access_token");
-      const res = axios.get(
+  async function fetchDepartments() {
+    const token = localStorage.getItem("access_token");
+      const res = await axios.get(
         "http://shivam-mac.local:8000/api/v1.0/qr/departments/",
         {
           headers: {
@@ -60,7 +62,10 @@ const AddProduct = () => {
           }
         }
       );
-      console.log(res.data)
+      setDepartments(res.data.data);
+  }
+  useEffect(() => {
+      fetchDepartments();
 
   }, [])
   
@@ -169,10 +174,9 @@ const AddProduct = () => {
             onChange={(e) => setDepartment(e.target.value)}
             className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
-            <option value="">Select department...</option>
-            <option value="Production">Production</option>
-            <option value="Quality">Quality</option>
-            <option value="Dispatch">Dispatch</option>
+            {departments.map((dept) => (
+              <option key={dept.key} value={dept.key}>{dept.label}</option>
+            ))}
           </select>
         </div>
 
