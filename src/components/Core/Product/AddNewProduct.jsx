@@ -68,6 +68,7 @@ const AddProduct = () => {
       alert("Please fill in all required fields");
       return;
     }
+      const token = localStorage.getItem("access_token");
 
     const productData = {
       name: productName,
@@ -91,7 +92,7 @@ const AddProduct = () => {
         location: location,
       },
       {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}`, },
       }
     );
     console.log(res);
