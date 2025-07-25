@@ -20,7 +20,11 @@
 
  - create multiple products ✅
 
- - bulk qr download testing (product_code)
+ - bulk qr download testing (product_code) ✅
 
- - quantity by default will be 0 
+ - quantity by default will be 0 ✅
+
+ - product list ✅ 
+
+ - mobile responsiveness (hide qr download and bulk create in mobile view) ✅ 
 
