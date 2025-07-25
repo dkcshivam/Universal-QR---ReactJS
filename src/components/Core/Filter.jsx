@@ -10,6 +10,10 @@ const SearchFilter = ({ onSearch, onFilterChange, onAddProduct }) => {
     onFilterChange(tab);
   };
 
+  const onBulkCreate = () => {
+
+  }
+``
   return (
     <div className="items-center justify-between w-full bg-white rounded-lg hidden sm:flex p-2 mb-4">
       {/* Left side - Mine/All tabs */}
