@@ -62,7 +62,7 @@ const SearchFilter = ({ onSearch, onFilterChange, onAddProduct }) => {
           className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
         >
           <FiPlus className="w-4 h-4" />
-          <span className="text-sm font-medium" onClick={()=>navigate("/upload-multiple-product")}>Add Multiple Product</span>
+          <span className="text-sm font-medium cursor-pointer" onClick={()=>navigate("/upload-multiple-product")}>Add Multiple Product</span>
         </button>
            <button
           onClick={onAddProduct}

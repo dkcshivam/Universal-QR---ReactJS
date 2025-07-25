@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 import {
   FaBuilding,
@@ -13,7 +14,9 @@ import {
 } from "react-icons/fa";
 
 function ProductDetail() {
-  const { id } = useParams();
+  const { code } = useParams();
+
+  const [data, setData] = useState("");
 
   const [selectedImage, setSelectedImage] = useState(null);
   const [newRemark, setNewRemark] = useState("");
@@ -25,6 +28,23 @@ function ProductDetail() {
       date: new Date().toLocaleDateString(),
     },
   ]);
+
+  const getProductDetail = async () => {
+    try {
+      const { data } = await axios.get(
+        `http://shivam-mac.local:8000/api/v1.0/qr/products/${code}/`
+      );
+      if ((data.status = 200)) {
+        setData(data?.data);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    getProductDetail();
+  }, [code]);
 
   const openModal = (imageSrc) => {
     setSelectedImage(imageSrc);
@@ -70,7 +90,7 @@ function ProductDetail() {
     <div className="page-container">
       <main className="main-content">
         <div className="product-name-header">
-          <h1 className="product-name">{id}</h1>
+          <h1 className="product-name">{product.name}</h1>
         </div>
 
         <div className="product-layout">

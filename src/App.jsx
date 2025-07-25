@@ -33,7 +33,7 @@ function App() {
         <Route path="/download-qr" element={<QRdownload />} />
         <Route path="/upload-multiple-product" element={<CreateMultipleProduct />} />
         {/* ProductDetail */}
-        <Route path="/product-detail/:id" element={<ProductDetail />} />
+        <Route path="/product-detail/:code" element={<ProductDetail />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

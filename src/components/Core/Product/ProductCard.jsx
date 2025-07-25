@@ -1,15 +1,20 @@
 import React from "react";
 import { FaMapMarkerAlt } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const ProductCard = ({ product, index }) => {
+  const navigate = useNavigate();
   return (
     <div
       key={index}
       className="bg-white rounded-lg shadow border border-gray-200 p-3 sm:p-5 flex flex-col justify-between hover:border-indigo-400"
     >
-      <div className="w-full h-[220px] rounded-none mb-[15px] overflow-hidden relative">
+      <div
+        className="w-full h-[220px] rounded-none mb-[15px] overflow-hidden relative cursor-pointer"
+        onClick={() => navigate(`/product-detail/${product?.code}`)}
+      >
         <img
-          src={product.coverImage}
+          src={product.cover_image}
           alt={product.name}
           className="w-full h-full object-cover"
         />
@@ -26,7 +31,7 @@ const ProductCard = ({ product, index }) => {
 
         <div className="flex flex-wrap gap-1">
           <span className="bg-[#6b7280] text-white text-[11px] font-medium px-[8px] py-[4px] rounded-[8px] uppercase tracking-[0.5px] whitespace-nowrap">
-            {product.department}
+            {product?.belongs_to_department}
           </span>
         </div>
       </div>

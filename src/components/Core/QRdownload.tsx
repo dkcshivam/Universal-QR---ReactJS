@@ -103,9 +103,16 @@ function QRdownload() {
 
     selectedProducts.forEach((id) => {
       const product = productGrid.find((p) => p.id === id);
+      const dummy = `{
+        url: "https//:dkcexport.com",
+        name: "shishpal",
+        department: "shiping",
+        quantity: 300,
+        shipingdate: "20-06-2025",
+      }`;
       if (product) {
         // The data to be encoded in the QR code. Could be a URL, product ID, etc.
-        const qrData = `https://your-app.com/product/${product.id}`;
+        const qrData = dummy;
 
         const promise = QRCode.toDataURL(qrData).then((url) => {
           const base64Data = url.split(",")[1];
