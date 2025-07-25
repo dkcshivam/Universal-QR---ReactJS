@@ -1,81 +1,87 @@
-import React, { useState } from "react";
-import { FiFilter, FiPlus, FiChevronDown } from "react-icons/fi";
+import { FiPlus } from "react-icons/fi";
 import { IoIosCreate } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import { IoMdDownload } from "react-icons/io";
 
-const SearchFilter = ({ onFilterChange, onAddProduct }) => {
-  const [activeTab, setActiveTab] = useState("mine");
+const SearchFilter = ({ onAddProduct, activeTab, setActiveTab }) => {
   const navigate = useNavigate();
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    onFilterChange(tab);
-  };
+  let token = localStorage.getItem("access_token");
 
   return (
-    <div className="flex items-center justify-between w-full bg-white rounded-lg p-2 mb-4">
-      {/* Left side - Mine/All tabs (Visible on all screens) */}
-      <div className="flex items-center gap-1">
-        <button
-          onClick={() => handleTabChange("mine")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            activeTab === "mine"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          Mine
-        </button>
-        <button
-          onClick={() => handleTabChange("all")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            activeTab === "all"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          All
-        </button>
-      </div>
+    <>
+      <div className="flex items-center justify-between w-full bg-white rounded-lg p-2 mb-4">
+        {/* Left side - Mine/All tabs (Visible on all screens) */}
 
-      {/* Right side - Action buttons (Hidden on mobile, visible on sm and up) */}
-      <div className="hidden sm:flex items-center gap-3">
-        {/* Add New Product Button - Single */}
+        {token ? (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setActiveTab("mine")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === "mine"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Mine
+            </button>
+            <button
+              onClick={() => setActiveTab("all")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === "all"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              All
+            </button>
+          </div>
+        ) : (
+          // Empty div to maintain layout when tabs are hidden
+          <div></div>
+        )}
 
-        <button
-          onClick={() => navigate("/add-product")}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
-        >
-          <FiPlus className="w-4 h-4" />
-          <span className="text-sm font-medium">Add New Product</span>
-        </button>
-        <button
-          onClick={onAddProduct}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
-        >
-          <IoIosCreate className="w-4 h-4" />
-          <span
-            className="text-sm font-medium"
-            onClick={() => navigate("/upload-multiple-product")}
+        {/* Right side - Action buttons (Hidden on mobile, visible on sm and up) */}
+        <div className="hidden sm:flex items-center gap-3">
+          {token && (
+            <>
+              <button
+                onClick={() => navigate("/add-product")}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
+              >
+                <FiPlus className="w-4 h-4" />
+                <span className="text-sm font-medium">Add New Product</span>
+              </button>
+              <button
+                onClick={onAddProduct}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
+              >
+                <IoIosCreate className="w-4 h-4" />
+                <span
+                  className="text-sm font-medium"
+                  onClick={() => navigate("/upload-multiple-product")}
+                >
+                  Bulk Create
+                </span>
+              </button>
+            </>
+          )}
+
+          <button
+            onClick={onAddProduct}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
           >
-            Bulk Create
-          </span>
-        </button>
-        <button
-          onClick={onAddProduct}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
-        >
-          <IoMdDownload className="w-4 h-4" />
-          <span
-            className="text-sm font-medium cursor-pointer"
-            onClick={() => navigate("/download-qr")}
-          >
-            Download QR Code
-          </span>
-        </button>
+            <IoMdDownload className="w-4 h-4" />
+            <span
+              className="text-sm font-medium cursor-pointer"
+              onClick={() => navigate("/download-qr")}
+            >
+              Download QR Code
+            </span>
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
