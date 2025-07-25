@@ -9,13 +9,16 @@ import Login from "./components/Auth/Login";
 import "./App.css";
 // import AddProductPage from "./components/Core/Product/AddNewProduct";
 import ProductGrid from "./components/Core/Product/ProductDisplay";
-import ProductDetail from "./components/Core/Product/ProductDetail";
+// import ProductDetail from "./components/Core/Product/ProductDetail";
 import QRdownload from "./components/Core/QRdownload";
 import CreateMultipleProduct from "./components/Core/CreateMultipleProduct";
 import QRScanner from "./components/Core/Product/ScanQR";
 
 import AddProduct from "./components/Core/Product/AddNewProduct";
-import { useState } from "react";
+import { useState } from 'react';
+import ProductDetail from "./components/Core/Product/ProductDetail";
+
+
 function App() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("mine");
