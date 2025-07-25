@@ -17,14 +17,22 @@ const ProductGrid = ({ product }) => {
           <ProductCard key={index} product={product} index={index} />
         ))}
       </div>
-      <Pagination
-        totalItems={product.length}
-        itemsPerPage={itemsPerPage}
-        currentPage={currentPage}
-        onPageChange={setCurrentPage}
-      />
+      {currentProducts?.length > 0 ? (
+        <Pagination
+          totalItems={product.length}
+          itemsPerPage={itemsPerPage}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+        />
+      ) : (
+        <div className="flex items-center justify-center py-4">
+          <span className="text-gray-500">No products found.</span>
+        </div>
+      )}
     </div>
   );
 };
 
 export default ProductGrid;
+
+

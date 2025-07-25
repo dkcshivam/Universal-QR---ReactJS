@@ -4,44 +4,64 @@ import { FiPlay, FiPause, FiVolume2 } from "react-icons/fi";
 const AudioPlayer = ({ audioUrl, duration }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [audioDuration, setAudioDuration] = useState(
-    parseDuration(duration) || 0
-  );
+  const [audioDuration, setAudioDuration] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const audioRef = useRef(null);
 
-  // Helper function to parse duration string (e.g., "0:2" or "1:30") to seconds
-  function parseDuration(durationStr) {
-    if (!durationStr || typeof durationStr === "number") {
-      return durationStr || 0;
+  // Formats time in seconds or "MM:SS" string to "MM:SS"
+  const formatTime = (input) => {
+    // if (input == null || isNaN(input) || !isFinite(input)) return "00:00";
+
+    let totalSeconds = 0;
+
+    if (typeof input === "string" && input.includes(":")) {
+      const min = input.split(":");
+      totalSeconds = (min[0] || 0) * 60 + (min[1] || 0);
+    } else {
+      totalSeconds = Number(input) || 0;
     }
 
-    const parts = durationStr.toString().split(":");
-    if (parts.length === 2) {
-      const minutes = parseInt(parts[0], 10) || 0;
-      const seconds = parseInt(parts[1], 10) || 0;
-      return minutes * 60 + seconds;
-    }
+    if (isNaN(totalSeconds) || !isFinite(totalSeconds)) return "00:00";
 
-    return 0;
-  }
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+  };
 
+  // Parse initial duration from props
   useEffect(() => {
-    // Update duration when prop changes
-    setAudioDuration(parseDuration(duration) || 0);
+    if (duration) {
+    console.log(duration)
+
+      const formatted = formatTime(duration);
+      console.log(formatted)
+      const min = formatted.split(":");
+      const total = (min[0] || 0) * 60 + (min[1] || 0);
+      console.log(total)
+      setAudioDuration(total);
+    }
   }, [duration]);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const updateTime = () => setCurrentTime(audio.currentTime);
-    const updateDuration = () => {
-      setAudioDuration(audio.duration);
-      setIsLoading(false);
-      console.log("Audio loaded, duration:", audio.duration);
+    const updateTime = () => {
+      if (!isNaN(audio.currentTime) && isFinite(audio.currentTime)) {
+        setCurrentTime(audio.currentTime);
+      }
     };
+
+    const updateDuration = () => {
+      if (!isNaN(audio.duration) && isFinite(audio.duration)) {
+        setAudioDuration(audio.duration);
+      }
+      setIsLoading(false);
+    };
+
     const handleEnded = () => setIsPlaying(false);
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
@@ -53,11 +73,9 @@ const AudioPlayer = ({ audioUrl, duration }) => {
     const handleLoadStart = () => {
       setIsLoading(true);
       setError(null);
-      console.log("Audio loading started");
     };
     const handleCanPlay = () => {
       setIsLoading(false);
-      console.log("Audio can play");
     };
 
     audio.addEventListener("timeupdate", updateTime);
@@ -89,7 +107,6 @@ const AudioPlayer = ({ audioUrl, duration }) => {
       if (isPlaying) {
         audio.pause();
       } else {
-        console.log("Attempting to play audio:", audioUrl);
         await audio.play();
       }
     } catch (err) {
@@ -107,15 +124,10 @@ const AudioPlayer = ({ audioUrl, duration }) => {
     const clickX = e.clientX - rect.left;
     const newTime = (clickX / rect.width) * audioDuration;
 
-    audio.currentTime = newTime;
-    setCurrentTime(newTime);
-  };
-
-  const formatTime = (seconds) => {
-    if (isNaN(seconds)) return "0:00";
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
+    if (!isNaN(newTime) && isFinite(newTime)) {
+      audio.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
   };
 
   const progressPercentage =
