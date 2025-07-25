@@ -10,7 +10,7 @@ const Layout = () => {
       <Header />
 
       {/* main content */}
-      <main className="flex-grow w-full py-2 px-4 sm:py-4 box-border sm:px-16 mb-20 md:mb-0">
+      <main className="flex-grow w-full py-2 px-4 sm:py-4 box-border sm:px-16">
         <Outlet />
       </main>
 

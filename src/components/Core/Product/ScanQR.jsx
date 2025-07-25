@@ -352,18 +352,22 @@ const QRScanner = ({ onResult }) => {
 
   const handleQRResult = (result) => {
     console.log("QR Code detected:", result);
+    // Close the full screen scanner first
+    setShowFullScreen(false);
+
     if (onResult) {
       onResult(result);
-    } else {
-      // Default behavior - show alert and go back
-      alert(`QR Code detected: ${result}`);
-      navigate(-1);
     }
+    // else {
+    //   // Default behavior - show alert and go back
+    //   alert(`QR Code detected: ${result}`);
+    //   navigate(-1);
+    // }
   };
 
   const handleCloseFullScreen = () => {
     setShowFullScreen(false);
-    navigate(-1); // Go back to previous page
+    // Don't navigate automatically - let parent handle navigation
   };
 
   // If mobile, show full screen scanner

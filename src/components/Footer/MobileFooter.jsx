@@ -10,7 +10,7 @@ const MobileFooter = () => {
   const isOnScanPage = location.pathname === "/scan";
 
   const handleAddProduct = () => {
-    navigate("/add-new-product");
+    navigate("/add-product");
   };
 
   const handleScanQR = () => {

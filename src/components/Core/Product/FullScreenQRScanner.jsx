@@ -164,8 +164,7 @@ const FullScreenQRScanner = ({ onResult, onClose }) => {
             if (result) {
               console.log("QR Result found:", result.getText());
               onResult(result.getText());
-              // Auto-close after successful scan
-              handleClose();
+              // Don't auto-close, let parent handle navigation
             }
 
             if (err && err.name !== "NotFoundException") {
