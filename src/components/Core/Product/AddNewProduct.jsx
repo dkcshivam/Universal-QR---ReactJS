@@ -23,6 +23,8 @@ const AddProduct = () => {
 
   const navigate = useNavigate();
 
+  const BASE_URL = import.meta.env.VITE_API_URL;
+
   const handleCoverChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -56,21 +58,17 @@ const AddProduct = () => {
   };
   async function fetchDepartments() {
     const token = localStorage.getItem("access_token");
-      const res = await axios.get(
-        "http://shivam-mac.local:8000/api/v1.0/qr/departments/",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          }
-        }
-      );
-      setDepartments(res.data.data);
+    const res = await axios.get(`${BASE_URL}/qr/departments/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    setDepartments(res.data.data);
   }
   useEffect(() => {
-      fetchDepartments();
+    fetchDepartments();
+  }, []);
 
-  }, [])
-  
   async function handlesubmit() {
     if (!productName.trim()) {
       toast.error("Please fill in all required fields");
@@ -107,7 +105,7 @@ const AddProduct = () => {
       });
 
       const res = await axios.post(
-        "http://shivam-mac.local:8000/api/v1.0/qr/products/create/",
+        `${BASE_URL}/qr/products/create/`,
         productData,
         {
           headers: {
@@ -213,7 +211,9 @@ const AddProduct = () => {
             className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             {departments.map((dept) => (
-              <option key={dept.key} value={dept.key}>{dept.label}</option>
+              <option key={dept.key} value={dept.key}>
+                {dept.label}
+              </option>
             ))}
           </select>
         </div>

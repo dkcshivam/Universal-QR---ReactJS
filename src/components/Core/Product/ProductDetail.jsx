@@ -14,7 +14,7 @@ import VoiceRecorder from "../Remarks/VoiceRecorder";
 import AudioPlayer from "../Remarks/AudioPlayer";
 import { toast } from "react-toastify";
 
-const API_BASE_URL = "http://shivam-mac.local:8000/api/v1.0/qr";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 function ProductDetail() {
   const { code } = useParams();
@@ -33,7 +33,7 @@ function ProductDetail() {
 
   const getProductDetail = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/products/${code}/`);
+      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`);
       if (res.status === 200) {
         const productData = res?.data?.data;
         setData(productData);
@@ -47,7 +47,7 @@ function ProductDetail() {
   // Get remarks for the product
   const getRemarks = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/remarks/${code}/`);
+      const res = await axios.get(`${API_BASE_URL}/qr/remarks/${code}/`);
       if (res.status === 200) {
         const remarksData = res?.data?.data || [];
         console.log("Remarks data:", remarksData);
@@ -78,7 +78,7 @@ function ProductDetail() {
       };
 
       const res = await axios.post(
-        `${API_BASE_URL}/remarks/${code}/`,
+        `${API_BASE_URL}/qr/remarks/${code}/`,
         payload,
         {
           headers: {
@@ -132,7 +132,7 @@ function ProductDetail() {
       formData.append("remark_audio", audioFile);
 
       const res = await axios.post(
-        `${API_BASE_URL}/remarks/${code}/`,
+        `${API_BASE_URL}/qr/remarks/${code}/`,
         formData,
         {
           headers: {
