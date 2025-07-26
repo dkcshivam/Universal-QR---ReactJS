@@ -14,7 +14,7 @@ import VoiceRecorder from "../Remarks/VoiceRecorder";
 import AudioPlayer from "../Remarks/AudioPlayer";
 import { toast } from "react-toastify";
 
-const API_BASE_URL = "http://shivam-mac.local:8000/api/v1.0/qr";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 function ProductDetail() {
 
@@ -108,7 +108,7 @@ function ProductDetail() {
 
   const getProductDetail = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/products/${code}/`);
+      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`);
       if (res.status === 200) {
         const productData = res?.data?.data;
         setData(productData);
@@ -122,7 +122,7 @@ function ProductDetail() {
   // Get remarks for the product
   const getRemarks = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/remarks/${code}/`);
+      const res = await axios.get(`${API_BASE_URL}/qr/remarks/${code}/`);
       if (res.status === 200) {
         const remarksData = res?.data?.data || [];
         console.log("Remarks data:", remarksData);
@@ -153,7 +153,7 @@ function ProductDetail() {
       };
 
       const res = await axios.post(
-        `${API_BASE_URL}/remarks/${code}/`,
+        `${API_BASE_URL}/qr/remarks/${code}/`,
         payload,
         {
           headers: {
@@ -207,7 +207,7 @@ function ProductDetail() {
       formData.append("remark_audio", audioFile);
 
       const res = await axios.post(
-        `${API_BASE_URL}/remarks/${code}/`,
+        `${API_BASE_URL}/qr/remarks/${code}/`,
         formData,
         {
           headers: {
@@ -239,9 +239,13 @@ function ProductDetail() {
     }
   }, [code]);
 
-  const openModal = (imageSrc) => {
-    setSelectedImage(imageSrc);
-  };
+  // const openModal = (imageSrc) => {
+  //   setSelectedImage(imageSrc);
+  // };
+
+  // const closeModal = () => {
+  //   setSelectedImage(null);
+  // };
 
   const handleAddTextRemark = async () => {
     if (newRemark.trim()) {
@@ -285,6 +289,66 @@ function ProductDetail() {
     setRemarkError(null);
   };
 
+  const handleDownloadQR = async () => {
+    try {
+      if (!data?.qr) {
+        alert("QR code not available for this product");
+        return;
+      }
+
+      // Show loading state (optional)
+      console.log("Downloading QR code...");
+
+      // Fetch the image as a blob
+      const response = await fetch(data.qr, {
+        method: "GET",
+        headers: {
+          Accept: "image/*",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Convert response to blob
+      const blob = await response.blob();
+
+      // Create object URL from blob
+      const url = window.URL.createObjectURL(blob);
+
+      // Create temporary anchor element for download
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${(data.name || data.code).replace(
+        /[^a-zA-Z0-9\s]/g,
+        "_"
+      )}_QR.png`;
+
+      // Append to body, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clean up object URL to free memory
+      window.URL.revokeObjectURL(url);
+
+      console.log("QR code downloaded successfully for:", data.name);
+    } catch (error) {
+      console.error("Error downloading QR code:", error);
+
+      // Fallback: try opening in new tab if fetch fails
+      try {
+        window.open(data.qr, "_blank");
+        console.log("Opened QR code in new tab as fallback");
+      } catch (fallbackError) {
+        alert(
+          "Failed to download QR code. Please try again or check your internet connection."
+        );
+      }
+    }
+  };
+
   // Format date from API response
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -316,7 +380,11 @@ function ProductDetail() {
 
               {/* Action Buttons */}
               <div className="flex flex-row items-stretch sm:items-center gap-2 lg:gap-4">
-                <button className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 md:flex-none lg:text-base hover:bg-[#7594c7]">
+                <button
+                  className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 md:flex-none lg:text-base"
+                  onClick={handleDownloadQR}
+                  disabled={!data?.qr}
+                >
                   <FaQrcode className="text-white" />
                   <span className="hidden sm:inline">Download QR</span>
                   <span className="sm:hidden">QR Code</span>
@@ -636,7 +704,7 @@ function ProductDetail() {
         </div>
 
         {/* Product Images Section */}
-        <div className="bg-white rounded-md shadow-md">
+        <div>
           <div className="w-full p-4 lg:p-6">
             <div className="text-base lg:text-lg font-semibold mb-4 flex items-center gap-2">
               <span>Product Images</span>
@@ -644,14 +712,14 @@ function ProductDetail() {
 
             {data?.images?.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 lg:gap-4">
-                {data?.images.map((src, index) => (
+                {data?.images.map((img, index) => (
                   <div
                     key={index}
                     className="aspect-square rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
-                    onClick={() => openModal(src)}
+                    // onClick={() => openModal(img)}
                   >
                     <img
-                      src={src?.image}
+                      src={img.image}
                       alt={`Product Image ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
@@ -668,7 +736,7 @@ function ProductDetail() {
       </main>
 
       {/* Image Modal */}
-      {selectedImage && (
+      {/* {selectedImage && (
         <div
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
           onClick={closeModal}
@@ -681,14 +749,14 @@ function ProductDetail() {
               <FaTimes />
             </button>
             <img
-              src={selectedImage}
+              src={selectedImage.image}
               alt="Enlarged product"
-              className="max-w-full max-h-full object-contain rounded-lg"
+              className="max-w-[50%] max-h-[50%] object-contain rounded-lg"
               onClick={(e) => e.stopPropagation()}
             />
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }
