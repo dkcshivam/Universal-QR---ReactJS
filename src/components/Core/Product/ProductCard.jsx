@@ -13,11 +13,17 @@ const ProductCard = ({ product, index }) => {
         className="w-full h-[220px] rounded-none mb-[15px] overflow-hidden relative cursor-pointer"
         onClick={() => navigate(`/product-detail/${product?.code}`)}
       >
-        <img
-          src={product?.cover_image}
-          alt={product?.name}
-          className="w-full h-full object-cover"
-        />
+        {product?.cover_image ? (
+          <img
+            src={product?.cover_image}
+            alt={product?.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="flex w-full h-full justify-center items-center font-bold text-[20px] text-gray-500 bg-gray-100">
+            Image Not Found
+          </div>
+        )}
       </div>
 
       <h3 className="text-[16px] font-bold text-[#333] mb-[15px] leading-[1.3]">
