@@ -46,7 +46,7 @@ function ProductDetail() {
   const [departments, setDepartments] = useState([]);
 
   useEffect(() => {
-    axios.get(`${API_BASE_URL}/departments/`, {
+    axios.get(`${import.meta.env.VITE_API_URL}/departments/`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
