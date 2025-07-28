@@ -9,7 +9,7 @@ import {
   FaCommentAlt,
   FaKeyboard,
   FaMicrophone,
-  FaTimes,
+  FaTimes
 } from "react-icons/fa";
 import { Edit } from "lucide-react";
 import VoiceRecorder from "../Remarks/VoiceRecorder";
@@ -36,7 +36,7 @@ function ProductDetail() {
   const [isSubmittingRemark, setIsSubmittingRemark] = useState(false);
   const [remarkError, setRemarkError] = useState(null);
 
-  // setting a loading state before calling the API, and keeping the modal open until the update is done 
+  // setting a loading state before calling the API, and keeping the modal open until the update is done
 
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -49,8 +49,8 @@ function ProductDetail() {
     department: "",
     quantity: "",
     location: "",
-    cover_image: null
-  })
+    cover_image: null,
+  });
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -62,19 +62,22 @@ function ProductDetail() {
   const closeModal = () => setEnlargedImage(null);
 
   const handleImageUpload = (files) => {
-    setUploadedImages((prev) => [...prev, ...Array.from(files)])
-  }
+    setUploadedImages((prev) => [...prev, ...Array.from(files)]);
+  };
 
   useEffect(() => {
-    axios.get(`${import.meta.env.VITE_API_URL}/qr/departments/`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }).then(res => {
-      setDepartments(res.data.data || []);
-    }).catch(err => {
-      setDepartments([]);
-    });
+    axios
+      .get(`${import.meta.env.VITE_API_URL}/qr/departments/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        setDepartments(res.data.data || []);
+      })
+      .catch((err) => {
+        setDepartments([]);
+      });
   }, [token]);
 
   const handleEditClick = () => {
@@ -87,25 +90,25 @@ function ProductDetail() {
       department: data?.belongs_to_department || "",
       quantity: data?.quantity || "",
       location: data?.location || "",
-      cover_image: data?.cover_image || null
+      cover_image: data?.cover_image || null,
     });
-    toast.success("You are in edit mode.")
+    toast.success("You are in edit mode.");
     setIsEditModalOpen(true);
   };
 
   const handleFieldChange = (e) => {
     setEditFields({
       ...editFields,
-      [e.target.name]: e.target.value
-    })
-  }
+      [e.target.name]: e.target.value,
+    });
+  };
   const handleSaveEdit = async () => {
-    setIsUpdating(true); // show loader immediately 
+    setIsUpdating(true); // show loader immediately
     await handleUpdateProduct();
     setIsUpdating(false); // hide loader after update
-    setIsEditModalOpen(false); // now close modal 
+    setIsEditModalOpen(false); // now close modal
     await getProductDetail();
-  }
+  };
   const handleUpdateProduct = async () => {
     try {
       const formData = new FormData();
@@ -114,22 +117,29 @@ function ProductDetail() {
       formData.append("quantity", editFields.quantity);
       formData.append("location", editFields.location);
 
-      // image as file 
+      // image as file
 
-      if (editFields.cover_image && typeof editFields.cover_image !== "string") {
+      if (
+        editFields.cover_image &&
+        typeof editFields.cover_image !== "string"
+      ) {
         formData.append("cover_image", editFields.cover_image);
       }
 
       console.log("Saving: ", editFields);
 
-      const response = await axios.put(`${API_BASE_URL}/qr/products/${code}/edit/`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.put(
+        `${API_BASE_URL}/qr/products/${code}/edit/`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      console.log("update response: ", response)
+      console.log("update response: ", response);
 
       await getProductDetail();
       toast.success("Product updated successfully!");
@@ -143,8 +153,8 @@ function ProductDetail() {
     try {
       const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`, {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (res.status === 200) {
         const productData = res?.data?.data;
@@ -156,40 +166,46 @@ function ProductDetail() {
     }
   };
   const handleSave = async (remarkId) => {
-  // Call API here to save the updated remark
-  // Example:
-  try {
-    await axios.put(`${API_BASE_URL}/qr/products/${code}/remarks/${remarkId}/edit/`, {
-      remark: editedText,
-    });
+    // Call API here to save the updated remark
+    // Example:
+    try {
+      await axios.put(
+        `${API_BASE_URL}/qr/products/${code}/remarks/${remarkId}/edit/`,
+        {
+          remark: editedText,
+        }
+      );
 
-    // After successful update, update local state or refetch remarks
-    const updatedRemarks = remarks.map((r) =>
-      r.id === remarkId ? { ...r, remark: editedText } : r
-    );
-    setRemarks(updatedRemarks); // assuming remarks is in state
-    setEditingId(null);
-  } catch (error) {
-    console.error("Error updating remark", error);
-    // Optionally show toast/error
-  }
-};
-const handleDeleteRemark = async (remarkId) => {
-  try {
-    await axios.delete(`${API_BASE_URL}/qr/products/${code}/remarks/${remarkId}/delete/`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      // After successful update, update local state or refetch remarks
+      const updatedRemarks = remarks.map((r) =>
+        r.id === remarkId ? { ...r, remark: editedText } : r
+      );
+      setRemarks(updatedRemarks); // assuming remarks is in state
+      setEditingId(null);
+    } catch (error) {
+      console.error("Error updating remark", error);
+      // Optionally show toast/error
+    }
+  };
+  const handleDeleteRemark = async (remarkId) => {
+    try {
+      await axios.delete(
+        `${API_BASE_URL}/qr/products/${code}/remarks/${remarkId}/delete/`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    // Remove the deleted remark from local state
-   getRemarks()
-    toast.success("Remark deleted successfully!");
-  } catch (error) {
-    console.error("Error deleting remark:", error);
-    toast.error("Failed to delete remark. Please try again.");
-  }
-}
+      // Remove the deleted remark from local state
+      getRemarks();
+      toast.success("Remark deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting remark:", error);
+      toast.error("Failed to delete remark. Please try again.");
+    }
+  };
   // Get remarks for the product
   const getRemarks = async () => {
     try {
@@ -233,7 +249,7 @@ const handleDeleteRemark = async (remarkId) => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -455,7 +471,6 @@ const handleDeleteRemark = async (remarkId) => {
 
               {/* Action Buttons */}
               <div className="flex flex-row items-stretch sm:items-center gap-2 lg:gap-4">
-
                 {/* Download QR Button */}
 
                 <button
@@ -567,11 +582,11 @@ const handleDeleteRemark = async (remarkId) => {
                   DEPARTMENT
                 </div>
                 <span className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100">
-                  {
-                    !data?.belongs_to_department ? "N/A" : (
-                      departments.find(dep => dep.key === data.belongs_to_department)?.label || data.belongs_to_department
-                    )
-                  }
+                  {!data?.belongs_to_department
+                    ? "N/A"
+                    : departments.find(
+                        (dep) => dep.key === data.belongs_to_department
+                      )?.label || data.belongs_to_department}
                 </span>
               </div>
 
@@ -581,14 +596,17 @@ const handleDeleteRemark = async (remarkId) => {
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
                   QUANTITY
                 </div>
-                <span
-                  className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100"
-                >
-                  {
-                    !data?.quantity && data?.quantity !== 0 ? "N/A" : `
-                      ${data.quantity} ${Number(data.quantity) === 1 || Number(data.quantity) === 0 ? "item" : "items"}
-                    `
-                  }
+                <span className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100">
+                  {!data?.quantity && data?.quantity !== 0
+                    ? "N/A"
+                    : `
+                      ${data.quantity} ${
+                        Number(data.quantity) === 1 ||
+                        Number(data.quantity) === 0
+                          ? "item"
+                          : "items"
+                      }
+                    `}
                 </span>
               </div>
 
@@ -598,12 +616,8 @@ const handleDeleteRemark = async (remarkId) => {
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
                   LOCATION
                 </div>
-                <span
-                  className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100"
-                >
-                  {
-                    !data?.location ? "N/A" : data.location
-                  }
+                <span className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100">
+                  {!data?.location ? "N/A" : data.location}
                 </span>
               </div>
             </div>
@@ -763,27 +777,26 @@ const handleDeleteRemark = async (remarkId) => {
 
                               {/* Show Edit button if user has permission */}
                               {remark.isEditable && !isEditing && (
-
                                 <>
-                                <button
-                                  onClick={() => {
-                                    setEditingId(remark.id);
-                                    setEditedText(remark.remark);
-                                  }}
-                                  className="text-gray-500 hover:text-blue-600 text-sm flex items-center gap-1 mt-1"
-                                  title="Edit Remark"
-                                >
-                                  <FaPencilAlt className="text-xs" />
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    handleDeleteRemark(remark.id);
-                                  }}
-                                  className="text-gray-500 hover:text-blue-600 text-sm flex items-center gap-1 mt-1"
-                                  title="delete Remark"
-                                >
-                                  <FaTrash className="text-xs" />
-                                </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingId(remark.id);
+                                      setEditedText(remark.remark);
+                                    }}
+                                    className="text-gray-500 hover:text-blue-600 text-sm flex items-center gap-1 mt-1"
+                                    title="Edit Remark"
+                                  >
+                                    <FaPencilAlt className="text-xs" />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      handleDeleteRemark(remark.id);
+                                    }}
+                                    className="text-gray-500 hover:text-blue-600 text-sm flex items-center gap-1 mt-1"
+                                    title="delete Remark"
+                                  >
+                                    <FaTrash className="text-xs" />
+                                  </button>
                                 </>
                               )}
                             </>
@@ -834,7 +847,7 @@ const handleDeleteRemark = async (remarkId) => {
                   <div
                     key={index}
                     className="aspect-square overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
-                  // onClick={() => openModal(img)}
+                    // onClick={() => openModal(img)}
                   >
                     <img
                       src={img.image}
@@ -846,8 +859,7 @@ const handleDeleteRemark = async (remarkId) => {
                 ))}
               </div>
             ) : (
-              <div className="">
-              </div>
+              <div className=""></div>
             )}
 
             {/* Image Upload Box - always below Product Images */}
@@ -858,7 +870,6 @@ const handleDeleteRemark = async (remarkId) => {
                 images={uploadedImages}
               />
             </div>
-
           </div>
         </div>
       </main>
@@ -881,7 +892,6 @@ const handleDeleteRemark = async (remarkId) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="absolute inset-0" onClick={closeModal}></div>
           <div className="relative max-w-3xl w-full flex justify-center items-center p-4">
-
             {/* Move the button up top-right corner, outside the image */}
 
             <button
@@ -900,9 +910,6 @@ const handleDeleteRemark = async (remarkId) => {
           </div>
         </div>
       )}
-
-
-
     </div>
   );
 }

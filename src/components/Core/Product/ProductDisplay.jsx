@@ -48,7 +48,7 @@ const [products, setProducts] = useState([]);
     <div className="min-h-screen box-border">
       {/* Render product cards for current page */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-5">
-        {currentProducts?.map((product, index) => (
+        {products?.map((product, index) => (
           <ProductCard key={index} product={product} index={index} activeTab={activeTab} />
         ))}
       </div>
