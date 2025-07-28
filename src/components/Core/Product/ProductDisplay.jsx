@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Pagination from "../../Pagination";
 import ProductCard from "./ProductCard";
+import axios from "axios";
 
 const ProductGrid = ({ product }) => {
   const [currentPage, setCurrentPage] = useState(1);

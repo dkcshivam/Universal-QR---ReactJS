@@ -3,6 +3,7 @@ import { FaBars, FaTimes, FaUserCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Search from "./Search";
 import Record from "./Record";
+import {toast} from "react-toastify";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -21,6 +22,9 @@ const Header = () => {
 
   const handleLogout = () => {
     localStorage.clear();
+
+    toast.success("You have logged out.")
+
     setTimeout(() => {
       navigate("/login");
       if (isMobileMenuOpen) {
@@ -79,7 +83,7 @@ const Header = () => {
                     <span>{localStorage.getItem("user")}</span>
                   </div>
                   <button
-                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer"
                     onClick={handleLogout}
                   >
                     Logout

@@ -557,3 +557,15 @@ body {
     font-size: 24px;
   }
 }
+
+
+/* Saving ... -> edit product modal */
+
+@keyframes upDown{
+  0%, 100% {transform: translateY(0);}
+  50% {transform: translateY(-8px);}
+}
+.saving-animate{
+  display: inline-block;
+  animation: upDown 1s infinite; 
+}

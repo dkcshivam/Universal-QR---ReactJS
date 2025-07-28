@@ -1,7 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { FaPlus } from "react-icons/fa";
 import {
   FaQrcode,
   FaCommentAlt,
@@ -32,6 +31,10 @@ function ProductDetail() {
   const [remarks, setRemarks] = useState([]);
   const [isSubmittingRemark, setIsSubmittingRemark] = useState(false);
   const [remarkError, setRemarkError] = useState(null);
+
+  // setting a loading state before calling the API, and keeping the modal open until the update is done 
+
+  const [isUpdating, setIsUpdating] = useState(false) ; 
 
   // edit mode 
 
@@ -81,8 +84,10 @@ function ProductDetail() {
   };
 
   const handleSaveEdit = async () => {
+    setIsUpdating(true) ; // show loader immediately 
     await handleUpdateProduct();
-    setIsEditModalOpen(false);
+    setIsUpdating(false) ; // hide loader after update
+    setIsEditModalOpen(false); // now close modal 
     await getProductDetail();
   }
 
@@ -431,7 +436,9 @@ function ProductDetail() {
                 </div>
                 <span className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100">
                   {
-                    !data?.belongs_to_department ? "N/A" : data.belongs_to_department
+                    !data?.belongs_to_department ? "N/A" : (
+                      departments.find(dep => dep.key === data.belongs_to_department)?.label || data.belongs_to_department
+                    )
                   }
                 </span>
               </div>
@@ -446,7 +453,9 @@ function ProductDetail() {
                   className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100"
                 >
                   {
-                    !data?.quantity ? "N/A" : `${data.quantity} ${Number(data.quantity) === 1 ? "item" : "items"}`
+                    !data?.quantity && data?.quantity !== 0 ? "N/A" : `
+                      ${data.quantity} ${Number(data.quantity) === 1 || Number(data.quantity) === 0 ? "item" : "items"}
+                    ` 
                   }
                 </span>
               </div>
@@ -668,7 +677,7 @@ function ProductDetail() {
         setEditFields={setEditFields}
         departments={departments}
         onSave={handleSaveEdit}
-        loading={false}
+        loading={isUpdating}
       />
 
       {/* Enlarged view for cover and product image */}
@@ -677,10 +686,14 @@ function ProductDetail() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="absolute inset-0" onClick={closeModal}></div>
           <div className="relative max-w-3xl w-full flex justify-center items-center p-4">
+
+            {/* Move the button up top-right corner, outside the image */}
+
             <button
-              className="absolute top-4 cursor-pointer right-4 text-white bg-black/60 rounded-full p-2 hover:bg-black/80 transition-transform duration-200 hover:scale-110 z-10"
+              className="absolute -top-8 cursor-pointer right-4 text-white bg-black/60 rounded-full p-2 hover:bg-black/80 transition-transform duration-200 hover:scale-110 z-10"
               onClick={closeModal}
               aria-label="Close"
+              style={{boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2"}}
             >
               <FaTimes className="text-2xl" />
             </button>
