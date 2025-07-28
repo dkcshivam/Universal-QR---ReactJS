@@ -6,13 +6,15 @@ import axios from "axios";
 const HomePage = ({ activeTab, setActiveTab }) => {
   const [product, setProduct] = useState([]);
 
+  const BASE_URL = import.meta.env.VITE_API_URL;
+
   const productList = async () => {
     let token = localStorage.getItem("access_token");
     try {
       const url =
         activeTab === "mine"
-          ? "http://shivam-mac.local:8000/api/v1.0/qr/products/?q=mine"
-          : "http://shivam-mac.local:8000/api/v1.0/qr/products/";
+          ? `${BASE_URL}/qr/products/?q=mine`
+          : `${BASE_URL}/qr/products/`;
       const { data } = await axios.get(
         url,
         token && {

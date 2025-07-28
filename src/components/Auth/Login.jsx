@@ -7,6 +7,8 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
+  const BASE_URL = import.meta.env.VITE_API_URL;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
@@ -15,13 +17,10 @@ const Login = () => {
     }
 
     try {
-      const res = await axios.post(
-        "http://shivam-mac.local:8000/api/v1.0/login/",
-        {
-          username: email,
-          password,
-        }
-      );
+      const res = await axios.post(`${BASE_URL}/login/`, {
+        username: email,
+        password,
+      });
 
       if (res.data.status === 200) {
         const { tokens, user } = res.data.data;

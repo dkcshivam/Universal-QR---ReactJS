@@ -28,6 +28,10 @@
 
  - mobile responsiveness (hide qr download and bulk create in mobile view) ✅ 
 
-- header section redesign for larger screen 
+- header section redesign for larger screen ✅
 
-- search backend 
+- search implement ✅  
+
+- update ✅ (name, quantity, belong to department, cover image and location )
+
+- after search result, it should be redirecting to that particular page 

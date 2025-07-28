@@ -20,6 +20,7 @@ import ProductDetail from "./components/Core/Product/ProductDetail";
 
 
 function App() {
+
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("mine");
   const handleQRResult = (result) => {

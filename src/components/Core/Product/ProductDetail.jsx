@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
-
+import { FaPlus } from "react-icons/fa";
 import {
   FaQrcode,
   FaCommentAlt,
@@ -13,10 +13,14 @@ import { Edit } from "lucide-react";
 import VoiceRecorder from "../Remarks/VoiceRecorder";
 import AudioPlayer from "../Remarks/AudioPlayer";
 import { toast } from "react-toastify";
+import EditProductModal from "./EditProductModal";
 
-const API_BASE_URL = "http://shivam-mac.local:8000/api/v1.0/qr";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 function ProductDetail() {
+
+  const token = localStorage.getItem("access_token");
+
   const { code } = useParams();
 
   const [data, setData] = useState("");
@@ -29,11 +33,95 @@ function ProductDetail() {
   const [isSubmittingRemark, setIsSubmittingRemark] = useState(false);
   const [remarkError, setRemarkError] = useState(null);
 
-  const token = localStorage.getItem("access_token");
+  // edit mode 
+
+  const [editFields, setEditFields] = useState({
+    name: "",
+    department: "",
+    quantity: "",
+    location: "",
+    cover_image: null
+  })
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const [departments, setDepartments] = useState([]);
+
+  const [enlargedImage, setEnlargedImage] = useState(null);
+
+  const openModal = (imgSrc) => setEnlargedImage(imgSrc);
+  const closeModal = () => setEnlargedImage(null);
+
+  useEffect(() => {
+    axios.get(`${import.meta.env.VITE_API_URL}/qr/departments/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).then(res => {
+      setDepartments(res.data.data || []);
+    }).catch(err => {
+      setDepartments([]);
+    });
+  }, [token]);
+
+  const handleEditClick = () => {
+    if (!token) {
+      toast.error("Please login to update product.");
+      return;
+    }
+    setEditFields({
+      name: data?.name || "",
+      department: data?.belongs_to_department || "",
+      quantity: data?.quantity || "",
+      location: data?.location || "",
+      cover_image: data?.cover_image || null
+    });
+    toast.success("You are in edit mode.")
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    await handleUpdateProduct();
+    setIsEditModalOpen(false);
+    await getProductDetail();
+  }
+
+  const handleUpdateProduct = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("name", editFields.name);
+      formData.append("belongs_to_department", editFields.department);
+      formData.append("quantity", editFields.quantity);
+      formData.append("location", editFields.location);
+
+      // image as file 
+
+      if (editFields.cover_image && typeof editFields.cover_image !== "string") {
+        formData.append("cover_image", editFields.cover_image);
+      }
+
+      console.log("Saving: ", editFields);
+
+      const response = await axios.put(`${API_BASE_URL}/qr/products/${code}/edit/`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`
+        },
+      });
+
+      console.log("update response: ", response)
+
+      await getProductDetail();
+      toast.success("Product updated successfully!");
+    } catch (error) {
+      console.log("handle update product failed: ", error);
+      toast.error("Product update failed! Please try again.");
+    }
+  };
 
   const getProductDetail = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/products/${code}/`);
+      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`);
       if (res.status === 200) {
         const productData = res?.data?.data;
         setData(productData);
@@ -47,7 +135,7 @@ function ProductDetail() {
   // Get remarks for the product
   const getRemarks = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/remarks/${code}/`);
+      const res = await axios.get(`${API_BASE_URL}/qr/remarks/${code}/`);
       if (res.status === 200) {
         const remarksData = res?.data?.data || [];
         console.log("Remarks data:", remarksData);
@@ -78,7 +166,7 @@ function ProductDetail() {
       };
 
       const res = await axios.post(
-        `${API_BASE_URL}/remarks/${code}/`,
+        `${API_BASE_URL}/qr/remarks/${code}/`,
         payload,
         {
           headers: {
@@ -132,7 +220,7 @@ function ProductDetail() {
       formData.append("remark_audio", audioFile);
 
       const res = await axios.post(
-        `${API_BASE_URL}/remarks/${code}/`,
+        `${API_BASE_URL}/qr/remarks/${code}/`,
         formData,
         {
           headers: {
@@ -305,8 +393,11 @@ function ProductDetail() {
 
               {/* Action Buttons */}
               <div className="flex flex-row items-stretch sm:items-center gap-2 lg:gap-4">
+
+                {/* Download QR Button */}
+
                 <button
-                  className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 md:flex-none lg:text-base"
+                  className="inline-flex items-center justify-center gap-2 bg-blue-500 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 md:flex-none lg:text-base hover:bg-blue-600"
                   onClick={handleDownloadQR}
                   disabled={!data?.qr}
                 >
@@ -315,7 +406,12 @@ function ProductDetail() {
                   <span className="sm:hidden">QR Code</span>
                 </button>
 
-                <button className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base">
+                {/* Edit Product Button */}
+
+                <button
+                  className="inline-flex items-center justify-center gap-2 bg-blue-500 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-blue-600"
+                  onClick={handleEditClick}
+                >
                   <Edit className="text-white w-4 h-4" />
                   <span className="hidden sm:inline">Edit Product</span>
                   <span className="sm:hidden">Edit</span>
@@ -324,49 +420,52 @@ function ProductDetail() {
             </div>
 
             {/* Product Info Grid */}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+              {/* Department */}
+
               <div className="flex flex-col gap-2">
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
                   DEPARTMENT
                 </div>
-                <div className="inline-flex items-center gap-2 bg-[#f8fafc] text-[#374151] px-3 py-2 lg:px-4 lg:py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base">
-                  <span>
-                    {!data?.belongs_to_department ? (
-                      <span>N/A</span>
-                    ) : (
-                      <span>{data?.belongs_to_department}</span>
-                    )}
-                  </span>
-                </div>
+                <span className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100">
+                  {
+                    !data?.belongs_to_department ? "N/A" : data.belongs_to_department
+                  }
+                </span>
               </div>
+
+              {/* quantity */}
 
               <div className="flex flex-col gap-2">
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
                   QUANTITY
                 </div>
-                <div className="inline-flex items-center gap-2 bg-[#f8fafc] text-[#374151] px-3 py-2 lg:px-4 lg:py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base">
-                  <span>
-                    {!data?.quantity ? (
-                      <span>N/A</span>
-                    ) : (
-                      <span>{data?.quantity} Items</span>
-                    )}
-                  </span>
-                </div>
+                <span
+                  className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100"
+                >
+                  {
+                    !data?.quantity ? "N/A" : `${data.quantity} ${Number(data.quantity) === 1 ? "item" : "items"}`
+                  }
+                </span>
               </div>
+
+              {/* location */}
 
               <div className="flex flex-col gap-2 sm:col-span-2 lg:col-span-1">
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
                   LOCATION
                 </div>
-                <div className="inline-flex items-center gap-2 bg-[#f8fafc] text-[#374151] px-3 py-2 lg:px-4 lg:py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base">
-                  {!data?.location ? (
-                    <span>N/A</span>
-                  ) : (
-                    <span>{data?.location}</span>
-                  )}
-                </div>
+                <span
+                  className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100"
+                >
+                  {
+                    !data?.location ? "N/A" : data.location
+                  }
+                </span>
               </div>
+
             </div>
 
             {/* Remarks Section */}
@@ -381,7 +480,7 @@ function ProductDetail() {
               {!showRemarkForm ? (
                 <div className="flex flex-col sm:flex-row gap-2">
                   <button
-                    className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm lg:text-base"
+                    className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm lg:text-base cursor-pointer"
                     onClick={() => handleShowRemarkForm("text")}
                     disabled={isSubmittingRemark}
                   >
@@ -390,7 +489,7 @@ function ProductDetail() {
                   </button>
 
                   <button
-                    className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm lg:text-base"
+                    className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm lg:text-base cursor-pointer"
                     onClick={() => handleShowRemarkForm("audio")}
                     disabled={isSubmittingRemark}
                   >
@@ -519,7 +618,8 @@ function ProductDetail() {
                 <img
                   src={data?.cover_image}
                   alt="cover preview"
-                  className="w-full h-full lg:max-h-[460px] object-cover rounded-lg border border-indigo-200"
+                  className="w-full h-full lg:max-h-[460px] object-cover border border-indigo-200 cursor-pointer"
+                  onClick={() => openModal(data?.cover_image)}
                 />
               </div>
             )}
@@ -538,13 +638,14 @@ function ProductDetail() {
                 {data?.images.map((img, index) => (
                   <div
                     key={index}
-                    className="aspect-square rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
-                    // onClick={() => openModal(img)}
+                    className="aspect-square overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
+                  // onClick={() => openModal(img)}
                   >
                     <img
                       src={img.image}
                       alt={`Product Image ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover cursor-pointer"
+                      onClick={() => openModal(img.image)}
                     />
                   </div>
                 ))}
@@ -558,28 +659,40 @@ function ProductDetail() {
         </div>
       </main>
 
-      {/* Image Modal */}
-      {/* {selectedImage && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-          onClick={closeModal}
-        >
-          <div className="relative max-w-full max-h-full">
+      {/* Edit Product Modal */}
+
+      <EditProductModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        editFields={editFields}
+        setEditFields={setEditFields}
+        departments={departments}
+        onSave={handleSaveEdit}
+        loading={false}
+      />
+
+      {/* Enlarged view for cover and product image */}
+
+      {enlargedImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="absolute inset-0" onClick={closeModal}></div>
+          <div className="relative max-w-3xl w-full flex justify-center items-center p-4">
             <button
-              className="absolute top-2 right-2 lg:top-4 lg:right-4 text-white bg-black bg-opacity-50 rounded-full w-8 h-8 lg:w-10 lg:h-10 flex items-center justify-center hover:bg-opacity-75 text-lg lg:text-xl z-10"
+              className="absolute top-4 cursor-pointer right-4 text-white bg-black/60 rounded-full p-2 hover:bg-black/80 transition-transform duration-200 hover:scale-110 z-10"
               onClick={closeModal}
+              aria-label="Close"
             >
-              <FaTimes />
+              <FaTimes className="text-2xl" />
             </button>
             <img
-              src={selectedImage.image}
-              alt="Enlarged product"
-              className="max-w-[50%] max-h-[50%] object-contain rounded-lg"
-              onClick={(e) => e.stopPropagation()}
+              src={enlargedImage}
+              alt="Enlarged"
+              className="max-h-[80vh] max-w-full object-contain"
             />
           </div>
         </div>
-      )} */}
+      )}
+
     </div>
   );
 }
