@@ -2,6 +2,8 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { FaPlus } from "react-icons/fa";
+import { FaPencilAlt,FaTrash } from "react-icons/fa";
+
 import {
   FaQrcode,
   FaCommentAlt,
@@ -17,11 +19,9 @@ import { toast } from "react-toastify";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 function ProductDetail() {
-
   const token = localStorage.getItem("access_token");
 
-  const { code } = useParams();
-
+  const { code, isEditable } = useParams();
   const [data, setData] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [newRemark, setNewRemark] = useState("");
@@ -32,29 +32,33 @@ function ProductDetail() {
   const [isSubmittingRemark, setIsSubmittingRemark] = useState(false);
   const [remarkError, setRemarkError] = useState(null);
 
-  // edit mode 
-
+  // edit mode
+  const [editingId, setEditingId] = useState(null);
+  const [editedText, setEditedText] = useState("");
   const [isEditMode, setIsEditMode] = useState(false);
   const [editFields, setEditFields] = useState({
     name: "",
     department: "",
     quantity: "",
     location: "",
-    cover_image: null
-  })
+    cover_image: null,
+  });
 
   const [departments, setDepartments] = useState([]);
 
   useEffect(() => {
-    axios.get(`${import.meta.env.VITE_API_URL}/departments/`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }).then(res => {
-      setDepartments(res.data.data || []);
-    }).catch(err => {
-      setDepartments([]);
-    });
+    axios
+      .get(`${import.meta.env.VITE_API_URL}/departments/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        setDepartments(res.data.data || []);
+      })
+      .catch((err) => {
+        setDepartments([]);
+      });
   }, [token]);
 
   const handleEditClick = () => {
@@ -67,7 +71,7 @@ function ProductDetail() {
       department: data?.belongs_to_department || "",
       quantity: data?.quantity || "",
       location: data?.location || "",
-      cover_image: null
+      cover_image: null,
     });
     setIsEditMode(true);
   };
@@ -75,9 +79,9 @@ function ProductDetail() {
   const handleFieldChange = (e) => {
     setEditFields({
       ...editFields,
-      [e.target.name]: e.target.value
-    })
-  }
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const handleUpdateProduct = async () => {
     try {
@@ -93,7 +97,7 @@ function ProductDetail() {
       await axios.put(`${API_BASE_URL}/products/${code}/edit/`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -118,11 +122,49 @@ function ProductDetail() {
       console.error("Error fetching product:", error);
     }
   };
+  const handleSave = async (remarkId) => {
+  // Call API here to save the updated remark
+  // Example:
+  try {
+    await axios.put(`${API_BASE_URL}/qr/products/${code}/remarks/${remarkId}/edit/`, {
+      remark: editedText,
+    });
 
+    // After successful update, update local state or refetch remarks
+    const updatedRemarks = remarks.map((r) =>
+      r.id === remarkId ? { ...r, remark: editedText } : r
+    );
+    setRemarks(updatedRemarks); // assuming remarks is in state
+    setEditingId(null);
+  } catch (error) {
+    console.error("Error updating remark", error);
+    // Optionally show toast/error
+  }
+};
+const handleDeleteRemark = async (remarkId) => {
+  try {
+    await axios.delete(`${API_BASE_URL}/qr/products/${code}/remarks/${remarkId}/delete/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // Remove the deleted remark from local state
+   getRemarks()
+    toast.success("Remark deleted successfully!");
+  } catch (error) {
+    console.error("Error deleting remark:", error);
+    toast.error("Failed to delete remark. Please try again.");
+  }
+}
   // Get remarks for the product
   const getRemarks = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/qr/remarks/${code}/`);
+      const res = await axios.get(`${API_BASE_URL}/qr/remarks/${code}/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (res.status === 200) {
         const remarksData = res?.data?.data || [];
         console.log("Remarks data:", remarksData);
@@ -392,7 +434,7 @@ function ProductDetail() {
 
                 {/* Edit product  */}
 
-                {isEditMode ? (
+                {isEditMode && isEditable === "true" ? (
                   <button
                     className="inline-flex items-center justify-center gap-2 bg-green-600 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-green-700"
                     onClick={handleUpdateProduct}
@@ -402,16 +444,17 @@ function ProductDetail() {
                     <span className="sm:hidden">Update</span>
                   </button>
                 ) : (
-                  <button
-                    className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-[#7594c7]"
-                    onClick={handleEditClick}
-                  >
-                    <Edit className="text-white w-4 h-4" />
-                    <span className="hidden sm:inline">Edit Product</span>
-                    <span className="sm:hidden">Edit</span>
-                  </button>
+                  isEditable === "true" && (
+                    <button
+                      className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-[#7594c7]"
+                      onClick={handleEditClick}
+                    >
+                      <Edit className="text-white w-4 h-4" />
+                      <span className="hidden sm:inline">Edit Product</span>
+                      <span className="sm:hidden">Edit</span>
+                    </button>
+                  )
                 )}
-
               </div>
             </div>
 
@@ -447,7 +490,9 @@ function ProductDetail() {
                     />
                     <button
                       className="absolute top-1 right-1 bg-white rounded-full p-1 shadow"
-                      onClick={() => setEditFields({ ...editFields, cover_image: null })}
+                      onClick={() =>
+                        setEditFields({ ...editFields, cover_image: null })
+                      }
                       type="button"
                     >
                       <FaTimes className="text-red-500" />
@@ -456,13 +501,18 @@ function ProductDetail() {
                 ) : (
                   <label className="flex flex-col items-center justify-center border-2 border-dashed border-indigo-300 rounded-md bg-gray-50 w-32 h-32 cursor-pointer hover:bg-indigo-50 transition">
                     <FaPlus className="text-indigo-400 text-2xl mb-1" />
-                    <span className="text-gray-500 text-xs">Upload Cover Image</span>
+                    <span className="text-gray-500 text-xs">
+                      Upload Cover Image
+                    </span>
                     <input
                       type="file"
                       name="cover_image"
                       accept="image/*"
-                      onChange={e =>
-                        setEditFields({ ...editFields, cover_image: e.target.files[0] })
+                      onChange={(e) =>
+                        setEditFields({
+                          ...editFields,
+                          cover_image: e.target.files[0],
+                        })
                       }
                       className="hidden"
                     />
@@ -474,7 +524,6 @@ function ProductDetail() {
             {/* Product Info Grid */}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
               {/* Department */}
 
               {isEditMode ? (
@@ -494,7 +543,9 @@ function ProductDetail() {
               ) : (
                 <div className="inline-flex items-center gap-2 bg-[#f8fafc] text-[#374151] px-3 py-2 lg:px-4 lg:py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base">
                   <span>
-                    {!data?.belongs_to_department ? "N/A" : data?.belongs_to_department}
+                    {!data?.belongs_to_department
+                      ? "N/A"
+                      : data?.belongs_to_department}
                   </span>
                 </div>
               )}
@@ -537,13 +588,10 @@ function ProductDetail() {
                       className="bg-transparent outline-none flex-1"
                     />
                   ) : (
-                    <span>
-                      {!data?.location ? "N/A" : data?.location}
-                    </span>
+                    <span>{!data?.location ? "N/A" : data?.location}</span>
                   )}
                 </div>
               </div>
-
             </div>
 
             {/* Remarks Section */}
@@ -554,7 +602,6 @@ function ProductDetail() {
                   {remarkError}
                 </div>
               )}
-
               {!showRemarkForm ? (
                 <div className="flex flex-col sm:flex-row gap-2">
                   <button
@@ -621,7 +668,6 @@ function ProductDetail() {
                   )}
                 </div>
               )}
-
               {/* Previous Remarks */}
               <div className="mt-6">
                 <div className="flex items-center gap-2 mb-4">
@@ -637,43 +683,100 @@ function ProductDetail() {
                       No remarks yet. Be the first to add one!
                     </div>
                   ) : (
-                    remarks.map((remark) => (
-                      <div
-                        key={remark.id}
-                        className="bg-gray-50 p-3 lg:p-4 rounded-lg border space-y-2"
-                      >
-                        <div className="flex flex-col sm:flex-row sm:justify-between gap-1 text-xs text-gray-400">
-                          <span>
-                            Remark by{" "}
-                            <span className="text-gray-700 font-semibold capitalize">
-                              {remark.username}
-                            </span>
-                          </span>
-                          <span>{formatDate(remark.created_at)}</span>
-                        </div>
+                    remarks.map((remark, index) => {
+                      const isEditing = editingId === remark.id;
 
-                        {remark.remark_type === "audio" ? (
-                          <div className="space-y-2">
-                            {remark.audio_url && (
-                              <div className="w-full overflow-hidden">
-                                <AudioPlayer
-                                  audioUrl={remark.audio_url}
-                                  duration={remark.audio_duration}
-                                  mimeType={remark.mimeType}
-                                />
-                              </div>
-                            )}
-                            <p className="text-gray-600 text-sm">
-                              {remark.remark}
-                            </p>
+                      return (
+                        <div
+                          key={remark.id}
+                          className="bg-gray-50 p-3 lg:p-4 rounded-lg border space-y-2"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:justify-between gap-1 text-xs text-gray-400">
+                            <span>
+                              Remark by{" "}
+                              <span className="text-gray-700 font-semibold capitalize">
+                                {remark.username}
+                              </span>
+                            </span>
+                            <span>{formatDate(remark.created_at)}</span>
                           </div>
-                        ) : (
-                          <p className="text-gray-800 text-sm lg:text-base break-words">
-                            {remark.remark}
-                          </p>
-                        )}
-                      </div>
-                    ))
+
+                          {isEditing ? (
+                            <div className="space-y-2">
+                              <textarea
+                                className="w-full border p-2 rounded text-sm"
+                                rows={3}
+                                value={editedText}
+                                onChange={(e) => setEditedText(e.target.value)}
+                              />
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleSave(remark.id)}
+                                  className="text-white bg-blue-600 hover:bg-blue-700 text-sm px-3 py-1 rounded"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => setEditingId(null)}
+                                  className="text-gray-600 hover:text-gray-800 text-sm"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              {remark.remark_type === "audio" ? (
+                                <div className="space-y-2">
+                                  {remark.audio_url && (
+                                    <div className="w-full overflow-hidden">
+                                      <AudioPlayer
+                                        audioUrl={remark.audio_url}
+                                        duration={remark.audio_duration}
+                                        mimeType={remark.mimeType}
+                                      />
+                                    </div>
+                                  )}
+                                  <p className="text-gray-600 text-sm break-words">
+                                    {remark.remark}
+                                  </p>
+                                </div>
+                              ) : (
+                                <p className="text-gray-800 text-sm lg:text-base break-words">
+                                  {remark.remark}
+                                </p>
+                              )}
+
+                              {/* Show Edit button if user has permission */}
+                              {remark.isEditable && !isEditing && (
+
+                                <>
+                                <button
+                                  onClick={() => {
+                                    setEditingId(remark.id);
+                                    setEditedText(remark.remark);
+                                  }}
+                                  className="text-gray-500 hover:text-blue-600 text-sm flex items-center gap-1 mt-1"
+                                  title="Edit Remark"
+                                >
+                                  <FaPencilAlt className="text-xs" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleDeleteRemark(remark.id);
+                                  }}
+                                  className="text-gray-500 hover:text-blue-600 text-sm flex items-center gap-1 mt-1"
+                                  title="delete Remark"
+                                >
+                                  <FaTrash className="text-xs" />
+                                </button>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               </div>

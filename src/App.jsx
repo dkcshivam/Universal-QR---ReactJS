@@ -52,7 +52,7 @@ function App() {
             element={<CreateMultipleProduct />}
           />
           {/* ProductDetail */}
-          <Route path="/product-detail/:code" element={<ProductDetail />} />
+          <Route path="/product-detail/:code/:isEditable" element={<ProductDetail />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
