@@ -15,6 +15,8 @@ import { Edit } from "lucide-react";
 import VoiceRecorder from "../Remarks/VoiceRecorder";
 import AudioPlayer from "../Remarks/AudioPlayer";
 import { toast } from "react-toastify";
+import EditProductModal from "./EditProductModal";
+import ProductImageUpload from "./ProductImageUpload";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -22,6 +24,8 @@ function ProductDetail() {
   const token = localStorage.getItem("access_token");
 
   const { code, isEditable } = useParams();
+
+  const [uploadedImages, setUploadedImages] = useState([]);
   const [data, setData] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [newRemark, setNewRemark] = useState("");
@@ -32,6 +36,10 @@ function ProductDetail() {
   const [isSubmittingRemark, setIsSubmittingRemark] = useState(false);
   const [remarkError, setRemarkError] = useState(null);
 
+  // setting a loading state before calling the API, and keeping the modal open until the update is done 
+
+  const [isUpdating, setIsUpdating] = useState(false);
+
   // edit mode
   const [editingId, setEditingId] = useState(null);
   const [editedText, setEditedText] = useState("");
@@ -41,29 +49,37 @@ function ProductDetail() {
     department: "",
     quantity: "",
     location: "",
-    cover_image: null,
-  });
+    cover_image: null
+  })
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const [departments, setDepartments] = useState([]);
 
+  const [enlargedImage, setEnlargedImage] = useState(null);
+
+  const openModal = (imgSrc) => setEnlargedImage(imgSrc);
+  const closeModal = () => setEnlargedImage(null);
+
+  const handleImageUpload = (files) => {
+    setUploadedImages((prev) => [...prev, ...Array.from(files)])
+  }
+
   useEffect(() => {
-    axios
-      .get(`${import.meta.env.VITE_API_URL}/departments/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((res) => {
-        setDepartments(res.data.data || []);
-      })
-      .catch((err) => {
-        setDepartments([]);
-      });
+    axios.get(`${import.meta.env.VITE_API_URL}/qr/departments/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).then(res => {
+      setDepartments(res.data.data || []);
+    }).catch(err => {
+      setDepartments([]);
+    });
   }, [token]);
 
   const handleEditClick = () => {
     if (!token) {
-      toast.error("Please login again");
+      toast.error("Please login to update product.");
       return;
     }
     setEditFields({
@@ -71,18 +87,25 @@ function ProductDetail() {
       department: data?.belongs_to_department || "",
       quantity: data?.quantity || "",
       location: data?.location || "",
-      cover_image: null,
+      cover_image: data?.cover_image || null
     });
-    setIsEditMode(true);
+    toast.success("You are in edit mode.")
+    setIsEditModalOpen(true);
   };
 
   const handleFieldChange = (e) => {
     setEditFields({
       ...editFields,
-      [e.target.name]: e.target.value,
-    });
-  };
-
+      [e.target.name]: e.target.value
+    })
+  }
+  const handleSaveEdit = async () => {
+    setIsUpdating(true); // show loader immediately 
+    await handleUpdateProduct();
+    setIsUpdating(false); // hide loader after update
+    setIsEditModalOpen(false); // now close modal 
+    await getProductDetail();
+  }
   const handleUpdateProduct = async () => {
     try {
       const formData = new FormData();
@@ -90,19 +113,25 @@ function ProductDetail() {
       formData.append("belongs_to_department", editFields.department);
       formData.append("quantity", editFields.quantity);
       formData.append("location", editFields.location);
-      if (editFields.cover_image) {
+
+      // image as file 
+
+      if (editFields.cover_image && typeof editFields.cover_image !== "string") {
         formData.append("cover_image", editFields.cover_image);
       }
 
-      await axios.put(`${API_BASE_URL}/products/${code}/edit/`, formData, {
+      console.log("Saving: ", editFields);
+
+      const response = await axios.put(`${API_BASE_URL}/qr/products/${code}/edit/`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
         },
       });
 
+      console.log("update response: ", response)
+
       await getProductDetail();
-      setIsEditMode(false);
       toast.success("Product updated successfully!");
     } catch (error) {
       console.log("handle update product failed: ", error);
@@ -112,7 +141,11 @@ function ProductDetail() {
 
   const getProductDetail = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`);
+      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       if (res.status === 200) {
         const productData = res?.data?.data;
         setData(productData);
@@ -200,7 +233,7 @@ const handleDeleteRemark = async (remarkId) => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`
           },
         }
       );
@@ -422,8 +455,11 @@ const handleDeleteRemark = async (remarkId) => {
 
               {/* Action Buttons */}
               <div className="flex flex-row items-stretch sm:items-center gap-2 lg:gap-4">
+
+                {/* Download QR Button */}
+
                 <button
-                  className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 md:flex-none lg:text-base"
+                  className="inline-flex items-center justify-center gap-2 bg-blue-500 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 md:flex-none lg:text-base hover:bg-blue-600"
                   onClick={handleDownloadQR}
                   disabled={!data?.qr}
                 >
@@ -432,7 +468,7 @@ const handleDeleteRemark = async (remarkId) => {
                   <span className="sm:hidden">QR Code</span>
                 </button>
 
-                {/* Edit product  */}
+                {/* Edit Product Button */}
 
                 {isEditMode && isEditable === "true" ? (
                   <button
@@ -526,29 +562,18 @@ const handleDeleteRemark = async (remarkId) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Department */}
 
-              {isEditMode ? (
-                <select
-                  name="department"
-                  value={editFields.department}
-                  onChange={handleFieldChange}
-                  className="bg-transparent outline-none flex-1"
-                >
-                  <option value="">Select Department</option>
-                  {departments.map((dep, idx) => (
-                    <option key={dep.id || idx} value={dep.name || ""}>
-                      {dep.name || "Unknown"}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <div className="inline-flex items-center gap-2 bg-[#f8fafc] text-[#374151] px-3 py-2 lg:px-4 lg:py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base">
-                  <span>
-                    {!data?.belongs_to_department
-                      ? "N/A"
-                      : data?.belongs_to_department}
-                  </span>
+              <div className="flex flex-col gap-2">
+                <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
+                  DEPARTMENT
                 </div>
-              )}
+                <span className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100">
+                  {
+                    !data?.belongs_to_department ? "N/A" : (
+                      departments.find(dep => dep.key === data.belongs_to_department)?.label || data.belongs_to_department
+                    )
+                  }
+                </span>
+              </div>
 
               {/* quantity */}
 
@@ -556,21 +581,15 @@ const handleDeleteRemark = async (remarkId) => {
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
                   QUANTITY
                 </div>
-                <div className="inline-flex items-center gap-2 bg-[#f8fafc] text-[#374151] px-3 py-2 lg:px-4 lg:py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base">
-                  {isEditMode ? (
-                    <input
-                      name="quantity"
-                      type="number"
-                      value={editFields.quantity}
-                      onChange={handleFieldChange}
-                      className="bg-transparent outline-none flex-1"
-                    />
-                  ) : (
-                    <span>
-                      {!data?.quantity ? "N/A" : `${data?.quantity} Items`}
-                    </span>
-                  )}
-                </div>
+                <span
+                  className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100"
+                >
+                  {
+                    !data?.quantity && data?.quantity !== 0 ? "N/A" : `
+                      ${data.quantity} ${Number(data.quantity) === 1 || Number(data.quantity) === 0 ? "item" : "items"}
+                    `
+                  }
+                </span>
               </div>
 
               {/* location */}
@@ -579,18 +598,13 @@ const handleDeleteRemark = async (remarkId) => {
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
                   LOCATION
                 </div>
-                <div className="inline-flex items-center gap-2 bg-[#f8fafc] text-[#374151] px-3 py-2 lg:px-4 lg:py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base">
-                  {isEditMode ? (
-                    <input
-                      name="location"
-                      value={editFields.location}
-                      onChange={handleFieldChange}
-                      className="bg-transparent outline-none flex-1"
-                    />
-                  ) : (
-                    <span>{!data?.location ? "N/A" : data?.location}</span>
-                  )}
-                </div>
+                <span
+                  className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100"
+                >
+                  {
+                    !data?.location ? "N/A" : data.location
+                  }
+                </span>
               </div>
             </div>
 
@@ -605,7 +619,7 @@ const handleDeleteRemark = async (remarkId) => {
               {!showRemarkForm ? (
                 <div className="flex flex-col sm:flex-row gap-2">
                   <button
-                    className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm lg:text-base"
+                    className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm lg:text-base cursor-pointer"
                     onClick={() => handleShowRemarkForm("text")}
                     disabled={isSubmittingRemark}
                   >
@@ -614,7 +628,7 @@ const handleDeleteRemark = async (remarkId) => {
                   </button>
 
                   <button
-                    className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm lg:text-base"
+                    className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm lg:text-base cursor-pointer"
                     onClick={() => handleShowRemarkForm("audio")}
                     disabled={isSubmittingRemark}
                   >
@@ -799,7 +813,8 @@ const handleDeleteRemark = async (remarkId) => {
                 <img
                   src={data?.cover_image}
                   alt="cover preview"
-                  className="w-full h-full lg:max-h-[460px] object-cover rounded-lg border border-indigo-200"
+                  className="w-full h-full lg:max-h-[460px] object-cover border border-indigo-200 cursor-pointer"
+                  onClick={() => openModal(data?.cover_image)}
                 />
               </div>
             )}
@@ -818,48 +833,76 @@ const handleDeleteRemark = async (remarkId) => {
                 {data?.images.map((img, index) => (
                   <div
                     key={index}
-                    className="aspect-square rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
-                    // onClick={() => openModal(img)}
+                    className="aspect-square overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
+                  // onClick={() => openModal(img)}
                   >
                     <img
                       src={img.image}
                       alt={`Product Image ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover cursor-pointer"
+                      onClick={() => openModal(img.image)}
                     />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-32 lg:h-52 text-center px-4 py-6 text-gray-500">
-                <p className="text-sm lg:text-base">No images found</p>
+              <div className="">
               </div>
             )}
+
+            {/* Image Upload Box - always below Product Images */}
+
+            <div className="mt-6">
+              <ProductImageUpload
+                onUpload={handleImageUpload}
+                images={uploadedImages}
+              />
+            </div>
+
           </div>
         </div>
       </main>
 
-      {/* Image Modal */}
-      {/* {selectedImage && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-          onClick={closeModal}
-        >
-          <div className="relative max-w-full max-h-full">
+      {/* Edit Product Modal */}
+
+      <EditProductModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        editFields={editFields}
+        setEditFields={setEditFields}
+        departments={departments}
+        onSave={handleSaveEdit}
+        loading={isUpdating}
+      />
+
+      {/* Enlarged view for cover and product image */}
+
+      {enlargedImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="absolute inset-0" onClick={closeModal}></div>
+          <div className="relative max-w-3xl w-full flex justify-center items-center p-4">
+
+            {/* Move the button up top-right corner, outside the image */}
+
             <button
-              className="absolute top-2 right-2 lg:top-4 lg:right-4 text-white bg-black bg-opacity-50 rounded-full w-8 h-8 lg:w-10 lg:h-10 flex items-center justify-center hover:bg-opacity-75 text-lg lg:text-xl z-10"
+              className="absolute -top-8 cursor-pointer right-4 text-white bg-black/60 rounded-full p-2 hover:bg-black/80 transition-transform duration-200 hover:scale-110 z-10"
               onClick={closeModal}
+              aria-label="Close"
+              style={{ boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2" }}
             >
-              <FaTimes />
+              <FaTimes className="text-2xl" />
             </button>
             <img
-              src={selectedImage.image}
-              alt="Enlarged product"
-              className="max-w-[50%] max-h-[50%] object-contain rounded-lg"
-              onClick={(e) => e.stopPropagation()}
+              src={enlargedImage}
+              alt="Enlarged"
+              className="max-h-[80vh] max-w-full object-contain"
             />
           </div>
         </div>
-      )} */}
+      )}
+
+
+
     </div>
   );
 }

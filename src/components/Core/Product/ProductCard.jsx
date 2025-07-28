@@ -7,7 +7,7 @@ const ProductCard = ({ product, index }) => {
   return (
     <div
       key={index}
-      className="bg-white rounded-lg shadow border border-gray-200 p-3 sm:p-5 flex flex-col justify-between hover:border-indigo-400"
+      className="bg-white rounded-none shadow border border-gray-200 p-3 sm:p-5 flex flex-col justify-between hover:border-indigo-400"
     >
       <div
         className="w-full h-[220px] rounded-none mb-[15px] overflow-hidden relative cursor-pointer"
