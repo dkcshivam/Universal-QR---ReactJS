@@ -13,6 +13,7 @@ import VoiceRecorder from "../Remarks/VoiceRecorder";
 import AudioPlayer from "../Remarks/AudioPlayer";
 import { toast } from "react-toastify";
 import EditProductModal from "./EditProductModal";
+import ProductImageUpload from "./ProductImageUpload";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -21,6 +22,8 @@ function ProductDetail() {
   const token = localStorage.getItem("access_token");
 
   const { code } = useParams();
+
+  const [uploadedImages, setUploadedImages] = useState([]);
 
   const [data, setData] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
@@ -34,7 +37,7 @@ function ProductDetail() {
 
   // setting a loading state before calling the API, and keeping the modal open until the update is done 
 
-  const [isUpdating, setIsUpdating] = useState(false) ; 
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // edit mode 
 
@@ -54,6 +57,10 @@ function ProductDetail() {
 
   const openModal = (imgSrc) => setEnlargedImage(imgSrc);
   const closeModal = () => setEnlargedImage(null);
+
+  const handleImageUpload = (files) => {
+    setUploadedImages((prev) => [...prev, ...Array.from(files)])
+  }
 
   useEffect(() => {
     axios.get(`${import.meta.env.VITE_API_URL}/qr/departments/`, {
@@ -84,9 +91,9 @@ function ProductDetail() {
   };
 
   const handleSaveEdit = async () => {
-    setIsUpdating(true) ; // show loader immediately 
+    setIsUpdating(true); // show loader immediately 
     await handleUpdateProduct();
-    setIsUpdating(false) ; // hide loader after update
+    setIsUpdating(false); // hide loader after update
     setIsEditModalOpen(false); // now close modal 
     await getProductDetail();
   }
@@ -126,7 +133,11 @@ function ProductDetail() {
 
   const getProductDetail = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`);
+      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       if (res.status === 200) {
         const productData = res?.data?.data;
         setData(productData);
@@ -140,7 +151,11 @@ function ProductDetail() {
   // Get remarks for the product
   const getRemarks = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/qr/remarks/${code}/`);
+      const res = await axios.get(`${API_BASE_URL}/qr/remarks/${code}/`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       if (res.status === 200) {
         const remarksData = res?.data?.data || [];
         console.log("Remarks data:", remarksData);
@@ -176,7 +191,7 @@ function ProductDetail() {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`
           },
         }
       );
@@ -455,7 +470,7 @@ function ProductDetail() {
                   {
                     !data?.quantity && data?.quantity !== 0 ? "N/A" : `
                       ${data.quantity} ${Number(data.quantity) === 1 || Number(data.quantity) === 0 ? "item" : "items"}
-                    ` 
+                    `
                   }
                 </span>
               </div>
@@ -660,10 +675,19 @@ function ProductDetail() {
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-32 lg:h-52 text-center px-4 py-6 text-gray-500">
-                <p className="text-sm lg:text-base">No images found</p>
+              <div className="">
               </div>
             )}
+
+            {/* Image Upload Box - always below Product Images */}
+
+            <div className="mt-6">
+              <ProductImageUpload
+                onUpload={handleImageUpload}
+                images={uploadedImages}
+              />
+            </div>
+
           </div>
         </div>
       </main>
@@ -693,7 +717,7 @@ function ProductDetail() {
               className="absolute -top-8 cursor-pointer right-4 text-white bg-black/60 rounded-full p-2 hover:bg-black/80 transition-transform duration-200 hover:scale-110 z-10"
               onClick={closeModal}
               aria-label="Close"
-              style={{boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2"}}
+              style={{ boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2" }}
             >
               <FaTimes className="text-2xl" />
             </button>
@@ -705,6 +729,8 @@ function ProductDetail() {
           </div>
         </div>
       )}
+
+
 
     </div>
   );
