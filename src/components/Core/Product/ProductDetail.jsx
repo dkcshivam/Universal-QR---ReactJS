@@ -13,6 +13,7 @@ import { Edit } from "lucide-react";
 import VoiceRecorder from "../Remarks/VoiceRecorder";
 import AudioPlayer from "../Remarks/AudioPlayer";
 import { toast } from "react-toastify";
+import EditProductModal from "./EditProductModal";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -34,7 +35,6 @@ function ProductDetail() {
 
   // edit mode 
 
-  const [isEditMode, setIsEditMode] = useState(false);
   const [editFields, setEditFields] = useState({
     name: "",
     department: "",
@@ -43,10 +43,17 @@ function ProductDetail() {
     cover_image: null
   })
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   const [departments, setDepartments] = useState([]);
 
+  const [enlargedImage, setEnlargedImage] = useState(null);
+
+  const openModal = (imgSrc) => setEnlargedImage(imgSrc);
+  const closeModal = () => setEnlargedImage(null);
+
   useEffect(() => {
-    axios.get(`${import.meta.env.VITE_API_URL}/departments/`, {
+    axios.get(`${import.meta.env.VITE_API_URL}/qr/departments/`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -59,7 +66,7 @@ function ProductDetail() {
 
   const handleEditClick = () => {
     if (!token) {
-      toast.error("Please login again");
+      toast.error("Please login to update product.");
       return;
     }
     setEditFields({
@@ -67,16 +74,16 @@ function ProductDetail() {
       department: data?.belongs_to_department || "",
       quantity: data?.quantity || "",
       location: data?.location || "",
-      cover_image: null
+      cover_image: data?.cover_image || null
     });
-    setIsEditMode(true);
+    toast.success("You are in edit mode.")
+    setIsEditModalOpen(true);
   };
 
-  const handleFieldChange = (e) => {
-    setEditFields({
-      ...editFields,
-      [e.target.name]: e.target.value
-    })
+  const handleSaveEdit = async () => {
+    await handleUpdateProduct();
+    setIsEditModalOpen(false);
+    await getProductDetail();
   }
 
   const handleUpdateProduct = async () => {
@@ -86,19 +93,25 @@ function ProductDetail() {
       formData.append("belongs_to_department", editFields.department);
       formData.append("quantity", editFields.quantity);
       formData.append("location", editFields.location);
-      if (editFields.cover_image) {
+
+      // image as file 
+
+      if (editFields.cover_image && typeof editFields.cover_image !== "string") {
         formData.append("cover_image", editFields.cover_image);
       }
 
-      await axios.put(`${API_BASE_URL}/products/${code}/edit/`, formData, {
+      console.log("Saving: ", editFields);
+
+      const response = await axios.put(`${API_BASE_URL}/qr/products/${code}/edit/`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`
         },
       });
 
+      console.log("update response: ", response)
+
       await getProductDetail();
-      setIsEditMode(false);
       toast.success("Product updated successfully!");
     } catch (error) {
       console.log("handle update product failed: ", error);
@@ -380,8 +393,11 @@ function ProductDetail() {
 
               {/* Action Buttons */}
               <div className="flex flex-row items-stretch sm:items-center gap-2 lg:gap-4">
+
+                {/* Download QR Button */}
+
                 <button
-                  className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 md:flex-none lg:text-base"
+                  className="inline-flex items-center justify-center gap-2 bg-blue-500 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 md:flex-none lg:text-base hover:bg-blue-600"
                   onClick={handleDownloadQR}
                   disabled={!data?.qr}
                 >
@@ -390,86 +406,18 @@ function ProductDetail() {
                   <span className="sm:hidden">QR Code</span>
                 </button>
 
-                {/* Edit product  */}
+                {/* Edit Product Button */}
 
-                {isEditMode ? (
-                  <button
-                    className="inline-flex items-center justify-center gap-2 bg-green-600 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-green-700"
-                    onClick={handleUpdateProduct}
-                  >
-                    <Edit className="text-white w-4 h-4" />
-                    <span className="hidden sm:inline">Update Product</span>
-                    <span className="sm:hidden">Update</span>
-                  </button>
-                ) : (
-                  <button
-                    className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-[#7594c7]"
-                    onClick={handleEditClick}
-                  >
-                    <Edit className="text-white w-4 h-4" />
-                    <span className="hidden sm:inline">Edit Product</span>
-                    <span className="sm:hidden">Edit</span>
-                  </button>
-                )}
-
+                <button
+                  className="inline-flex items-center justify-center gap-2 bg-blue-500 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-blue-600"
+                  onClick={handleEditClick}
+                >
+                  <Edit className="text-white w-4 h-4" />
+                  <span className="hidden sm:inline">Edit Product</span>
+                  <span className="sm:hidden">Edit</span>
+                </button>
               </div>
             </div>
-
-            {/* Name */}
-            {isEditMode && (
-              <div className="flex flex-col gap-2 mb-2">
-                <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
-                  PRODUCT NAME
-                </div>
-                <input
-                  name="name"
-                  value={editFields.name}
-                  onChange={handleFieldChange}
-                  placeholder="Enter product name here"
-                  className="bg-[#f8fafc] text-[#374151] px-3 py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base"
-                />
-              </div>
-            )}
-
-            {/* Cover Image */}
-
-            {isEditMode && (
-              <div className="flex flex-col gap-2 mb-2">
-                <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
-                  COVER IMAGE
-                </div>
-                {editFields.cover_image ? (
-                  <div className="relative w-32 h-32">
-                    <img
-                      src={URL.createObjectURL(editFields.cover_image)}
-                      alt="Preview"
-                      className="w-full h-full object-cover rounded"
-                    />
-                    <button
-                      className="absolute top-1 right-1 bg-white rounded-full p-1 shadow"
-                      onClick={() => setEditFields({ ...editFields, cover_image: null })}
-                      type="button"
-                    >
-                      <FaTimes className="text-red-500" />
-                    </button>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-indigo-300 rounded-md bg-gray-50 w-32 h-32 cursor-pointer hover:bg-indigo-50 transition">
-                    <FaPlus className="text-indigo-400 text-2xl mb-1" />
-                    <span className="text-gray-500 text-xs">Upload Cover Image</span>
-                    <input
-                      type="file"
-                      name="cover_image"
-                      accept="image/*"
-                      onChange={e =>
-                        setEditFields({ ...editFields, cover_image: e.target.files[0] })
-                      }
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </div>
-            )}
 
             {/* Product Info Grid */}
 
@@ -477,27 +425,16 @@ function ProductDetail() {
 
               {/* Department */}
 
-              {isEditMode ? (
-                <select
-                  name="department"
-                  value={editFields.department}
-                  onChange={handleFieldChange}
-                  className="bg-transparent outline-none flex-1"
-                >
-                  <option value="">Select Department</option>
-                  {departments.map((dep, idx) => (
-                    <option key={dep.id || idx} value={dep.name || ""}>
-                      {dep.name || "Unknown"}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <div className="inline-flex items-center gap-2 bg-[#f8fafc] text-[#374151] px-3 py-2 lg:px-4 lg:py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base">
-                  <span>
-                    {!data?.belongs_to_department ? "N/A" : data?.belongs_to_department}
-                  </span>
+              <div className="flex flex-col gap-2">
+                <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
+                  DEPARTMENT
                 </div>
-              )}
+                <span className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100">
+                  {
+                    !data?.belongs_to_department ? "N/A" : data.belongs_to_department
+                  }
+                </span>
+              </div>
 
               {/* quantity */}
 
@@ -505,21 +442,13 @@ function ProductDetail() {
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
                   QUANTITY
                 </div>
-                <div className="inline-flex items-center gap-2 bg-[#f8fafc] text-[#374151] px-3 py-2 lg:px-4 lg:py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base">
-                  {isEditMode ? (
-                    <input
-                      name="quantity"
-                      type="number"
-                      value={editFields.quantity}
-                      onChange={handleFieldChange}
-                      className="bg-transparent outline-none flex-1"
-                    />
-                  ) : (
-                    <span>
-                      {!data?.quantity ? "N/A" : `${data?.quantity} Items`}
-                    </span>
-                  )}
-                </div>
+                <span
+                  className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100"
+                >
+                  {
+                    !data?.quantity ? "N/A" : `${data.quantity} ${Number(data.quantity) === 1 ? "item" : "items"}`
+                  }
+                </span>
               </div>
 
               {/* location */}
@@ -528,20 +457,13 @@ function ProductDetail() {
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
                   LOCATION
                 </div>
-                <div className="inline-flex items-center gap-2 bg-[#f8fafc] text-[#374151] px-3 py-2 lg:px-4 lg:py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base">
-                  {isEditMode ? (
-                    <input
-                      name="location"
-                      value={editFields.location}
-                      onChange={handleFieldChange}
-                      className="bg-transparent outline-none flex-1"
-                    />
-                  ) : (
-                    <span>
-                      {!data?.location ? "N/A" : data?.location}
-                    </span>
-                  )}
-                </div>
+                <span
+                  className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100"
+                >
+                  {
+                    !data?.location ? "N/A" : data.location
+                  }
+                </span>
               </div>
 
             </div>
@@ -558,7 +480,7 @@ function ProductDetail() {
               {!showRemarkForm ? (
                 <div className="flex flex-col sm:flex-row gap-2">
                   <button
-                    className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm lg:text-base"
+                    className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm lg:text-base cursor-pointer"
                     onClick={() => handleShowRemarkForm("text")}
                     disabled={isSubmittingRemark}
                   >
@@ -567,7 +489,7 @@ function ProductDetail() {
                   </button>
 
                   <button
-                    className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm lg:text-base"
+                    className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm lg:text-base cursor-pointer"
                     onClick={() => handleShowRemarkForm("audio")}
                     disabled={isSubmittingRemark}
                   >
@@ -696,7 +618,8 @@ function ProductDetail() {
                 <img
                   src={data?.cover_image}
                   alt="cover preview"
-                  className="w-full h-full lg:max-h-[460px] object-cover rounded-lg border border-indigo-200"
+                  className="w-full h-full lg:max-h-[460px] object-cover border border-indigo-200 cursor-pointer"
+                  onClick={() => openModal(data?.cover_image)}
                 />
               </div>
             )}
@@ -715,13 +638,14 @@ function ProductDetail() {
                 {data?.images.map((img, index) => (
                   <div
                     key={index}
-                    className="aspect-square rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
-                    // onClick={() => openModal(img)}
+                    className="aspect-square overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
+                  // onClick={() => openModal(img)}
                   >
                     <img
                       src={img.image}
                       alt={`Product Image ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover cursor-pointer"
+                      onClick={() => openModal(img.image)}
                     />
                   </div>
                 ))}
@@ -735,28 +659,40 @@ function ProductDetail() {
         </div>
       </main>
 
-      {/* Image Modal */}
-      {/* {selectedImage && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-          onClick={closeModal}
-        >
-          <div className="relative max-w-full max-h-full">
+      {/* Edit Product Modal */}
+
+      <EditProductModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        editFields={editFields}
+        setEditFields={setEditFields}
+        departments={departments}
+        onSave={handleSaveEdit}
+        loading={false}
+      />
+
+      {/* Enlarged view for cover and product image */}
+
+      {enlargedImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="absolute inset-0" onClick={closeModal}></div>
+          <div className="relative max-w-3xl w-full flex justify-center items-center p-4">
             <button
-              className="absolute top-2 right-2 lg:top-4 lg:right-4 text-white bg-black bg-opacity-50 rounded-full w-8 h-8 lg:w-10 lg:h-10 flex items-center justify-center hover:bg-opacity-75 text-lg lg:text-xl z-10"
+              className="absolute top-4 cursor-pointer right-4 text-white bg-black/60 rounded-full p-2 hover:bg-black/80 transition-transform duration-200 hover:scale-110 z-10"
               onClick={closeModal}
+              aria-label="Close"
             >
-              <FaTimes />
+              <FaTimes className="text-2xl" />
             </button>
             <img
-              src={selectedImage.image}
-              alt="Enlarged product"
-              className="max-w-[50%] max-h-[50%] object-contain rounded-lg"
-              onClick={(e) => e.stopPropagation()}
+              src={enlargedImage}
+              alt="Enlarged"
+              className="max-h-[80vh] max-w-full object-contain"
             />
           </div>
         </div>
-      )} */}
+      )}
+
     </div>
   );
 }
