@@ -22,7 +22,7 @@ const HomePage = ({ activeTab, setActiveTab }) => {
         }
       );
       if (data?.status === 200) {
-        setProduct(data?.data);
+        setProduct(data?.data?.results);
       }
     } catch (error) {
       console.log(error);
