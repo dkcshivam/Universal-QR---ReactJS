@@ -1,69 +1,86 @@
-import React, { useRef } from 'react'
+import axios from 'axios';
+import React, { useRef, useState } from 'react'
 import { FaPlus } from 'react-icons/fa';
+import { useParams } from 'react-router-dom';
 
 const ProductImageUpload = ({ onUpload, images }) => {
 
-    const fileInputRef = useRef();
+    const fileInputRef = useRef() ;
 
+    const [isDragging, setIsDragging] = useState(false);
+    
     const handleClick = () => {
-
+        fileInputRef.current.click();
     }
 
-    const handleDrop = () => {
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
 
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            onUpload(e.dataTransfer.files)
+        }
     }
 
-    const handleChange = () => {
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+    }
 
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+    }
+
+    const handleChange = (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+            onUpload(e.target.files);
+        }
     }
 
     return (
-        <div className='flex gap-4'>
-
+        <div className="flex gap-4">
+            
             {/* Upload Box */}
 
             <div
-                className='border-2 border-dashed border-blue-300 rounded-md bg-gray-50 flex flex-col items-center justify-center h-48 w-48 text-center px-4 py-6 text-gray-500 cursor-pointer transition hover:bg-blue-50'
+                className={`border-2 border-dashed rounded-md flex flex-col items-center justify-center h-48 w-48 text-center px-4 py-6 cursor-pointer transition-all duration-200
+      ${isDragging ? "border-blue-500 bg-blue-50 scale-105" : "border-blue-300 bg-gray-50"}
+      hover:bg-blue-50`}
                 onClick={handleClick}
                 onDrop={handleDrop}
-                onDragOver={(e) => e.preventDefault()}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                style={{ position: "relative" }}
             >
                 <input
-                    type='file'
+                    type="file"
                     multiple
                     ref={fileInputRef}
                     style={{ display: "none" }}
                     onChange={handleChange}
-                    accept='image/*'
+                    accept="image/*"
                 />
-
-                {/* Plus Icon */}
-
-                <FaPlus className='text-blue-400 text-3xl mb-2'/>
-
-                <p className="font-medium text-gray-600 text-sm mb-2">
-                    Click or drag and drop
-                </p>
-                <p className="text-xs text-gray-400">to upload product images</p>
+                <FaPlus className={`mb-2 ${isDragging ? "text-blue-500 text-4xl" : "text-blue-400 text-3xl"}`} />
+                <span className="font-medium text-gray-600 text-sm">
+                    Click or drag and drop to upload
+                </span>
             </div>
 
             {/* Uploaded Images Preview */}
 
-            <div className="flex gap-2 flex-wrap items-center">
-                {images && images.length > 0 ? (
-                    images.map((img, idx) => (
+            {images && images.length > 0 && (
+                <div className="flex gap-2 flex-wrap items-center">
+                    {images.map((img, idx) => (
                         <img
                             key={idx}
-                            src={typeof img === "string" ? img : URL.createObjectURL(img)}
+                            src={img.image || (typeof img === "string" ? img : URL.createObjectURL(img))}
                             alt={`Product ${idx + 1}`}
-                            className="w-20 h-20 object-cover rounded border"
+                            className="h-48 w-48 object-cover rounded border border-blue-100"
                         />
-                    ))
-                ) : (
-                    <span className=""></span>
-                )}
-            </div>
-
+                    ))}
+                </div>
+            )}
         </div>
     )
 }

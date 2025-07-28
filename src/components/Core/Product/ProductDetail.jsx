@@ -58,9 +58,33 @@ function ProductDetail() {
   const openModal = (imgSrc) => setEnlargedImage(imgSrc);
   const closeModal = () => setEnlargedImage(null);
 
-  const handleImageUpload = (files) => {
-    setUploadedImages((prev) => [...prev, ...Array.from(files)])
-  }
+  // uploading image (product image)
+
+  const handleImageUpload = async (files) => {
+
+    const formData = new FormData();
+    Array.from(files).forEach(file => {
+      formData.append("image", file); 
+    });
+
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/qr/products/${code}/images/upload/`,
+        formData,
+        { headers: {
+          "Content-Type": "multipart/form-data", 
+          "Authorization": `Bearer ${token}`
+        } }
+      );
+
+      // fetching the updated product details to get new images 
+
+      await getProductDetail() ; 
+
+    } catch (err) {
+      console.error("Image upload failed", err);
+    }
+  };
 
   useEffect(() => {
     axios.get(`${import.meta.env.VITE_API_URL}/qr/departments/`, {
@@ -657,34 +681,12 @@ function ProductDetail() {
               <span>Product Images</span>
             </div>
 
-            {data?.images?.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 lg:gap-4">
-                {data?.images.map((img, index) => (
-                  <div
-                    key={index}
-                    className="aspect-square overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
-                  // onClick={() => openModal(img)}
-                  >
-                    <img
-                      src={img.image}
-                      alt={`Product Image ${index + 1}`}
-                      className="w-full h-full object-cover cursor-pointer"
-                      onClick={() => openModal(img.image)}
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="">
-              </div>
-            )}
-
             {/* Image Upload Box - always below Product Images */}
 
             <div className="mt-6">
               <ProductImageUpload
                 onUpload={handleImageUpload}
-                images={uploadedImages}
+                images={data?.images || []}
               />
             </div>
 
