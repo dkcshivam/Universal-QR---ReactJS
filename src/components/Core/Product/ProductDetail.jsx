@@ -162,7 +162,7 @@ function ProductDetail() {
       const response = await axios.put(
         `${API_BASE_URL}/qr/products/${code}/edit/`,
         formData,
-        {
+        token && {
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
@@ -182,7 +182,11 @@ function ProductDetail() {
 
   const getProductDetail = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`);
+      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`,token && {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (res.status === 200) {
         const productData = res?.data?.data;
         setData(productData);
@@ -193,8 +197,7 @@ function ProductDetail() {
     }
   };
   const handleSave = async (remarkId) => {
-    // Call API here to save the updated remark
-    // Example:
+
     try {
       await axios.put(
         `${API_BASE_URL}/qr/products/${code}/remarks/${remarkId}/edit/`,
