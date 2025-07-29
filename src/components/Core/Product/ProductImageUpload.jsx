@@ -1,7 +1,9 @@
 import axios from 'axios';
 import React, { useRef, useState } from 'react'
-import { FaPlus, FaTimes } from 'react-icons/fa';
+import { FaPlus, FaTimes, FaTrash } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
+import DeleteImageModal from './DeleteConfirmation';
+import { toast } from 'react-toastify';
 
 const ProductImageUpload = ({ onUpload, images, isUploading }) => {
 
@@ -9,6 +11,8 @@ const ProductImageUpload = ({ onUpload, images, isUploading }) => {
 
     const [isDragging, setIsDragging] = useState(false);
     const [enlargedImage, setEnlargedImage] = useState(null);
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [deleteImageId, setDeleteImageId] = useState(null);
 
     const handleClick = () => {
         fileInputRef.current.click();
@@ -41,6 +45,36 @@ const ProductImageUpload = ({ onUpload, images, isUploading }) => {
 
     const handleImageClick = (img) => {
         setEnlargedImage(img.image || (typeof img === "string" ? img : URL.createObjectURL(img)));
+    }
+
+    const handleDeleteClick = (imageId) => {
+        setDeleteImageId(imageId);
+        setDeleteModalOpen(true);
+    }
+
+    const { code } = useParams(); // product code from params
+
+    const handleConfirmDelete = async () => {
+        try {
+            await axios.delete(`${import.meta.env.VITE_API_URL}/qr/products/${code}/images/${deleteImageId}/delete/`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("access_token")}`
+                }
+            });
+
+            toast.success("Image deleted successfully! Kindly refresh the page to see the changes.", {
+                autoClose: 4000 // 5 seconds
+            });
+
+            setDeleteImageId(null);
+            setDeleteModalOpen(false);
+
+            // No state update, no reload
+        } catch (error) {
+            toast.error("Failed to delete image.");
+            setDeleteModalOpen(false);
+            setDeleteImageId(null);
+        }
     }
 
     return (
@@ -86,13 +120,38 @@ const ProductImageUpload = ({ onUpload, images, isUploading }) => {
             {images && images.length > 0 && (
                 <div className="w-full mt-6 grid grid-cols-3 gap-4 sm:mt-0 sm:ml-4 sm:grid-cols-1 sm:flex sm:flex-wrap">
                     {images.map((img, idx) => (
-                        <img
-                            key={idx}
-                            src={img.image || (typeof img === "string" ? img : URL.createObjectURL(img))}
-                            alt={`Product ${idx + 1}`}
-                            className="h-28 w-28 sm:h-48 sm:w-48 object-cover border border-blue-100 cursor-pointer transition-colors duration-200 hover:border-blue-500"
-                            onClick={() => handleImageClick(img)}
-                        />
+                        <div key={idx} className="relative group flex flex-col items-center">
+                            <img
+                                src={img.image || (typeof img === "string" ? img : URL.createObjectURL(img))}
+                                alt={`Product ${idx + 1}`}
+                                className="h-28 w-28 sm:h-48 sm:w-48 object-cover border border-blue-100 cursor-pointer transition-colors duration-200 hover:border-blue-500"
+                                onClick={() => handleImageClick(img)}
+                            />
+                            {/* Desktop: absolute button on hover */}
+                            <button
+                                className="hidden sm:flex absolute top-2 right-2 items-center gap-1 bg-white px-2 py-1 rounded shadow text-red-600 opacity-0 group-hover:opacity-100 transition-all duration-200 scale-100 group-hover:scale-105 cursor-pointer hover:bg-red-600 hover:text-white"
+                                title="Delete Image"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteClick(img.id);
+                                }}
+                            >
+                                <FaTrash className="text-red-600 hover:text-white transition-colors duration-200" />
+                                <span className="text-xs font-semibold hover:text-white transition-colors duration-200">Delete</span>
+                            </button>
+                            {/* Mobile: always visible button below image */}
+                            <button
+                                className="mt-2 flex sm:hidden items-center gap-1 bg-white px-2 py-1 rounded shadow text-red-600 transition-all duration-200 scale-100 cursor-pointer hover:bg-red-600 hover:text-white w-full justify-center"
+                                title="Delete Image"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteClick(img.id);
+                                }}
+                            >
+                                <FaTrash className="text-red-600 hover:text-white transition-colors duration-200" />
+                                <span className="text-xs font-semibold hover:text-white transition-colors duration-200">Delete</span>
+                            </button>
+                        </div>
                     ))}
                 </div>
             )}
@@ -118,6 +177,14 @@ const ProductImageUpload = ({ onUpload, images, isUploading }) => {
                     </div>
                 </div>
             )}
+
+            {/* Delete confirmation modal pop-up */}
+
+            <DeleteImageModal
+                open={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+            />
 
         </div>
     )

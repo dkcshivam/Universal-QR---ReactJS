@@ -337,7 +337,7 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
 
           {/* Label Text */}
           {!isExpanded && (
-            <span className="flex-1 text-gray-500 text-xs font-normal pr-3 truncate">
+            <span className="flex-1 text-gray-500 text-[12px] font-semibold pr-3 truncate">
               Help Desk
             </span>
           )}
