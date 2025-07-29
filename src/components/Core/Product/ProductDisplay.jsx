@@ -3,8 +3,8 @@ import Pagination from "../../Pagination";
 import ProductCard from "./ProductCard";
 import axios from "axios";
 
-const ProductGrid = () => {
-  const [products, setProducts] = useState([]);
+const ProductGrid = ({ product, activeTab }) => {
+const [products, setProducts] = useState([]);
   const [pagination, setPagination] = useState({
     count: 0,
     total_pages: 1,
@@ -49,7 +49,7 @@ const ProductGrid = () => {
       {/* Render product cards for current page */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-5">
         {products?.map((product, index) => (
-          <ProductCard key={product.id || index} product={product} index={index} />
+          <ProductCard key={index} product={product} index={index} activeTab={activeTab} />
         ))}
       </div>
       {/* Show pagination if products exist, else show empty message */}

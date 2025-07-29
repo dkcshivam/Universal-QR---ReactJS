@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaBars, FaTimes, FaUserCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Search from "./Search";
@@ -36,42 +36,60 @@ const Header = () => {
   // Define dynamic classes for clarity
   const recordContainerClass = `
     transition-all duration-300 ease-in-out
-    ${expanded === "search" ? "flex-none w-16" : "flex-1"}
+   
   `;
 
   const searchContainerClass = `
     transition-all duration-300 ease-in-out
-    ${expanded === "record" ? "flex-none w-16" : "flex-1"}
+   
   `;
+function MobileDevice() {
+  console.log(window.matchMedia("only screen and (max-width: 930px)").matches)
+  return window.matchMedia("only screen and (max-width: 930px)").matches;
+}
+const [isMobileDevice, setIsMobileDevice] = useState(MobileDevice());
+useEffect(() => {
+  const handleResize = () => {
+    setIsMobileDevice(MobileDevice());
+  };
+  window.addEventListener("resize", handleResize);
+  return () => {
+    window.removeEventListener("resize", handleResize);
+  };
+}, []);
 
   return (
     <header className="bg-white sticky top-0 z-30 shadow-sm border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 gap-2 sm:gap-4">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full flex items-center justify-between h-20 gap-2 sm:gap-4">
           {/* Left & Center Combined: Record and Search */}
-          <div className="flex-1 flex items-center gap-2 sm:gap-4 min-w-0">
+          <div className=" flex items-center gap-2 sm:gap-4 min-w-0">
             <div
               className={recordContainerClass}
               onClick={() => handleExpand("record")}
             >
               <Record
+                isMobile={isMobileDevice}
                 isExpanded={expanded === "record"}
                 isCollapsed={expanded === "search"}
                 onToggle={handleCollapse}
               />
             </div>
-            <div
-              className={searchContainerClass}
+           
+          </div>
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+             <div
+              className={searchContainerClass}  
               onClick={() => handleExpand("search")}
             >
               <Search
+              isMobile={isMobileDevice}
                 isExpanded={expanded === "search"}
                 isCollapsed={expanded === "record"}
                 onToggle={handleCollapse}
               />
             </div>
           </div>
-
           {/* Right: Profile (Desktop) / Hamburger (Mobile) */}
           <div className="flex-shrink-0 flex items-center">
             {/* Desktop Profile & Actions */}

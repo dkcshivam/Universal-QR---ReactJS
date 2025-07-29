@@ -37,7 +37,7 @@ const HomePage = ({ activeTab, setActiveTab }) => {
   return (
     <div>
       <SearchFilter activeTab={activeTab} setActiveTab={setActiveTab} />
-      <ProductGrid product={product} />
+      <ProductGrid product={product} activeTab={activeTab} />
     </div>
   );
 };

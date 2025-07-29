@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaPlus, FaTrash, FaTimes } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { FaSave } from "react-icons/fa";
@@ -11,12 +11,13 @@ function CreateMultipleProduct() {
     department: "",
     quantity: "",
     coverImage: null, // File object
-    coverImageUrl: {}, // Preview URL
+    coverImageUrl: "", // Preview URL
     productImages: [], // Array of File objects
     productImageUrls: [], // Array of preview URLs
   });
-
+  const [departments, setDepartments] = useState([]);
   const [productRows, setProductRows] = useState([createNewProductRow()]);
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   const handleInputChange = (index, event) => {
     const { name, value } = event.target;
@@ -99,8 +100,6 @@ function CreateMultipleProduct() {
       }
     }
 
-    const BASE_URL = import.meta.env.VITE_API_URL;
-
     // remove empty last row if present
 
     const filteredRows = productRows.filter(
@@ -135,6 +134,19 @@ function CreateMultipleProduct() {
     setProductRows([createNewProductRow()]);
   };
 
+    async function fetchDepartments() {
+      const token = localStorage.getItem("access_token");
+      const res = await axios.get(`${BASE_URL}/qr/departments/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setDepartments(res.data.data);
+    }
+    useEffect(() => {
+      fetchDepartments();
+    }, []);
+    
   return (
     <div className="fixed left-0 right-0 w-screen min-h-screen bg-white shadow-md overflow-x-auto p-4 box-border">
       <div className="flex items-center justify-between mb-5 px-2">
@@ -209,9 +221,11 @@ function CreateMultipleProduct() {
                   style={{ width: "100%" }}
                 >
                   <option value="">Select Department</option>
-                  <option value="HARD GOODS">Hard Goods</option>
-                  <option value="SOFT GOODS">Sampling</option>
-                  <option value="ELECTRONICS">Production</option>
+                  {departments.map((dept) => (
+                    <option key={dept.key} value={dept.key}>
+                      {dept.label}
+                    </option>
+                  ))}
                 </select>
               </td>
               <td style={{ width: "70px", textAlign: "center" }}>
@@ -242,7 +256,7 @@ function CreateMultipleProduct() {
                       style={{ position: "relative", width: 40, height: 40 }}
                     >
                       <img
-                        src={row.coverImageUrl}
+                        src={row.coverImageUrl || ""}
                         alt="Cover"
                         style={{
                           width: 40,

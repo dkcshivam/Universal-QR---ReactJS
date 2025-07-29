@@ -11,7 +11,7 @@ const ProductCard = ({ product, index }) => {
     >
       <div
         className="w-full h-[220px] rounded-none mb-[15px] overflow-hidden relative cursor-pointer"
-        onClick={() => navigate(`/product-detail/${product?.code}`)}
+        onClick={() => navigate(`/product-detail/${product?.code}/${product?.isEditable}`)}
       >
         <img
           src={product?.cover_image}

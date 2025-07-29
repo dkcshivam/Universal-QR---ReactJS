@@ -44,7 +44,6 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
 
       setResults(Array.isArray(response.data.data.results) ? response.data.data.results : []);
 
-      console.log("Search result: ", response.data.data);
 
     } catch (error) {
       setError(error.message || "Error searching");
@@ -150,15 +149,16 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
     setSearchQuery(e.target.value);
     setHasSearched(false) ; // reset search flag on new input
   };
+  console.log(isMobile, isCollapsed, isExpanded);
 
   const baseClasses = isMobile
     ? "transition-all duration-300 ease-in-out"
     : "transition-all duration-300 ease-in-out";
 
   const containerClasses = isMobile
-    ? `${baseClasses} ${isCollapsed ? "w-12 h-12" : isExpanded ? "w-72" : "w-40"
+    ? `${baseClasses} ${isCollapsed ? "w-12 h-12" : isExpanded ? "w-60" : "w-40"
     }`
-    : `${baseClasses} ${isCollapsed ? "w-12 h-12" : "w-full"}`;
+    : `${baseClasses} ${"h-12 w-100"}`;
 
   return (
     <div className={containerClasses}>
@@ -193,13 +193,12 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
             {isExpanded && (
               <form onSubmit={handleSubmit} className="flex-1 flex items-center">
                 <input
-                  ref={inputRef}
+                  // ref={inputRef}
                   type="text"
                   value={searchQuery}
                   onChange={handleInputChange}
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
-                  onClick={(e) => e.stopPropagation()}
                   placeholder="Search products..."
                   className="flex-1 h-full bg-transparent border-none outline-none text-gray-900 placeholder-gray-400 text-sm px-2"
                 />
