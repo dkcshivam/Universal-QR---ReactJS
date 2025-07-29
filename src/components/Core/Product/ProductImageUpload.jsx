@@ -44,7 +44,7 @@ const ProductImageUpload = ({ onUpload, images, isUploading }) => {
     }
 
     return (
-        <div className="w-full flex flex-col items-center">
+        <div className="w-full flex flex-col items-center sm:flex-row sm:items-start">
 
             {/* Upload Box at left */}
             <div
@@ -84,7 +84,7 @@ const ProductImageUpload = ({ onUpload, images, isUploading }) => {
             {/* Images grid */}
 
             {images && images.length > 0 && (
-                <div className="w-full ml-4 grid grid-cols-3 gap-4 mt-6">
+                <div className="w-full mt-6 grid grid-cols-3 gap-4 sm:mt-0 sm:ml-4 sm:grid-cols-1 sm:flex sm:flex-wrap">
                     {images.map((img, idx) => (
                         <img
                             key={idx}
@@ -94,6 +94,28 @@ const ProductImageUpload = ({ onUpload, images, isUploading }) => {
                             onClick={() => handleImageClick(img)}
                         />
                     ))}
+                </div>
+            )}
+
+            {/* enlarged image */}
+
+            {enlargedImage && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+                    <div className="absolute inset-0" onClick={() => setEnlargedImage(null)}></div>
+                    <div className="relative">
+                        <img
+                            src={enlargedImage}
+                            alt="Enlarged"
+                            className="max-h-[80vh] max-w-[90vw] object-contain shadow-lg"
+                        />
+                        <button
+                            className="absolute top-2 right-2 text-white bg-black/60 rounded-full p-2 hover:bg-black/80 transition-transform duration-200 hover:scale-110 z-10"
+                            onClick={() => setEnlargedImage(null)}
+                            aria-label="Close"
+                        >
+                            <FaTimes className="text-2xl" />
+                        </button>
+                    </div>
                 </div>
             )}
 
