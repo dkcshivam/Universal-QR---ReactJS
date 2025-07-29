@@ -23,7 +23,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 function ProductDetail() {
   const token = localStorage.getItem("access_token");
 
-  const { code, isEditable } = useParams();
+  const { code } = useParams();
 
   const [uploadedImages, setUploadedImages] = useState([]);
   const [data, setData] = useState("");
@@ -485,7 +485,7 @@ function ProductDetail() {
 
                 {/* Edit Product Button */}
 
-                {isEditMode && isEditable === "true" ? (
+                {isEditMode && has_update_power ? (
                   <button
                     className="inline-flex items-center justify-center gap-2 bg-green-600 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-green-700"
                     onClick={handleUpdateProduct}
@@ -495,7 +495,7 @@ function ProductDetail() {
                     <span className="sm:hidden">Update</span>
                   </button>
                 ) : (
-                  isEditable === "true" && (
+                  data.has_update_power && (
                     <button
                       className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-[#7594c7]"
                       onClick={handleEditClick}
