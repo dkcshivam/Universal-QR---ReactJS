@@ -1,6 +1,8 @@
 import axios from "axios";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect,useMemo } from "react";
 import { FaSearch, FaTimes } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { debounce } from 'lodash';
 
 const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
 
@@ -10,7 +12,10 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const [hasSearched, setHasSearched] = useState(false) ; 
+
   const inputRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isExpanded && inputRef.current) {
@@ -22,21 +27,23 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
 
   const fetchSearchResults = async (query) => {
 
-    console.log("API hit with query: ", query) ; 
+    console.log("API hit with query: ", query);
 
     setLoading(true);
     setError(null);
+    setHasSearched(true) ; 
 
     console.log("fetchSearchResults called with query:", query);
 
     try {
-      const response = await axios(`${import.meta.env.VITE_API_URL}/qr/search?q=${encodeURIComponent(query)}`);
+      const response = await axios(`${import.meta.env.VITE_API_URL}/qr/search-elastic?q=${encodeURIComponent(query)}`);
 
       console.log("search response: ", response);
-      
-      setResults(response.data.data || []);
 
-      console.log("Search result: ", response.data.data);
+      // setResults(response.data.data || []);
+
+      setResults(Array.isArray(response.data.data.results) ? response.data.data.results : []);
+
 
     } catch (error) {
       setError(error.message || "Error searching");
@@ -48,17 +55,56 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
 
   }
 
+  // debouncing for larger screens 
+
+  const debouncedFetch = useMemo(() => debounce(fetchSearchResults, 2000), []);
+
+  useEffect(() => {
+
+    // will be only searching if the user has stopped typing for 3 seconds 
+
+    // if (isExpanded && searchQuery.trim()) {
+    //   setLoading(true);
+
+    //   const delayDebounce = setTimeout(() => {
+    //     fetchSearchResults(searchQuery.trim());
+    //   }, 2000);
+
+    //   return () => clearTimeout(delayDebounce);
+    // }
+    // else {
+    //   setResults([]);
+    //   setLoading(false);
+    // }
+
+      if (isExpanded && searchQuery.trim()) {
+      debouncedFetch(searchQuery.trim());
+    } else {
+      setResults([]);
+      setLoading(false);
+    }
+
+    // Cancel debounce on unmount
+    return () => {
+      debouncedFetch.cancel();
+    };
+
+
+  }, [searchQuery, isExpanded])
+
+
+
   // debouncing for mobile searches 
 
   useEffect(() => {
-    if(isMobile && isExpanded && searchQuery.trim()){
+    if (isMobile && isExpanded && searchQuery.trim()) {
       const delayDebounce = setTimeout(() => {
-          fetchSearchResults(searchQuery.trim()) ; 
+        fetchSearchResults(searchQuery.trim());
       }, 400);
       return () => clearTimeout(delayDebounce)
     }
 
-    if(isMobile && !searchQuery.trim()){
+    if (isMobile && !searchQuery.trim()) {
       setResults([])
     }
 
@@ -92,27 +138,27 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("handleSubmit called with searchQuery:", searchQuery);
 
     if (searchQuery.trim()) {
-      fetchSearchResults(searchQuery.trim());
-    } else {
-      console.log("Search query is empty, not searching.")
+      handleClose();
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
     }
   };
 
   const handleInputChange = (e) => {
     setSearchQuery(e.target.value);
+    setHasSearched(false) ; // reset search flag on new input
   };
+  console.log(isMobile, isCollapsed, isExpanded);
 
   const baseClasses = isMobile
     ? "transition-all duration-300 ease-in-out"
     : "transition-all duration-300 ease-in-out";
 
   const containerClasses = isMobile
-    ? `${baseClasses} ${isCollapsed ? "w-12 h-12" : isExpanded ? "w-72" : "w-40"
+    ? `${baseClasses} ${isCollapsed ? "w-12 h-12" : isExpanded ? "w-60" : "w-40"
     }`
-    : `${baseClasses} ${isCollapsed ? "w-12 h-12" : "w-full"}`;
+    : `${baseClasses} ${"h-12 w-100"}`;
 
   return (
     <div className={containerClasses}>
@@ -147,13 +193,12 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
             {isExpanded && (
               <form onSubmit={handleSubmit} className="flex-1 flex items-center">
                 <input
-                  ref={inputRef}
+                  // ref={inputRef}
                   type="text"
                   value={searchQuery}
                   onChange={handleInputChange}
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
-                  onClick={(e) => e.stopPropagation()}
                   placeholder="Search products..."
                   className="flex-1 h-full bg-transparent border-none outline-none text-gray-900 placeholder-gray-400 text-sm px-2"
                 />
@@ -178,16 +223,35 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
                 <div className="p-3">
                   {loading && <p className="text-sm text-gray-500">Loading...</p>}
                   {error && <p className="text-sm text-red-500">{error}</p>}
-                  {!loading && !error && results.length === 0 && (
+
+                  {/* if result not found - display no results found  */}
+
+                  {!loading && !error && results.length === 0 && searchQuery.trim().length > 0 && hasSearched && (
                     <p className="text-sm text-gray-500">No results found.</p>
                   )}
+
+                  {/* if found: results */}
+
                   <div className="space-y-2">
-                    {results.map((item) => (
-                      <div key={item.id} className="p-2 hover:bg-gray-50 rounded cursor-pointer">
-                        <p className="text-sm text-gray-700 font-semibold">{item.name}</p>
-                        <p className="text-xs text-gray-500">Code: {item.code}</p>
-                      </div>
-                    ))}
+                    {
+                      results.map((item) => (
+                        <div
+                          key={item.id}
+                          className="p-2 hover:bg-gray-50 rounded cursor-pointer"
+                          onClick={() => {
+                            handleClose() ; 
+                            navigate(`/product-detail/${item.code}`)
+                          }}
+                        >
+                          <p className="text-sm text-gray-700 font-semibold">
+                            {item.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Code: {item.code}
+                          </p>
+                        </div>
+                      ))
+                    }
                   </div>
                 </div>
               </div>

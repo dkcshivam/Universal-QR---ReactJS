@@ -2,12 +2,12 @@ import React from "react";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
-const ProductCard = ({ product, index }) => {
+const ProductCard = ({ product, index, activeTab }) => {
   const navigate = useNavigate();
   return (
     <div
       key={index}
-      className="bg-white rounded-lg shadow border border-gray-200 p-3 sm:p-5 flex flex-col justify-between hover:border-indigo-400"
+      className="bg-white rounded-none shadow border border-gray-200 p-3 sm:p-5 flex flex-col justify-between hover:border-indigo-400"
     >
       <div
         className="w-full h-[220px] rounded-none mb-[15px] overflow-hidden relative cursor-pointer"

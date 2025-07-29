@@ -5,10 +5,12 @@ const Pagination = ({
   itemsPerPage,
   currentPage,
   onPageChange,
+  totalPages: totalPagesProp 
 }) => {
+
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const start = (currentPage - 1) * itemsPerPage + 1;
-  const end = Math.min(start + itemsPerPage - 1, totalItems);
+  const end = start + itemsPerPage - 1 > totalItems ? totalItems : start + itemsPerPage - 1;
 
   // Generate page numbers to display
   const getPageNumbers = () => {

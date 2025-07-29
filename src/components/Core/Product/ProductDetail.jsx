@@ -1,24 +1,31 @@
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { FaPlus } from "react-icons/fa";
+import { FaPencilAlt,FaTrash } from "react-icons/fa";
 
 import {
   FaQrcode,
   FaCommentAlt,
   FaKeyboard,
   FaMicrophone,
-  FaTimes,
+  FaTimes
 } from "react-icons/fa";
 import { Edit } from "lucide-react";
 import VoiceRecorder from "../Remarks/VoiceRecorder";
 import AudioPlayer from "../Remarks/AudioPlayer";
 import { toast } from "react-toastify";
+import EditProductModal from "./EditProductModal";
+import ProductImageUpload from "./ProductImageUpload";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 function ProductDetail() {
+  const token = localStorage.getItem("access_token");
+
   const { code } = useParams();
 
+  const [uploadedImages, setUploadedImages] = useState([]);
   const [data, setData] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [newRemark, setNewRemark] = useState("");
@@ -29,7 +36,142 @@ function ProductDetail() {
   const [isSubmittingRemark, setIsSubmittingRemark] = useState(false);
   const [remarkError, setRemarkError] = useState(null);
 
-  const token = localStorage.getItem("access_token");
+  // setting a loading state before calling the API, and keeping the modal open until the update is done
+
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // edit mode
+  const [editingId, setEditingId] = useState(null);
+  const [editedText, setEditedText] = useState("");
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editFields, setEditFields] = useState({
+    name: "",
+    department: "",
+    quantity: "",
+    location: "",
+    cover_image: null,
+  });
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const [departments, setDepartments] = useState([]);
+
+  const [enlargedImage, setEnlargedImage] = useState(null);
+
+  const openModal = (imgSrc) => setEnlargedImage(imgSrc);
+  const closeModal = () => setEnlargedImage(null);
+
+  // uploading image (product image)
+
+  const handleImageUpload = async (files) => {
+
+    const formData = new FormData();
+    Array.from(files).forEach(file => {
+      formData.append("image", file); 
+    });
+
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/qr/products/${code}/images/upload/`,
+        formData,
+        { headers: {
+          "Content-Type": "multipart/form-data", 
+          "Authorization": `Bearer ${token}`
+        } }
+      );
+
+      // fetching the updated product details to get new images 
+
+      await getProductDetail() ; 
+
+    } catch (err) {
+      console.error("Image upload failed", err);
+    }
+  };
+
+  useEffect(() => {
+    axios
+      .get(`${import.meta.env.VITE_API_URL}/qr/departments/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        setDepartments(res.data.data || []);
+      })
+      .catch((err) => {
+        setDepartments([]);
+      });
+  }, [token]);
+
+  const handleEditClick = () => {
+    if (!token) {
+      toast.error("Please login to update product.");
+      return;
+    }
+    setEditFields({
+      name: data?.name || "",
+      department: data?.belongs_to_department || "",
+      quantity: data?.quantity || "",
+      location: data?.location || "",
+      cover_image: data?.cover_image || null,
+    });
+    toast.success("You are in edit mode.");
+    setIsEditModalOpen(true);
+  };
+
+  const handleFieldChange = (e) => {
+    setEditFields({
+      ...editFields,
+      [e.target.name]: e.target.value,
+    });
+  };
+  const handleSaveEdit = async () => {
+    setIsUpdating(true); // show loader immediately
+    await handleUpdateProduct();
+    setIsUpdating(false); // hide loader after update
+    setIsEditModalOpen(false); // now close modal
+    await getProductDetail();
+  };
+  const handleUpdateProduct = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("name", editFields.name);
+      formData.append("belongs_to_department", editFields.department);
+      formData.append("quantity", editFields.quantity);
+      formData.append("location", editFields.location);
+
+      // image as file
+
+      if (
+        editFields.cover_image &&
+        typeof editFields.cover_image !== "string"
+      ) {
+        formData.append("cover_image", editFields.cover_image);
+      }
+
+      console.log("Saving: ", editFields);
+
+      const response = await axios.put(
+        `${API_BASE_URL}/qr/products/${code}/edit/`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("update response: ", response);
+
+      await getProductDetail();
+      toast.success("Product updated successfully!");
+    } catch (error) {
+      console.log("handle update product failed: ", error);
+      toast.error("Product update failed! Please try again.");
+    }
+  };
 
   const getProductDetail = async () => {
     try {
@@ -43,11 +185,55 @@ function ProductDetail() {
       console.error("Error fetching product:", error);
     }
   };
+  const handleSave = async (remarkId) => {
+    // Call API here to save the updated remark
+    // Example:
+    try {
+      await axios.put(
+        `${API_BASE_URL}/qr/products/${code}/remarks/${remarkId}/edit/`,
+        {
+          remark: editedText,
+        }
+      );
 
+      // After successful update, update local state or refetch remarks
+      const updatedRemarks = remarks.map((r) =>
+        r.id === remarkId ? { ...r, remark: editedText } : r
+      );
+      setRemarks(updatedRemarks); // assuming remarks is in state
+      setEditingId(null);
+    } catch (error) {
+      console.error("Error updating remark", error);
+      // Optionally show toast/error
+    }
+  };
+  const handleDeleteRemark = async (remarkId) => {
+    try {
+      await axios.delete(
+        `${API_BASE_URL}/qr/products/${code}/remarks/${remarkId}/delete/`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Remove the deleted remark from local state
+      getRemarks();
+      toast.success("Remark deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting remark:", error);
+      toast.error("Failed to delete remark. Please try again.");
+    }
+  };
   // Get remarks for the product
   const getRemarks = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/qr/remarks/${code}/`);
+      const res = await axios.get(`${API_BASE_URL}/qr/remarks/${code}/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (res.status === 200) {
         const remarksData = res?.data?.data || [];
         console.log("Remarks data:", remarksData);
@@ -305,8 +491,10 @@ function ProductDetail() {
 
               {/* Action Buttons */}
               <div className="flex flex-row items-stretch sm:items-center gap-2 lg:gap-4">
+                {/* Download QR Button */}
+
                 <button
-                  className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 md:flex-none lg:text-base"
+                  className="inline-flex items-center justify-center gap-2 bg-blue-500 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 md:flex-none lg:text-base hover:bg-blue-600"
                   onClick={handleDownloadQR}
                   disabled={!data?.qr}
                 >
@@ -315,57 +503,142 @@ function ProductDetail() {
                   <span className="sm:hidden">QR Code</span>
                 </button>
 
-                <button className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base">
-                  <Edit className="text-white w-4 h-4" />
-                  <span className="hidden sm:inline">Edit Product</span>
-                  <span className="sm:hidden">Edit</span>
-                </button>
+                {/* Edit Product Button */}
+
+                {isEditMode && has_update_power ? (
+                  <button
+                    className="inline-flex items-center justify-center gap-2 bg-green-600 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-green-700"
+                    onClick={handleUpdateProduct}
+                  >
+                    <Edit className="text-white w-4 h-4" />
+                    <span className="hidden sm:inline">Update Product</span>
+                    <span className="sm:hidden">Update</span>
+                  </button>
+                ) : (
+                  data.has_update_power && (
+                    <button
+                      className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-[#7594c7]"
+                      onClick={handleEditClick}
+                    >
+                      <Edit className="text-white w-4 h-4" />
+                      <span className="hidden sm:inline">Edit Product</span>
+                      <span className="sm:hidden">Edit</span>
+                    </button>
+                  )
+                )}
               </div>
             </div>
 
+            {/* Name */}
+            {isEditMode && (
+              <div className="flex flex-col gap-2 mb-2">
+                <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
+                  PRODUCT NAME
+                </div>
+                <input
+                  name="name"
+                  value={editFields.name}
+                  onChange={handleFieldChange}
+                  placeholder="Enter product name here"
+                  className="bg-[#f8fafc] text-[#374151] px-3 py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base"
+                />
+              </div>
+            )}
+
+            {/* Cover Image */}
+
+            {isEditMode && (
+              <div className="flex flex-col gap-2 mb-2">
+                <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
+                  COVER IMAGE
+                </div>
+                {editFields.cover_image ? (
+                  <div className="relative w-32 h-32">
+                    <img
+                      src={URL.createObjectURL(editFields.cover_image)}
+                      alt="Preview"
+                      className="w-full h-full object-cover rounded"
+                    />
+                    <button
+                      className="absolute top-1 right-1 bg-white rounded-full p-1 shadow"
+                      onClick={() =>
+                        setEditFields({ ...editFields, cover_image: null })
+                      }
+                      type="button"
+                    >
+                      <FaTimes className="text-red-500" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-indigo-300 rounded-md bg-gray-50 w-32 h-32 cursor-pointer hover:bg-indigo-50 transition">
+                    <FaPlus className="text-indigo-400 text-2xl mb-1" />
+                    <span className="text-gray-500 text-xs">
+                      Upload Cover Image
+                    </span>
+                    <input
+                      type="file"
+                      name="cover_image"
+                      accept="image/*"
+                      onChange={(e) =>
+                        setEditFields({
+                          ...editFields,
+                          cover_image: e.target.files[0],
+                        })
+                      }
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+            )}
+
             {/* Product Info Grid */}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Department */}
+
               <div className="flex flex-col gap-2">
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
                   DEPARTMENT
                 </div>
-                <div className="inline-flex items-center gap-2 bg-[#f8fafc] text-[#374151] px-3 py-2 lg:px-4 lg:py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base">
-                  <span>
-                    {!data?.belongs_to_department ? (
-                      <span>N/A</span>
-                    ) : (
-                      <span>{data?.belongs_to_department}</span>
-                    )}
-                  </span>
-                </div>
+                <span className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100">
+                  {!data?.belongs_to_department
+                    ? "N/A"
+                    : departments.find(
+                        (dep) => dep.key === data.belongs_to_department
+                      )?.label || data.belongs_to_department}
+                </span>
               </div>
+
+              {/* quantity */}
 
               <div className="flex flex-col gap-2">
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
                   QUANTITY
                 </div>
-                <div className="inline-flex items-center gap-2 bg-[#f8fafc] text-[#374151] px-3 py-2 lg:px-4 lg:py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base">
-                  <span>
-                    {!data?.quantity ? (
-                      <span>N/A</span>
-                    ) : (
-                      <span>{data?.quantity} Items</span>
-                    )}
-                  </span>
-                </div>
+                <span className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100">
+                  {!data?.quantity && data?.quantity !== 0
+                    ? "N/A"
+                    : `
+                      ${data.quantity} ${
+                        Number(data.quantity) === 1 ||
+                        Number(data.quantity) === 0
+                          ? "item"
+                          : "items"
+                      }
+                    `}
+                </span>
               </div>
+
+              {/* location */}
 
               <div className="flex flex-col gap-2 sm:col-span-2 lg:col-span-1">
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
                   LOCATION
                 </div>
-                <div className="inline-flex items-center gap-2 bg-[#f8fafc] text-[#374151] px-3 py-2 lg:px-4 lg:py-2 rounded-md border border-[#e2e8f0] text-sm lg:text-base">
-                  {!data?.location ? (
-                    <span>N/A</span>
-                  ) : (
-                    <span>{data?.location}</span>
-                  )}
-                </div>
+                <span className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100">
+                  {!data?.location ? "N/A" : data.location}
+                </span>
               </div>
             </div>
 
@@ -377,11 +650,10 @@ function ProductDetail() {
                   {remarkError}
                 </div>
               )}
-
               {!showRemarkForm ? (
                 <div className="flex flex-col sm:flex-row gap-2">
                   <button
-                    className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm lg:text-base"
+                    className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm lg:text-base cursor-pointer"
                     onClick={() => handleShowRemarkForm("text")}
                     disabled={isSubmittingRemark}
                   >
@@ -390,7 +662,7 @@ function ProductDetail() {
                   </button>
 
                   <button
-                    className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm lg:text-base"
+                    className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm lg:text-base cursor-pointer"
                     onClick={() => handleShowRemarkForm("audio")}
                     disabled={isSubmittingRemark}
                   >
@@ -444,7 +716,6 @@ function ProductDetail() {
                   )}
                 </div>
               )}
-
               {/* Previous Remarks */}
               <div className="mt-6">
                 <div className="flex items-center gap-2 mb-4">
@@ -460,43 +731,99 @@ function ProductDetail() {
                       No remarks yet. Be the first to add one!
                     </div>
                   ) : (
-                    remarks.map((remark) => (
-                      <div
-                        key={remark.id}
-                        className="bg-gray-50 p-3 lg:p-4 rounded-lg border space-y-2"
-                      >
-                        <div className="flex flex-col sm:flex-row sm:justify-between gap-1 text-xs text-gray-400">
-                          <span>
-                            Remark by{" "}
-                            <span className="text-gray-700 font-semibold capitalize">
-                              {remark.username}
-                            </span>
-                          </span>
-                          <span>{formatDate(remark.created_at)}</span>
-                        </div>
+                    remarks.map((remark, index) => {
+                      const isEditing = editingId === remark.id;
 
-                        {remark.remark_type === "audio" ? (
-                          <div className="space-y-2">
-                            {remark.audio_url && (
-                              <div className="w-full overflow-hidden">
-                                <AudioPlayer
-                                  audioUrl={remark.audio_url}
-                                  duration={remark.audio_duration}
-                                  mimeType={remark.mimeType}
-                                />
-                              </div>
-                            )}
-                            <p className="text-gray-600 text-sm">
-                              {remark.remark}
-                            </p>
+                      return (
+                        <div
+                          key={remark.id}
+                          className="bg-gray-50 p-3 lg:p-4 rounded-lg border space-y-2"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:justify-between gap-1 text-xs text-gray-400">
+                            <span>
+                              Remark by{" "}
+                              <span className="text-gray-700 font-semibold capitalize">
+                                {remark.username}
+                              </span>
+                            </span>
+                            <span>{formatDate(remark.created_at)}</span>
                           </div>
-                        ) : (
-                          <p className="text-gray-800 text-sm lg:text-base break-words">
-                            {remark.remark}
-                          </p>
-                        )}
-                      </div>
-                    ))
+
+                          {isEditing ? (
+                            <div className="space-y-2">
+                              <textarea
+                                className="w-full border p-2 rounded text-sm"
+                                rows={3}
+                                value={editedText}
+                                onChange={(e) => setEditedText(e.target.value)}
+                              />
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleSave(remark.id)}
+                                  className="text-white bg-blue-600 hover:bg-blue-700 text-sm px-3 py-1 rounded"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => setEditingId(null)}
+                                  className="text-gray-600 hover:text-gray-800 text-sm"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              {remark.remark_type === "audio" ? (
+                                <div className="space-y-2">
+                                  {remark.audio_url && (
+                                    <div className="w-full overflow-hidden">
+                                      <AudioPlayer
+                                        audioUrl={remark.audio_url}
+                                        duration={remark.audio_duration}
+                                        mimeType={remark.mimeType}
+                                      />
+                                    </div>
+                                  )}
+                                  <p className="text-gray-600 text-sm break-words">
+                                    {remark.remark}
+                                  </p>
+                                </div>
+                              ) : (
+                                <p className="text-gray-800 text-sm lg:text-base break-words">
+                                  {remark.remark}
+                                </p>
+                              )}
+
+                              {/* Show Edit button if user has permission */}
+                              {remark.isEditable && !isEditing && (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      setEditingId(remark.id);
+                                      setEditedText(remark.remark);
+                                    }}
+                                    className="text-gray-500 hover:text-blue-600 text-sm flex items-center gap-1 mt-1"
+                                    title="Edit Remark"
+                                  >
+                                    <FaPencilAlt className="text-xs" />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      handleDeleteRemark(remark.id);
+                                    }}
+                                    className="text-gray-500 hover:text-blue-600 text-sm flex items-center gap-1 mt-1"
+                                    title="delete Remark"
+                                  >
+                                    <FaTrash className="text-xs" />
+                                  </button>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -519,7 +846,8 @@ function ProductDetail() {
                 <img
                   src={data?.cover_image}
                   alt="cover preview"
-                  className="w-full h-full lg:max-h-[460px] object-cover rounded-lg border border-indigo-200"
+                  className="w-full h-full lg:max-h-[460px] object-cover border border-indigo-200 cursor-pointer"
+                  onClick={() => openModal(data?.cover_image)}
                 />
               </div>
             )}
@@ -533,53 +861,54 @@ function ProductDetail() {
               <span>Product Images</span>
             </div>
 
-            {data?.images?.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 lg:gap-4">
-                {data?.images.map((img, index) => (
-                  <div
-                    key={index}
-                    className="aspect-square rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
-                    // onClick={() => openModal(img)}
-                  >
-                    <img
-                      src={img.image}
-                      alt={`Product Image ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-32 lg:h-52 text-center px-4 py-6 text-gray-500">
-                <p className="text-sm lg:text-base">No images found</p>
-              </div>
-            )}
+            {/* Image Upload Box - always below Product Images */}
+
+            <div className="mt-6">
+              <ProductImageUpload
+                onUpload={handleImageUpload}
+                images={data?.images || []}
+              />
+            </div>
           </div>
         </div>
       </main>
 
-      {/* Image Modal */}
-      {/* {selectedImage && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-          onClick={closeModal}
-        >
-          <div className="relative max-w-full max-h-full">
+      {/* Edit Product Modal */}
+
+      <EditProductModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        editFields={editFields}
+        setEditFields={setEditFields}
+        departments={departments}
+        onSave={handleSaveEdit}
+        loading={isUpdating}
+      />
+
+      {/* Enlarged view for cover and product image */}
+
+      {enlargedImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="absolute inset-0" onClick={closeModal}></div>
+          <div className="relative max-w-3xl w-full flex justify-center items-center p-4">
+            {/* Move the button up top-right corner, outside the image */}
+
             <button
-              className="absolute top-2 right-2 lg:top-4 lg:right-4 text-white bg-black bg-opacity-50 rounded-full w-8 h-8 lg:w-10 lg:h-10 flex items-center justify-center hover:bg-opacity-75 text-lg lg:text-xl z-10"
+              className="absolute -top-8 cursor-pointer right-4 text-white bg-black/60 rounded-full p-2 hover:bg-black/80 transition-transform duration-200 hover:scale-110 z-10"
               onClick={closeModal}
+              aria-label="Close"
+              style={{ boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2" }}
             >
-              <FaTimes />
+              <FaTimes className="text-2xl" />
             </button>
             <img
-              src={selectedImage.image}
-              alt="Enlarged product"
-              className="max-w-[50%] max-h-[50%] object-contain rounded-lg"
-              onClick={(e) => e.stopPropagation()}
+              src={enlargedImage}
+              alt="Enlarged"
+              className="max-h-[80vh] max-w-full object-contain"
             />
           </div>
         </div>
-      )} */}
+      )}
     </div>
   );
 }
