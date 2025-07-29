@@ -175,11 +175,7 @@ function ProductDetail() {
 
   const getProductDetail = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`);
       if (res.status === 200) {
         const productData = res?.data?.data;
         setData(productData);
