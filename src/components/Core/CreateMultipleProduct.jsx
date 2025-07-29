@@ -284,7 +284,7 @@ function CreateMultipleProduct() {
                       </button>
                     </div>
                   )}
-                  <label
+                  { !row.coverImageUrl && (<label
                     style={{
                       width: 40,
                       height: 40,
@@ -308,7 +308,7 @@ function CreateMultipleProduct() {
                     <FaPlus
                       style={{ color: "#2563eb", fontSize: 18, margin: 0 }}
                     />
-                  </label>
+                  </label>)}
                 </div>
               </td>
 

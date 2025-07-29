@@ -40,6 +40,10 @@ function ProductDetail() {
 
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // to show loader while uploading 
+
+  const [isUploading, setIsUploading] = useState(false) ; 
+
   // edit mode
   const [editingId, setEditingId] = useState(null);
   const [editedText, setEditedText] = useState("");
@@ -83,19 +87,22 @@ function ProductDetail() {
       // fetching the updated product details to get new images 
 
       await getProductDetail() ; 
-
+      toast.success('Image uploaded successfully!') ; 
     } catch (err) {
-      console.error("Image upload failed", err);
+      
+      // trying to show backend error message if available 
+
+      const errorMsg = err?.response?.data?.errors_data?.image?.[0] || err?.response?.data?.message || "Image upload failed!" ; 
+
+      toast.error(errorMsg) ; 
+    } finally {
+      setIsUploading(false) ; 
     }
   };
 
   useEffect(() => {
     axios
-      .get(`${import.meta.env.VITE_API_URL}/qr/departments/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      .get(`${import.meta.env.VITE_API_URL}/qr/departments/`)
       .then((res) => {
         setDepartments(res.data.data || []);
       })
@@ -868,6 +875,7 @@ function ProductDetail() {
                 has_update_power={data.has_update_power}
                 onUpload={handleImageUpload}
                 images={data?.images || []}
+                isUploading={isUploading}
               />
             </div>
           </div>
