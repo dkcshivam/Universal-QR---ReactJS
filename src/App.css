@@ -569,3 +569,19 @@ body {
   display: inline-block;
   animation: upDown 1s infinite; 
 }
+
+
+/* Toast notification for mobile view */
+
+@media (max-width: 640px) {
+  .Toastify__toast {
+    min-width: 140px !important;
+    max-width: 90vw !important;
+    font-size: 0.8rem !important;
+    padding: 6px 10px !important;
+  }
+  .Toastify__toast-body {
+    font-size: 0.8rem !important;
+    padding: 0 !important;
+  }
+}

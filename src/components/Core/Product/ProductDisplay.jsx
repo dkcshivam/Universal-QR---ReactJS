@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import Pagination from "../../Pagination";
 import ProductCard from "./ProductCard";
 import axios from "axios";
+import Lottie from "lottie-react";
+// import lottieSpinner from '../../../media/lottie-spinner.json'
 
 const ProductGrid = ({activeTab }) => {
 const [products, setProducts] = useState([]);
@@ -9,12 +11,32 @@ const [products, setProducts] = useState([]);
     count: 0,
     total_pages: 1,
     current_page: 1,
-  }); // Number of products per page
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [lottieData, setLottieData] = useState(null) ; 
+
+  const itemsPerPage = 20; // Number of products per page
+
+  // in Vite (CRA), the public folder is not part of the module system. Files in 'public' are served as static assets, not imported as modules
+
+  useEffect(() => {
+    fetch('/media/lottie-spinner.json') 
+      .then(res => res.json())
+      .then(data => setLottieData(data)) ; 
+    
+    fetchProducts(1) ;   
+  }, [])
+
+ // Number of products per page
   const [nextURL, setNextURL] = useState(null);
   const [previousURL, setPreviousURL] = useState(null);
   // Fetch products from API for a given page
 
   const fetchProducts = async (page = 1) => {
+
+    setLoading(true);
+
     const token = localStorage.getItem("access_token");
     try {
       const url = activeTab === "mine"
@@ -40,6 +62,7 @@ const [products, setProducts] = useState([]);
     } catch (error) {
       setProducts([]);
     }
+    setLoading(false);
   };
 
   // Initial fetch on mount
@@ -54,25 +77,35 @@ const [products, setProducts] = useState([]);
 
   return (
     <div className="min-h-screen box-border">
-      {/* Render product cards for current page */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-5">
-        {products?.map((product, index) => (
-          <ProductCard key={index} product={product} index={index} activeTab={activeTab} />
-        ))}
-      </div>
-      {/* Show pagination if products exist, else show empty message */}
-      {products?.length > 0 ? (
-        <Pagination
-          totalItems={pagination.count}
-          itemsPerPage={100}
-          currentPage={pagination.current_page}
-          totalPages={pagination.total_pages}
-          onPageChange={handlePageChange}
-        />
-      ) : (
-        <div className="flex items-center justify-center py-4">
-          <span className="text-gray-500">No products found.</span>
+      {loading ? (
+        <div className="flex items-center justify-center h-[60vh]">
+          <Lottie
+            animationData={lottieData}
+            loop={true}
+            style={{ width: 120, height: 120 }}
+          />
         </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-5">
+            {products?.map((product, index) => (
+              <ProductCard key={index} product={product} index={index} activeTab={activeTab} />
+            ))}
+          </div>
+          {products?.length > 0 ? (
+            <Pagination
+              totalItems={pagination.count}
+              itemsPerPage={100}
+              currentPage={pagination.current_page}
+              totalPages={pagination.total_pages}
+              onPageChange={handlePageChange}
+            />
+          ) : (
+            <div className="flex items-center justify-center py-4">
+              <span className="text-gray-500">No products found.</span>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

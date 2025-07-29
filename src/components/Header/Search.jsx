@@ -186,8 +186,8 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
               <FaSearch className="h-4 w-4 text-gray-400" />
             </div>
             {!isExpanded && (
-              <span className="flex-1 text-gray-700 text-base font-semibold pr-3 truncate">
-                Search products
+              <span className="flex-1 text-gray-700 text-[13px] font-semibold pr-3 truncate">
+                Search products...
               </span>
             )}
             {isExpanded && (
