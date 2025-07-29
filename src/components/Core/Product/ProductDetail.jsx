@@ -865,6 +865,7 @@ function ProductDetail() {
 
             <div className="mt-6">
               <ProductImageUpload
+                has_update_power={data.has_update_power}
                 onUpload={handleImageUpload}
                 images={data?.images || []}
               />
