@@ -13,12 +13,10 @@ import CreateMultipleProduct from "./components/Core/CreateMultipleProduct";
 import QRScanner from "./components/Core/Product/ScanQR";
 import SearchResults from "./components/Header/SearchResults";
 import AddProduct from "./components/Core/Product/AddNewProduct";
-import { useState } from 'react';
+import { useState } from "react";
 import ProductDetail from "./components/Core/Product/ProductDetail";
 
-
 function App() {
-
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("mine");
   const handleQRResult = (result) => {
@@ -52,7 +50,7 @@ function App() {
           {/* ProductDetail */}
           <Route path="/product-detail/:code/" element={<ProductDetail />} />
           {/* Search Results  */}
-          <Route path="/search" element={<SearchResults/>} />
+          <Route path="/search" element={<SearchResults />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

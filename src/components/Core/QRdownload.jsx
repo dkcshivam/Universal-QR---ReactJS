@@ -5,25 +5,30 @@ import axios from "axios";
 // Sample product data based on your image
 
 function QRdownload() {
-
   const [products, setProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState(new Set());
 
-  // fetch all products from the backend 
+  // fetch all products from the backend
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/qr/products`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/qr/products`
+        );
 
-        setProducts(Array.isArray(response.data.data.results) ? response.data.data.results : []);
+        setProducts(
+          Array.isArray(response.data.data.results)
+            ? response.data.data.results
+            : []
+        );
       } catch (error) {
         console.log("Error in fetching all products:", error);
         toast.error("Failed to fetch all products");
       }
-    }
+    };
     fetchProducts();
-  }, [])
+  }, []);
 
   const handleSelectOne = (productId) => {
     const newSelection = new Set(selectedProducts);
@@ -44,7 +49,7 @@ function QRdownload() {
     // Map selected IDs to product codes
 
     const selectedCodes = Array.from(selectedProducts)
-      .map(id => products.find(p => p.id === id)?.code)
+      .map((id) => products.find((p) => p.id === id)?.code)
       .filter(Boolean);
 
     console.log("Selected IDs:", Array.from(selectedProducts));
@@ -55,15 +60,15 @@ function QRdownload() {
       product_codes: selectedCodes,
     };
 
-    console.log("Payload sent to backend:", payload)
+    console.log("Payload sent to backend:", payload);
 
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/qr/bulk-qr-download/`,
         payload,
         {
-          responseType: 'blob',
-          headers: { 'Content-Type': 'application/json' },
+          responseType: "blob",
+          headers: { "Content-Type": "application/json" },
         }
       );
 
@@ -76,7 +81,6 @@ function QRdownload() {
       document.body.removeChild(link);
 
       toast.success("QR codes downloaded successfully!");
-
     } catch (error) {
       console.log("handle download error: ", error);
       toast.error(error.message || "Something went wrong");
@@ -85,14 +89,22 @@ function QRdownload() {
 
   const now = new Date();
 
-  // formatted date and time for QR Zip naming 
+  // formatted date and time for QR Zip naming
 
-  const formattedDate = now.toLocaleDateString('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric'
-  }).replace(/ /g, '-'); // e.g., 25-Jul-2025
-  const formattedTime = now.toLocaleTimeString('en-US', {
-    hour: '2-digit', minute: '2-digit'
-  }).replace(/:/g, '-').replace(/ /g, ''); // e.g., 04-02PM
+  const formattedDate = now
+    .toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
+    .replace(/ /g, "-"); // e.g., 25-Jul-2025
+  const formattedTime = now
+    .toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+    .replace(/:/g, "-")
+    .replace(/ /g, ""); // e.g., 04-02PM
 
   const fileName = `QR_Codes_${formattedDate}_${formattedTime}.zip`;
 
@@ -120,42 +132,47 @@ function QRdownload() {
           </tr>
         </thead>
         <tbody>
-          { Array.isArray(products) && products.map((product) => (
-            <tr key={product.id}>
-              <td>
-                <input
-                  type="checkbox"
-                  checked={selectedProducts.has(product.id)}
-                  onChange={() => handleSelectOne(product.id)}
-                  className="cursor-pointer"
-                />
-              </td>
-              <td>
-                {
-                  product.cover_image ? (
+          {Array.isArray(products) &&
+            products.map((product) => (
+              <tr key={product.id}>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={selectedProducts.has(product.id)}
+                    onChange={() => handleSelectOne(product.id)}
+                    className="cursor-pointer"
+                  />
+                </td>
+                <td>
+                  {product.cover_image ? (
                     <img
                       src={product.cover_image}
                       alt={product.name}
                       className="product-table-img"
-                      style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 1 }}
+                      style={{
+                        width: 50,
+                        height: 50,
+                        objectFit: "cover",
+                        borderRadius: 1,
+                      }}
                     />
                   ) : (
-                    <span className="text-gray-400 text-xs">
-                      No Image
-                    </span>
-                  )
-                }
-              </td>
-              <td>{product.name}</td>
-              <td>{product.quantity}</td>
-              <td>{product.location || <span className="text-gray-400 text-xs">N/A</span>}</td>
-              <td>
-                {product.belongs_to_department} || <span className="text-gray-400 text-xs">
-                  N/A
-                </span>
-              </td>
-            </tr>
-          ))}
+                    <span className="text-gray-400 text-xs">No Image</span>
+                  )}
+                </td>
+                <td>{product.name}</td>
+                <td>{product.quantity}</td>
+                <td>
+                  {product.location || (
+                    <span className="text-gray-400 text-xs">N/A</span>
+                  )}
+                </td>
+                <td>
+                  {product.belongs_to_department} ||{" "}
+                  <span className="text-gray-400 text-xs">N/A</span>
+                </td>
+              </tr>
+            ))}
         </tbody>
       </table>
     </div>
