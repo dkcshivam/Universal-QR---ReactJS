@@ -69,27 +69,24 @@ const AddProduct = () => {
     fetchDepartments();
   }, []);
 
-  async function handlesubmit() {
+  // product create
+
+  async function createProduct() {
     if (!productName.trim()) {
-      toast.error("Please fill in all required fields");
-      return;
+      toast.error("Please fill in the required fields.");
+      return null;
     }
 
     const token = localStorage.getItem("access_token");
 
     if (!token) {
-      toast.error("Please first login after then create a product");
-      return;
-    }
-
-    if (!token) {
-      toast.error("Authentication token not found. Please login again.");
-      navigate("/login");
+      toast.error("Please login first to create a product.");
       return;
     }
 
     try {
       const productData = new FormData();
+
       productData.append("name", productName);
       productData.append("quantity", quantity || "");
       productData.append("department", department || "");
@@ -100,65 +97,81 @@ const AddProduct = () => {
         productData.append("cover_image", coverImage.file);
       }
 
-      productImages.forEach((img, index) => {
+      productImages.forEach((img) => {
         productData.append("product_images", img.file);
-      });
+      })
 
-      const res = await axios.post(
-        `${BASE_URL}/qr/products/create/`,
+      const response = await axios.post(`${BASE_URL}/qr/products/create/`,
         productData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
+            Authorization: `Bearer ${token}`
+          }
         }
-      );
+      )
 
-      if (res.status === 201) {
-        toast.success(res.data.message || "Product created successfully!");
-
-        // Reset form only on success
-        setProductName("");
-        setQuantity("");
-        setLocation("");
-        setDepartment("");
-        setRemarks("");
-        setCoverImage(null);
-        setProductImages([]);
-
-        navigate(-1);
+      if (response.status === 201) {
+        return response.data.data; // returning the created product data 
       }
-    } catch (error) {
-      console.error("Error creating product:", error);
 
+      return null;
+    } catch (error) {
       if (error.response) {
-        // Server responded with error status
-        const errorMessage =
-          error.response.data.message ||
-          error.response.data.error ||
-          "Failed to create product";
+        const errorMessage = error.response.data.message || error.response.data.error || "Failed to create product";
         toast.error(errorMessage);
-      } else if (error.request) {
-        // Request was made but no response received
+      }
+      else if (error.request) {
         toast.error("Network error. Please check your connection.");
-      } else {
-        // Something else happened
-        toast.error("An unexpected error occurred");
+      }
+      else {
+        toast.error("An unexpected error occured.")
       }
     }
+
   }
+
+  // create product and redirect to product-detail page 
+
+  const handleSave = async () => {
+    const product = await createProduct();
+    if (product) {
+      toast.success("Product created! Redirecting to details...");
+      navigate(`/product-detail/${product.product_code}/`);
+    }
+  }
+
+  // create product and redirect to the same 'AddNewProduct' page (if the user wants to add more product)
+
+  const handleSaveAndCreateNew = async () => {
+    const product = await createProduct();
+
+    if (product) {
+      toast.success("Product created! You can add another.");
+
+      setProductName("");
+      setQuantity("");
+      setLocation("");
+      setDepartment("");
+      setRemarks("");
+      setCoverImage(null);
+      setProductImages([]);
+    }
+  }
+
+  // product created and user remains on the same page to add more products 
 
   return (
     <div className="min-h-screen bg-gray-50 space-y-4">
       <div className="flex items-center justify-start bg-white w-full md:max-w-4xl rounded-2xl mx-auto shadow-md gap-2 p-4">
         <button
           onClick={() => window.history.back()}
-          className="flex items-center justify-center p-2 bg-blue-500 rounded-lg cursor-pointer"
+          className="inline-flex items-center gap-2 cursor-pointer px-4 py-2 bg-blue-400 hover:bg-blue-500 rounded-lg text-white transition-colors duration-200 shadow-sm hover:shadow-md"
         >
-          <FaArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
-          <span className="text-sm sm:text-base">Go Back</span>
+          <FaArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="text-sm sm:text-base font-medium">Go Back</span>
         </button>
+
         <div className="flex justify-center flex-1 gap-2">
           <h1 className="text-xl font-bold text-gray-800">Add New Product</h1>
         </div>
@@ -174,7 +187,7 @@ const AddProduct = () => {
             value={productName}
             onChange={(e) => setProductName(e.target.value)}
             placeholder="Enter product name..."
-            className="w-full px-4 py-2 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 shadow-sm"
+            className="w-full px-4 py-2 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
           />
         </div>
 
@@ -187,7 +200,7 @@ const AddProduct = () => {
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
               placeholder="Enter quantity..."
-              className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
@@ -197,7 +210,7 @@ const AddProduct = () => {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Enter location..."
-              className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -208,7 +221,7 @@ const AddProduct = () => {
           <select
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
-            className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {departments.map((dept) => (
               <option key={dept.key} value={dept.key}>
@@ -226,16 +239,16 @@ const AddProduct = () => {
             onChange={(e) => setRemarks(e.target.value)}
             placeholder="Add any additional notes or remarks..."
             // maxLength={500}
-            className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+            className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             rows={4}
           />
         </div>
 
         {/* Cover Image */}
         <div>
-          <label className="block font-medium text-gray-700">Cover Image</label>
+          <label className="block font-medium text-gray-700 mb-3">Cover Image</label>
           {!coverImage ? (
-            <label className="border-2 border-dashed border-indigo-300 rounded-md bg-gray-50 flex flex-col items-center justify-center h-52 text-center px-4 py-6 text-gray-500 cursor-pointer transition">
+            <label className="border-2 border-dashed border-blue-300 rounded-md bg-gray-50 flex flex-col items-center justify-center h-52 text-center px-4 py-6 text-gray-500 cursor-pointer transition">
               <input
                 type="file"
                 accept="image/*"
@@ -252,7 +265,7 @@ const AddProduct = () => {
               <img
                 src={coverImage.url}
                 alt="cover preview"
-                className="w-full h-52 object-cover rounded-lg border border-indigo-200"
+                className="w-full h-52 object-cover rounded-lg border border-blue-200"
               />
               <button
                 type="button"
@@ -268,7 +281,7 @@ const AddProduct = () => {
             <button
               type="button"
               onClick={() => coverFileInputRef.current.click()}
-              className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md"
+              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md cursor-pointer"
             >
               <FiUpload />
               Upload Cover
@@ -276,7 +289,7 @@ const AddProduct = () => {
             <button
               type="button"
               onClick={() => coverCameraInputRef.current.click()}
-              className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md"
+              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md cursor-pointer"
             >
               <FiCamera />
               Take Photo
@@ -302,12 +315,12 @@ const AddProduct = () => {
 
         {/* Product Images */}
         <div>
-          <label className="block font-medium text-gray-700">
+          <label className="block font-medium text-gray-700 mb-3">
             Product Images
           </label>
 
           {productImages.length === 0 ? (
-            <label className="border-2 border-dashed border-indigo-300 rounded-md bg-gray-50 flex flex-col items-center justify-center h-52 text-center px-4 py-6 text-gray-500 cursor-pointer transition">
+            <label className="border-2 border-dashed border-blue-300 rounded-md bg-gray-50 flex flex-col items-center justify-center h-52 text-center px-4 py-6 text-gray-500 cursor-pointer transition">
               <input
                 type="file"
                 multiple
@@ -328,7 +341,7 @@ const AddProduct = () => {
                   <img
                     src={img.url}
                     alt={`preview-${index}`}
-                    className="w-full h-52 object-cover rounded-lg border border-indigo-200"
+                    className="w-full h-52 object-cover rounded-lg border border-blue-200"
                   />
                   <button
                     type="button"
@@ -346,7 +359,7 @@ const AddProduct = () => {
             <button
               type="button"
               onClick={() => productFileInputRef.current.click()}
-              className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md"
+              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md cursor-pointer"
             >
               <FiUpload />
               Upload Images
@@ -354,7 +367,7 @@ const AddProduct = () => {
             <button
               type="button"
               onClick={() => productCameraInputRef.current.click()}
-              className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md"
+              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md cursor-pointer"
             >
               <FiCamera />
               Take Photo
@@ -381,23 +394,27 @@ const AddProduct = () => {
         </div>
 
         {/* Save Buttons */}
-        <div className="flex gap-4">
+
+        <div className="flex flex-row gap-3 mt-10 justify-end">
           <button
-            onClick={handlesubmit}
-            className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg shadow hover:bg-emerald-600 transition"
+            onClick={handleSave}
+            className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg shadow hover:bg-emerald-600 transition cursor-pointer font-semibold"
           >
             <Save size={18} />
             Save
           </button>
           <button
-            onClick={handlesubmit}
-            className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg shadow hover:bg-emerald-600 transition"
+            onClick={handleSaveAndCreateNew}
+            className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg shadow hover:bg-emerald-600 transition cursor-pointer font-semibold"
           >
             <Plus size={18} />
             Save & Create New
           </button>
         </div>
       </div>
+
+
+
     </div>
   );
 };

@@ -278,16 +278,16 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
     isCollapsed,
     isMobile,
   });
-
+  console.log(isMobile, isCollapsed, isExpanded);
   const baseClasses = isMobile
     ? "transition-all duration-300 ease-in-out"
     : "transition-all duration-300 ease-in-out";
 
   const containerClasses = isMobile
     ? `${baseClasses} ${
-        isCollapsed ? "w-12 h-12" : isExpanded ? "w-72" : "w-40"
+        isCollapsed ? "w-12 h-12" : isExpanded ? "w-55" : "w-30"
       }`
-    : `${baseClasses} ${isCollapsed ? "w-12 h-12" : "w-full max-w-xs"}`;
+    : `${baseClasses} ${"h-12 w-100"}`;
 
   return (
     <div className={containerClasses}>
@@ -337,7 +337,7 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
 
           {/* Label Text */}
           {!isExpanded && (
-            <span className="flex-1 text-gray-500 text-xs font-normal pr-3 truncate">
+            <span className="flex-1 text-gray-500 text-[12px] font-semibold pr-3 truncate">
               Help Desk
             </span>
           )}

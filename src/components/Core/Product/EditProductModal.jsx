@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FaTimes, FaSave, FaBan, FaUpload } from "react-icons/fa";
 
 const EditProductModal = ({
@@ -12,7 +12,28 @@ const EditProductModal = ({
 }) => {
     const fileInputRef = useRef();
     const [isDragging, setIsDragging] = useState(false); // for effect on drag
-    const dragCounter = useRef(0) ; 
+    const dragCounter = useRef(0);
+
+    // fade-out effect when closing the modal 
+
+    const [isClosing, setIsClosing] = useState(false) ; 
+
+    // smooth close effect 
+
+    useEffect(() => {
+        if(!isOpen){
+            setIsClosing(false)  
+        }
+    }, [isOpen])
+
+    const handleClose = () => {
+        setIsClosing(true) ; 
+        
+        setTimeout(() => {
+            onClose() ; 
+            setIsClosing(false)
+        }, 400); // 400ms for transition
+    }
 
     if (!isOpen) return null;
 
@@ -55,6 +76,20 @@ const EditProductModal = ({
                 <h2 className="text-xl font-bold mb-5 text-center">
                     Update Product Details
                 </h2>
+
+                {/* product detail being updated */}
+
+                {
+                    loading && (
+                        <div className="flex flex-col items-center mb-4">
+                            <span className="w-6 h-6 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mb-2"></span>
+                            <p className="text-blue=500 font-medium text-sm animate-pulse">
+                                Your product details are being updated... Please wait. 
+                            </p>
+                        </div>
+                    )
+                }
+
                 <div className="flex flex-col gap-4">
                     <div>
                         <label className="block text-xs font-semibold mb-1">Product Name</label>
@@ -206,17 +241,26 @@ const EditProductModal = ({
                 <div className="flex justify-end gap-2 mt-6">
                     <button
                         className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 flex items-center cursor-pointer gap-2"
-                        onClick={onClose}
+                        onClick={handleClose}
                         disabled={loading}
                     >
                         <FaBan /> Cancel
                     </button>
                     <button
-                        className="px-4 py-2 rounded bg-blue-500 text-white  cursor-pointer hover:bg-blue-600 flex items-center gap-2"
+                        className="px-4 py-2 rounded bg-blue-500 text-white cursor-pointer hover:bg-blue-600 flex items-center gap-2"
                         onClick={onSave}
                         disabled={loading}
                     >
-                        <FaSave /> {loading ? "Saving..." : "Save Changes"}
+                        {loading ? (
+                            <>
+                                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                <span className="saving-animate">Saving...</span>
+                            </>
+                        ) : (
+                            <>
+                                <FaSave /> Save Changes
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
