@@ -202,11 +202,17 @@ function ProductDetail() {
   };
   const handleSave = async (remarkId) => {
 
-    try {
+    try {  
       await axios.put(
-        `${API_BASE_URL}/qr/products/${code}/remarks/${remarkId}/edit/`,
+        `${API_BASE_URL}/qr/products/${code}/remarks/update/${remarkId}/`,
         {
           remark: editedText,
+        },
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -224,7 +230,7 @@ function ProductDetail() {
   const handleDeleteRemark = async (remarkId) => {
     try {
       await axios.delete(
-        `${API_BASE_URL}/qr/products/${code}/remarks/${remarkId}/delete/`,
+        `${API_BASE_URL}/qr/products/${code}/products/${remarkId}/remarks/delete/`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -243,7 +249,7 @@ function ProductDetail() {
   // Get remarks for the product
   const getRemarks = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/qr/remarks/${code}/`, {
+      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/remarks/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -278,7 +284,7 @@ function ProductDetail() {
       };
 
       const res = await axios.post(
-        `${API_BASE_URL}/qr/remarks/${code}/`,
+        `${API_BASE_URL}/qr/products/${code}/remarks/create/`,
         payload,
         {
           headers: {
@@ -519,7 +525,7 @@ function ProductDetail() {
 
                 {/* Edit Product Button */}
 
-                {isEditMode && has_update_power ? (
+                {isEditMode && isEditable ? (
                   <button
                     className="inline-flex items-center justify-center gap-2 bg-green-600 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-green-700"
                     onClick={handleUpdateProduct}
@@ -529,7 +535,7 @@ function ProductDetail() {
                     <span className="sm:hidden">Update</span>
                   </button>
                 ) : (
-                  data.has_update_power && (
+                  data.isEditable && (
                     <button
                       className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-[#7594c7]"
                       onClick={handleEditClick}
@@ -879,7 +885,7 @@ function ProductDetail() {
 
             <div className="mt-6">
               <ProductImageUpload
-                has_update_power={data.has_update_power}
+                has_update_power={data.isEditable}
                 onUpload={handleImageUpload}
                 images={data?.images || []}
                 isUploading={isUploading}
