@@ -132,47 +132,47 @@ function QRdownload() {
           </tr>
         </thead>
         <tbody>
-          {Array.isArray(products) &&
-            products.map((product) => (
-              <tr key={product.id}>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={selectedProducts.has(product.id)}
-                    onChange={() => handleSelectOne(product.id)}
-                    className="cursor-pointer"
+          { Array.isArray(products) && products.map((product) => (
+            <tr key={product.id}>
+              <td>
+                <input
+                  type="checkbox"
+                  checked={selectedProducts.has(product.id)}
+                  onChange={() => handleSelectOne(product.id)}
+                  className="cursor-pointer"
+                />
+              </td>
+              <td>
+                {product.cover_image ? (
+                  <img
+                    src={product.cover_image}
+                    alt={product.name}
+                    className="product-table-img"
+                    style={{
+                      width: 50,
+                      height: 50,
+                      objectFit: "cover",
+                      borderRadius: 1,
+                    }}
                   />
-                </td>
-                <td>
-                  {product.cover_image ? (
-                    <img
-                      src={product.cover_image}
-                      alt={product.name}
-                      className="product-table-img"
-                      style={{
-                        width: 50,
-                        height: 50,
-                        objectFit: "cover",
-                        borderRadius: 1,
-                      }}
-                    />
-                  ) : (
-                    <span className="text-gray-400 text-xs">No Image</span>
-                  )}
-                </td>
-                <td>{product.name}</td>
-                <td>{product.quantity}</td>
-                <td>
-                  {product.location || (
-                    <span className="text-gray-400 text-xs">N/A</span>
-                  )}
-                </td>
-                <td>
-                  {product.belongs_to_department} ||{" "}
+                ) : (
+                  <span className="text-gray-400 text-xs">No Image</span>
+                )}
+              </td>
+              <td className="capitalize">{product.name}</td>
+              <td>{product.quantity}</td>
+              <td className="capitalize">
+                {product.location || (
                   <span className="text-gray-400 text-xs">N/A</span>
-                </td>
-              </tr>
-            ))}
+                )}
+              </td>
+              <td className="capitalize">
+                {product.belongs_to_department || (
+                  <span className="text-gray-400 text-xs">N/A</span>
+                )}
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
