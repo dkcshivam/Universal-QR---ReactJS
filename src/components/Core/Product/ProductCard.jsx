@@ -2,7 +2,7 @@ import React from "react";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
-const ProductCard = ({ product, index }) => {
+const ProductCard = ({ product, index, activeTab }) => {
   const navigate = useNavigate();
   return ( 
     <div
@@ -11,7 +11,7 @@ const ProductCard = ({ product, index }) => {
     >
       <div
         className="w-full h-[220px] rounded-none mb-[15px] overflow-hidden relative cursor-pointer"
-        onClick={() => navigate(`/product-detail/${product?.code}/${product?.isEditable}`)}
+        onClick={() => navigate(`/product-detail/${product?.code}`)}
       >
         {
           product?.cover_image ? (

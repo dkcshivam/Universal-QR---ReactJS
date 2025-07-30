@@ -5,43 +5,47 @@ import { useParams } from 'react-router-dom';
 import DeleteImageModal from './DeleteConfirmation';
 import { toast } from 'react-toastify';
 
-const ProductImageUpload = ({ onUpload, images, isUploading }) => {
-
-    const fileInputRef = useRef();
+const ProductImageUpload = ({
+  has_update_power,
+  onUpload,
+  images,
+  isUploading,
+}) => {
+  const fileInputRef = useRef();
 
     const [isDragging, setIsDragging] = useState(false);
     const [enlargedImage, setEnlargedImage] = useState(null);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [deleteImageId, setDeleteImageId] = useState(null);
 
-    const handleClick = () => {
-        fileInputRef.current.click();
-    }
+  const handleClick = () => {
+    fileInputRef.current.click();
+  };
 
-    const handleDrop = (e) => {
-        e.preventDefault();
-        setIsDragging(false);
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
 
-        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            onUpload(e.dataTransfer.files)
-        }
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      onUpload(e.dataTransfer.files);
     }
+  };
 
-    const handleDragOver = (e) => {
-        e.preventDefault();
-        setIsDragging(true);
-    }
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
 
-    const handleDragLeave = (e) => {
-        e.preventDefault();
-        setIsDragging(false);
-    }
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
 
-    const handleChange = (e) => {
-        if (e.target.files && e.target.files.length > 0) {
-            onUpload(e.target.files);
-        }
+  const handleChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      onUpload(e.target.files);
     }
+  };
 
     const handleImageClick = (img) => {
         setEnlargedImage(img.image || (typeof img === "string" ? img : URL.createObjectURL(img)));
@@ -77,45 +81,55 @@ const ProductImageUpload = ({ onUpload, images, isUploading }) => {
         }
     }
 
-    return (
-        <div className="w-full flex flex-col items-center sm:flex-row sm:items-start">
+  return (
+    <div className="w-full flex flex-col items-center sm:flex-row sm:items-start">
+      {/* Upload Box at left */}
 
-            {/* Upload Box at left */}
-            <div
-                className={`border-2 border-dashed flex flex-col items-center justify-center
+      {has_update_power && (
+        <div
+          className={`border-2 border-dashed flex flex-col items-center justify-center
                 h-28 w-28 sm:h-48 sm:w-48 text-center px-2 py-4 sm:px-4 sm:py-6 cursor-pointer
                 transition-all duration-300 bg-blue-50 hover:bg-blue-100
-                ${isDragging ? "border-blue-500 bg-blue-100 scale-105" : "border-blue-300"}
+                ${
+                  isDragging
+                    ? "border-blue-500 bg-blue-100 scale-105"
+                    : "border-blue-300"
+                }
             `}
-                onClick={handleClick}
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                style={{ position: "relative" }}
-            >
-                {isUploading && (
-                    <div className='absolute inset-0 bg-white/70 flex items-center justify-center z-10'>
-                        <div className='w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin'></div>
-                    </div>
-                )}
-                <input
-                    type="file"
-                    multiple
-                    ref={fileInputRef}
-                    style={{ display: "none" }}
-                    onChange={handleChange}
-                    accept="image/*"
-                />
-                <FaPlus className={`mb-2 ${isDragging ? "text-blue-500 text-4xl" : "text-blue-400 text-3xl"}`} />
-                <span className="font-medium text-gray-600 text-sm hidden sm:inline-block">
-                    Click or drag and drop to upload
-                </span>
-                <span className='font-medium text-gray-600 text-sm sm:hidden inline-block'>
-                    Click to Upload
-                </span>
+          onClick={handleClick}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          style={{ position: "relative" }}
+        >
+          {isUploading && (
+            <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
+              <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
             </div>
+          )}
+          <input
+            type="file"
+            multiple
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            onChange={handleChange}
+            accept="image/*"
+          />
+          <FaPlus
+            className={`mb-2 ${
+              isDragging ? "text-blue-500 text-4xl" : "text-blue-400 text-3xl"
+            }`}
+          />
+          <span className="font-medium text-gray-600 text-sm hidden sm:inline-block">
+            Click or drag and drop to upload
+          </span>
+          <span className="font-medium text-gray-600 text-sm sm:hidden inline-block">
+            Click to Upload
+          </span>
+        </div>
+      )}
 
-            {/* Images grid */}
+      {/* Images grid */}
 
             {images && images.length > 0 && (
                 <div className="w-full mt-6 grid grid-cols-3 gap-4 sm:mt-0 sm:ml-4 sm:grid-cols-1 sm:flex sm:flex-wrap">
@@ -156,7 +170,7 @@ const ProductImageUpload = ({ onUpload, images, isUploading }) => {
                 </div>
             )}
 
-            {/* enlarged image */}
+      {/* enlarged image */}
 
             {enlargedImage && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
@@ -190,4 +204,4 @@ const ProductImageUpload = ({ onUpload, images, isUploading }) => {
     )
 }
 
-export default ProductImageUpload
+export default ProductImageUpload;

@@ -23,7 +23,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 function ProductDetail() {
   const token = localStorage.getItem("access_token");
 
-  const { code, isEditable } = useParams();
+  const { code } = useParams();
 
   const [uploadedImages, setUploadedImages] = useState([]);
   const [data, setData] = useState("");
@@ -104,7 +104,11 @@ function ProductDetail() {
 
   useEffect(() => {
     axios
-      .get(`${import.meta.env.VITE_API_URL}/qr/departments/`)
+      .get(`${import.meta.env.VITE_API_URL}/qr/departments/`,token && {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .then((res) => {
         setDepartments(res.data.data || []);
       })
@@ -164,7 +168,7 @@ function ProductDetail() {
       const response = await axios.put(
         `${API_BASE_URL}/qr/products/${code}/edit/`,
         formData,
-        {
+        token && {
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
@@ -184,7 +188,11 @@ function ProductDetail() {
 
   const getProductDetail = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`);
+      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`,token && {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (res.status === 200) {
         const productData = res?.data?.data;
         setData(productData);
@@ -195,8 +203,7 @@ function ProductDetail() {
     }
   };
   const handleSave = async (remarkId) => {
-    // Call API here to save the updated remark
-    // Example:
+
     try {
       await axios.put(
         `${API_BASE_URL}/qr/products/${code}/remarks/${remarkId}/edit/`,
@@ -514,7 +521,7 @@ function ProductDetail() {
 
                 {/* Edit Product Button */}
 
-                {isEditMode && isEditable === "true" ? (
+                {isEditMode && has_update_power ? (
                   <button
                     className="inline-flex items-center justify-center gap-2 bg-green-600 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-green-700"
                     onClick={handleUpdateProduct}
@@ -524,7 +531,7 @@ function ProductDetail() {
                     <span className="sm:hidden">Update</span>
                   </button>
                 ) : (
-                  isEditable === "true" && (
+                  data.has_update_power && (
                     <button
                       className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-[#7594c7]"
                       onClick={handleEditClick}
@@ -875,6 +882,7 @@ function ProductDetail() {
 
             <div className="mt-6">
               <ProductImageUpload
+                has_update_power={data.has_update_power}
                 onUpload={handleImageUpload}
                 images={data?.images || []}
                 isUploading={isUploading}
