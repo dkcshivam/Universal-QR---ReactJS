@@ -19,7 +19,7 @@ const SearchFilter = ({ onAddProduct, activeTab, setActiveTab }) => {
             <button
               onClick={() => {
                 setActiveTab("mine") ; 
-                toast.info("Showing your products.", {autoClose: 3000})
+                toast.info("Showing your products only.", {autoClose: 3000})
               }}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === "mine"
                   ? "bg-blue-500 text-white"
