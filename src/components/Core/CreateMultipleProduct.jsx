@@ -134,19 +134,19 @@ function CreateMultipleProduct() {
     setProductRows([createNewProductRow()]);
   };
 
-    async function fetchDepartments() {
-      const token = localStorage.getItem("access_token");
-      const res = await axios.get(`${BASE_URL}/qr/departments/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setDepartments(res.data.data);
-    }
-    useEffect(() => {
-      fetchDepartments();
-    }, []);
-    
+  async function fetchDepartments() {
+    const token = localStorage.getItem("access_token");
+    const res = await axios.get(`${BASE_URL}/qr/departments/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    setDepartments(res.data.data);
+  }
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
   return (
     <div className="fixed left-0 right-0 w-screen min-h-screen bg-white shadow-md overflow-x-auto p-4 box-border">
       <div className="flex items-center justify-between mb-5 px-2">
@@ -253,14 +253,14 @@ function CreateMultipleProduct() {
                 >
                   {row.coverImageUrl && (
                     <div
-                      style={{ position: "relative", width: 40, height: 40 }}
+                      style={{ position: "relative", width: 100, height: 140 }}
                     >
                       <img
                         src={row.coverImageUrl || ""}
                         alt="Cover"
                         style={{
-                          width: 40,
-                          height: 40,
+                          width: "100%",
+                          height: "100%",
                           objectFit: "cover",
                           borderRadius: 6,
                           border: "1px solid #eee",
@@ -284,31 +284,33 @@ function CreateMultipleProduct() {
                       </button>
                     </div>
                   )}
-                  { !row.coverImageUrl && (<label
-                    style={{
-                      width: 40,
-                      height: 40,
-                      border: "1px dashed #2563eb",
-                      borderRadius: 6,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      cursor: "pointer",
-                      background: "#f8fafc",
-                      marginLeft: row.coverImageUrl ? 4 : 0,
-                      padding: 0,
-                    }}
-                  >
-                    <input
-                      type="file"
-                      accept="image/*"
-                      style={{ display: "none" }}
-                      onChange={(e) => handleCoverImageChange(index, e)}
-                    />
-                    <FaPlus
-                      style={{ color: "#2563eb", fontSize: 18, margin: 0 }}
-                    />
-                  </label>)}
+                  {!row.coverImageUrl && (
+                    <label
+                      style={{
+                        width: 40,
+                        height: 40,
+                        border: "1px dashed #2563eb",
+                        borderRadius: 6,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        background: "#f8fafc",
+                        marginLeft: row.coverImageUrl ? 4 : 0,
+                        padding: 0,
+                      }}
+                    >
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={(e) => handleCoverImageChange(index, e)}
+                      />
+                      <FaPlus
+                        style={{ color: "#2563eb", fontSize: 18, margin: 0 }}
+                      />
+                    </label>
+                  )}
                 </div>
               </td>
 
@@ -328,14 +330,18 @@ function CreateMultipleProduct() {
                     row.productImageUrls.map((url, imgIdx) => (
                       <div
                         key={imgIdx}
-                        style={{ position: "relative", width: 32, height: 32 }}
+                        style={{
+                          position: "relative",
+                          width: 100,
+                          height: 140,
+                        }}
                       >
                         <img
                           src={url}
                           alt="Product"
                           style={{
-                            width: 32,
-                            height: 32,
+                            width: "100%",
+                            height: "100%",
                             objectFit: "cover",
                             borderRadius: 6,
                             border: "1px solid #eee",
@@ -363,8 +369,8 @@ function CreateMultipleProduct() {
                     ))}
                   <label
                     style={{
-                      width: 32,
-                      height: 32,
+                      width: 40,
+                      height: 40,
                       border: "1px dashed #2563eb",
                       borderRadius: 6,
                       display: "flex",

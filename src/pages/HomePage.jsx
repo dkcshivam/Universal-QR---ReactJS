@@ -8,13 +8,10 @@ const HomePage = ({ activeTab, setActiveTab }) => {
 
   const BASE_URL = import.meta.env.VITE_API_URL;
 
-
-
-
   return (
     <div>
       <SearchFilter activeTab={activeTab} setActiveTab={setActiveTab} />
-      <ProductGrid  activeTab={activeTab} />
+      <ProductGrid activeTab={activeTab} />
     </div>
   );
 };
