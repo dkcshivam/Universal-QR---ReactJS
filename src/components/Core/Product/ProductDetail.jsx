@@ -569,7 +569,7 @@ function ProductDetail() {
                       className="w-full h-full object-cover rounded"
                     />
                     <button
-                      className="absolute top-1 right-1 bg-white rounded-full p-1 shadow"
+                      className="absolute top-1 right-1 bg-white rounded-full p-1 shadow cursor-pointer"
                       onClick={() =>
                         setEditFields({ ...editFields, cover_image: null })
                       }
@@ -902,13 +902,12 @@ function ProductDetail() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="absolute inset-0" onClick={closeModal}></div>
           <div className="relative max-w-3xl w-full flex justify-center items-center p-4">
-            {/* Move the button up top-right corner, outside the image */}
 
             <button
-              className="absolute -top-8 cursor-pointer right-4 text-white bg-black/60 rounded-full p-2 hover:bg-black/80 transition-transform duration-200 hover:scale-110 z-10"
+              className="absolute top-4 right-4 cursor-pointer text-white bg-black/60 rounded-full p-2 hover:bg-black/80 transition-transform duration-200 hover:scale-110 z-20"
               onClick={closeModal}
               aria-label="Close"
-              style={{ boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2" }}
+              style={{ boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)" }} // <-- fixed parenthesis
             >
               <FaTimes className="text-2xl" />
             </button>
