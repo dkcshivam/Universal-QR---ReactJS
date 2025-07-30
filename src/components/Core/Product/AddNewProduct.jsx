@@ -5,6 +5,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { toast } from "react-toastify";
+import CameraModal from "./CameraModal";
 
 const AddProduct = () => {
   const [productName, setProductName] = useState("");
@@ -21,6 +22,8 @@ const AddProduct = () => {
   const productFileInputRef = useRef(null);
   const productCameraInputRef = useRef(null);
 
+  const [showCameraModal, setShowCameraModal] = useState(false);
+
   const navigate = useNavigate();
 
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -34,6 +37,10 @@ const AddProduct = () => {
       };
       setCoverImage(imageObj);
     }
+  };
+
+  const handleCameraCapture = (imageSrc) => {
+    setCoverImage({ file: null, url: imageSrc });
   };
 
   const handleProductImagesChange = (e) => {
@@ -288,7 +295,7 @@ const AddProduct = () => {
             </button>
             <button
               type="button"
-              onClick={() => coverCameraInputRef.current.click()}
+              onClick={() => setShowCameraModal(true)}
               className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md cursor-pointer"
             >
               <FiCamera />
@@ -366,7 +373,7 @@ const AddProduct = () => {
             </button>
             <button
               type="button"
-              onClick={() => productCameraInputRef.current.click()}
+              onClick={() => setShowCameraModal(true)}
               className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md cursor-pointer"
             >
               <FiCamera />
@@ -413,7 +420,14 @@ const AddProduct = () => {
         </div>
       </div>
 
+      {/* camera modal */}
 
+      {showCameraModal && (
+        <CameraModal
+          onCapture={handleCameraCapture}
+          onClose={() => setShowCameraModal(false)}
+        />
+      )}
 
     </div>
   );

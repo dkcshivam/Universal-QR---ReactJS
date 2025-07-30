@@ -36,7 +36,7 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
     console.log("fetchSearchResults called with query:", query);
 
     try {
-      const response = await axios(`${import.meta.env.VITE_API_URL}/qr/search-elastic?q=${encodeURIComponent(query)}`);
+      const response = await axios(`${import.meta.env.VITE_API_URL}/qr/search?q=${encodeURIComponent(query)}`);
 
       console.log("search response: ", response);
 

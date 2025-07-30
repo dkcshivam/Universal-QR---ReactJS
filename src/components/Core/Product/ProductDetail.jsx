@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaRegCopy } from "react-icons/fa";
 import { FaPencilAlt, FaTrash } from "react-icons/fa";
 
 import {
@@ -104,7 +104,7 @@ function ProductDetail() {
 
   useEffect(() => {
     axios
-      .get(`${import.meta.env.VITE_API_URL}/qr/departments/`,token && {
+      .get(`${import.meta.env.VITE_API_URL}/qr/departments/`, token && {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -188,7 +188,7 @@ function ProductDetail() {
 
   const getProductDetail = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`,token && {
+      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`, token && {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -204,7 +204,7 @@ function ProductDetail() {
   };
   const handleSave = async (remarkId) => {
 
-    try {  
+    try {
       await axios.put(
         `${API_BASE_URL}/qr/products/${code}/remarks/update/${remarkId}/`,
         {
@@ -505,13 +505,25 @@ function ProductDetail() {
           <div className="flex-1 flex flex-col gap-6 p-4 lg:p-8 bg-white rounded-md shadow-md">
             {/* Header Section */}
             <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-4">
-              <div className="flex-1">
-                <h1 className="text-xl lg:text-3xl text-[#1e293b] font-bold capitalize break-words">
-                  {data.name}{" "}
-                  <span className="text-sm lg:text-lg text-gray-400 block lg:inline">
-                    (#{data.code})
-                  </span>
-                </h1>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xl lg:text-3xl text-[#1e293b] font-bold capitalize break-words">
+                  {data.name}
+                </span>
+                <span className="text-sm lg:text-lg text-gray-400">
+                  (#{data.code})
+                </span>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs lg:text-sm font-semibold cursor-pointer transition-all duration-200 hover:bg-blue-500 hover:text-white"
+                  onClick={() => {
+                    navigator.clipboard.writeText(data.code);
+                    toast.success("Product code copied!");
+                  }}
+                  aria-label="Copy Product Code"
+                >
+                  <FaRegCopy className="text-base" />
+                  <span>Copy</span>
+                </button>
               </div>
 
               {/* Action Buttons */}
