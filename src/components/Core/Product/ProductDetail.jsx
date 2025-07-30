@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { FaPlus } from "react-icons/fa";
-import { FaPencilAlt,FaTrash } from "react-icons/fa";
+import { FaPencilAlt, FaTrash } from "react-icons/fa";
 
 import {
   FaQrcode,
@@ -42,7 +42,7 @@ function ProductDetail() {
 
   // to show loader while uploading 
 
-  const [isUploading, setIsUploading] = useState(false) ; 
+  const [isUploading, setIsUploading] = useState(false);
 
   // edit mode
   const [editingId, setEditingId] = useState(null);
@@ -71,32 +71,34 @@ function ProductDetail() {
 
     const formData = new FormData();
     Array.from(files).forEach(file => {
-      formData.append("image", file); 
+      formData.append("image", file);
     });
 
     try {
       await axios.post(
         `${import.meta.env.VITE_API_URL}/qr/products/${code}/images/upload/`,
         formData,
-        { headers: {
-          "Content-Type": "multipart/form-data", 
-          "Authorization": `Bearer ${token}`
-        } }
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "Authorization": `Bearer ${token}`
+          }
+        }
       );
 
       // fetching the updated product details to get new images 
 
-      await getProductDetail() ; 
-      toast.success('Image uploaded successfully!') ; 
+      await getProductDetail();
+      toast.success('Image uploaded successfully!');
     } catch (err) {
-      
+
       // trying to show backend error message if available 
 
-      const errorMsg = err?.response?.data?.errors_data?.image?.[0] || err?.response?.data?.message || "Image upload failed!" ; 
+      const errorMsg = err?.response?.data?.errors_data?.image?.[0] || err?.response?.data?.message || "Image upload failed!";
 
-      toast.error(errorMsg) ; 
+      toast.error(errorMsg);
     } finally {
-      setIsUploading(false) ; 
+      setIsUploading(false);
     }
   };
 
@@ -612,8 +614,8 @@ function ProductDetail() {
                   {!data?.belongs_to_department
                     ? "N/A"
                     : departments.find(
-                        (dep) => dep.key === data.belongs_to_department
-                      )?.label || data.belongs_to_department}
+                      (dep) => dep.key === data.belongs_to_department
+                    )?.label || data.belongs_to_department}
                 </span>
               </div>
 
@@ -627,12 +629,11 @@ function ProductDetail() {
                   {!data?.quantity && data?.quantity !== 0
                     ? "N/A"
                     : `
-                      ${data.quantity} ${
-                        Number(data.quantity) === 1 ||
-                        Number(data.quantity) === 0
-                          ? "item"
-                          : "items"
-                      }
+                      ${data.quantity} ${Number(data.quantity) === 1 ||
+                      Number(data.quantity) === 0
+                      ? "item"
+                      : "items"
+                    }
                     `}
                 </span>
               </div>
@@ -843,11 +844,13 @@ function ProductDetail() {
               Cover Image
             </label>
             {!data?.cover_image ? (
-              <label className="border-2 border-dashed border-indigo-300 rounded-md bg-gray-50 flex flex-col items-center justify-center h-48 lg:h-52 text-center px-4 py-6 text-gray-500 cursor-pointer transition">
-                <p className="mt-1 font-medium text-gray-600 text-sm lg:text-base">
-                  Upload cover image
-                </p>
-              </label>
+              <div className="border-2 border-dashed border-indigo-300 rounded-md bg-gray-50 flex items-center justify-center h-48 lg:h-52 relative">
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <span className="bg-blue-300 text-white text-[15px] font-semibold px-4 py-2 rounded-full shadow">
+                    No cover image uploaded
+                  </span>
+                </span>
+              </div>
             ) : (
               <div className="w-full h-48 lg:h-auto lg:flex-1">
                 <img

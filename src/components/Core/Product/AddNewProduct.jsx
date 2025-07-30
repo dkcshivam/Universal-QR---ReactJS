@@ -69,6 +69,8 @@ const AddProduct = () => {
     fetchDepartments();
   }, []);
 
+  // product created and redirected to the homepage 
+
   async function handlesubmit() {
     if (!productName.trim()) {
       toast.error("Please fill in all required fields");
@@ -140,14 +142,16 @@ const AddProduct = () => {
           "Failed to create product";
         toast.error(errorMessage);
       } else if (error.request) {
-        // Request was made but no response received
         toast.error("Network error. Please check your connection.");
       } else {
-        // Something else happened
         toast.error("An unexpected error occurred");
       }
     }
   }
+
+  // product created and user remains on the same page to add more products 
+
+
 
   return (
     <div className="min-h-screen bg-gray-50 space-y-4">
@@ -398,6 +402,14 @@ const AddProduct = () => {
             <Plus size={18} />
             Save & Create New
           </button>
+        </div>
+        <div className="mt-2 text-sm text-gray-500 text-right">
+          <div>
+            <span className="font-semibold text-emerald-600">Save:</span> Creates the product and redirects you to the homepage.
+          </div>
+          <div>
+            <span className="font-semibold text-emerald-600">Save & Create New:</span> Creates the product and keeps you on this page to add another product.
+          </div>
         </div>
       </div>
     </div>
