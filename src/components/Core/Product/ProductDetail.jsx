@@ -4,6 +4,7 @@ import axios from "axios";
 import { FaPlus, FaRegCopy } from "react-icons/fa";
 import { FaPencilAlt, FaTrash } from "react-icons/fa";
 import { GiFastBackwardButton } from "react-icons/gi";
+import { FaArrowLeft } from "react-icons/fa";
 
 import {
   FaQrcode,
@@ -501,14 +502,58 @@ function ProductDetail() {
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
           {/* Left Side: Product Info */}
           <div className="flex-1 flex flex-col gap-6 p-4 lg:p-8 bg-white rounded-md shadow-md">
+
             {/* Header Section */}
-            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-4">
-              <div className="flex items-center gap-2 flex-wrap">
+            
+            <div className="mb-4 flex flex-col gap-2">
+              {/* Top row: Back button + actions */}
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => navigate(-1)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
+                  aria-label="Go Back"
+                >
+                  <FaArrowLeft className="w-4 h-4" />
+                  <span>Back</span>
+                </button>
+                <div className="flex items-center gap-2">
+                  {/* Download QR Button */}
+                  <button
+                    className="inline-flex items-center justify-center gap-2 bg-blue-500 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm lg:text-base hover:bg-blue-600"
+                    onClick={handleDownloadQR}
+                    disabled={!data?.qr}
+                  >
+                    <FaQrcode className="text-white" />
+                    <span className="hidden sm:inline">Download QR</span>
+                    <span className="sm:hidden">QR Code</span>
+                  </button>
+                  {/* Edit Product Button */}
+                  {isEditMode && isEditable ? (
+                    <button
+                      className="inline-flex items-center justify-center gap-2 bg-green-600 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm lg:text-base hover:bg-green-700"
+                      onClick={handleUpdateProduct}
+                    >
+                      <Edit className="text-white w-4 h-4" />
+                      <span className="hidden sm:inline">Update Product</span>
+                      <span className="sm:hidden">Update</span>
+                    </button>
+                  ) : (
+                    data.isEditable && (
+                      <button
+                        className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm lg:text-base hover:bg-[#7594c7]"
+                        onClick={handleEditClick}
+                      >
+                        <Edit className="text-white w-4 h-4" />
+                        <span className="hidden sm:inline">Edit Product</span>
+                        <span className="sm:hidden">Edit</span>
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
+              {/* Bottom row: Product name, code, copy */}
+              <div className="flex items-center gap-2 flex-wrap mt-2">
                 <span className="text-xl lg:text-3xl text-[#1e293b] font-bold capitalize break-words">
-                  <GiFastBackwardButton
-                    onClick={() => navigate(-1)}
-                    className="cursor-pointer mb-2"
-                  />{" "}
                   {data.name}
                 </span>
                 <span className="text-sm lg:text-lg text-gray-400">
@@ -526,45 +571,6 @@ function ProductDetail() {
                   <FaRegCopy className="text-base" />
                   <span>Copy</span>
                 </button>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-row items-stretch sm:items-center gap-2 lg:gap-4">
-                {/* Download QR Button */}
-
-                <button
-                  className="inline-flex items-center justify-center gap-2 bg-blue-500 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 md:flex-none lg:text-base hover:bg-blue-600"
-                  onClick={handleDownloadQR}
-                  disabled={!data?.qr}
-                >
-                  <FaQrcode className="text-white" />
-                  <span className="hidden sm:inline">Download QR</span>
-                  <span className="sm:hidden">QR Code</span>
-                </button>
-
-                {/* Edit Product Button */}
-
-                {isEditMode && isEditable ? (
-                  <button
-                    className="inline-flex items-center justify-center gap-2 bg-green-600 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-green-700"
-                    onClick={handleUpdateProduct}
-                  >
-                    <Edit className="text-white w-4 h-4" />
-                    <span className="hidden sm:inline">Update Product</span>
-                    <span className="sm:hidden">Update</span>
-                  </button>
-                ) : (
-                  data.isEditable && (
-                    <button
-                      className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-[#7594c7]"
-                      onClick={handleEditClick}
-                    >
-                      <Edit className="text-white w-4 h-4" />
-                      <span className="hidden sm:inline">Edit Product</span>
-                      <span className="sm:hidden">Edit</span>
-                    </button>
-                  )
-                )}
               </div>
             </div>
 
@@ -644,8 +650,8 @@ function ProductDetail() {
                   {!data?.belongs_to_department
                     ? "N/A"
                     : departments.find(
-                        (dep) => dep.key === data.belongs_to_department
-                      )?.label || data.belongs_to_department}
+                      (dep) => dep.key === data.belongs_to_department
+                    )?.label || data.belongs_to_department}
                 </span>
               </div>
 
@@ -659,12 +665,11 @@ function ProductDetail() {
                   {!data?.quantity && data?.quantity !== 0
                     ? "N/A"
                     : `
-                      ${data.quantity} ${
-                        Number(data.quantity) === 1 ||
-                        Number(data.quantity) === 0
-                          ? "item"
-                          : "items"
-                      }
+                      ${data.quantity} ${Number(data.quantity) === 1 ||
+                      Number(data.quantity) === 0
+                      ? "item"
+                      : "items"
+                    }
                     `}
                 </span>
               </div>
