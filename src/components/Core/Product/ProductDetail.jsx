@@ -102,7 +102,11 @@ function ProductDetail() {
 
   useEffect(() => {
     axios
-      .get(`${import.meta.env.VITE_API_URL}/qr/departments/`)
+      .get(`${import.meta.env.VITE_API_URL}/qr/departments/`,token && {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .then((res) => {
         setDepartments(res.data.data || []);
       })
