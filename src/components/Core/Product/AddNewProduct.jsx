@@ -69,27 +69,24 @@ const AddProduct = () => {
     fetchDepartments();
   }, []);
 
-  async function handlesubmit() {
+  // product create
+
+  async function createProduct() {
     if (!productName.trim()) {
-      toast.error("Please fill in all required fields");
-      return;
+      toast.error("Please fill in the required fields.");
+      return null;
     }
 
     const token = localStorage.getItem("access_token");
 
     if (!token) {
-      toast.error("Please first login after then create a product");
-      return;
-    }
-
-    if (!token) {
-      toast.error("Authentication token not found. Please login again.");
-      navigate("/login");
+      toast.error("Please login first to create a product.");
       return;
     }
 
     try {
       const productData = new FormData();
+
       productData.append("name", productName);
       productData.append("quantity", quantity || "");
       productData.append("department", department || "");
@@ -100,54 +97,70 @@ const AddProduct = () => {
         productData.append("cover_image", coverImage.file);
       }
 
-      productImages.forEach((img, index) => {
+      productImages.forEach((img) => {
         productData.append("product_images", img.file);
-      });
+      })
 
-      const res = await axios.post(
-        `${BASE_URL}/qr/products/create/`,
+      const response = await axios.post(`${BASE_URL}/qr/products/create/`,
         productData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
+            Authorization: `Bearer ${token}`
+          }
         }
-      );
+      )
 
-      if (res.status === 201) {
-        toast.success(res.data.message || "Product created successfully!");
-
-        // Reset form only on success
-        setProductName("");
-        setQuantity("");
-        setLocation("");
-        setDepartment("");
-        setRemarks("");
-        setCoverImage(null);
-        setProductImages([]);
-
-        navigate(-1);
+      if (response.status === 201) {
+        return response.data.data; // returning the created product data 
       }
-    } catch (error) {
-      console.error("Error creating product:", error);
 
+      return null;
+    } catch (error) {
       if (error.response) {
-        // Server responded with error status
-        const errorMessage =
-          error.response.data.message ||
-          error.response.data.error ||
-          "Failed to create product";
+        const errorMessage = error.response.data.message || error.response.data.error || "Failed to create product";
         toast.error(errorMessage);
-      } else if (error.request) {
-        // Request was made but no response received
+      }
+      else if (error.request) {
         toast.error("Network error. Please check your connection.");
-      } else {
-        // Something else happened
-        toast.error("An unexpected error occurred");
+      }
+      else {
+        toast.error("An unexpected error occured.")
       }
     }
+
   }
+
+  // create product and redirect to product-detail page 
+
+  const handleSave = async () => {
+    const product = await createProduct();
+
+    if (product) {
+      toast.success("Product created! Redirecting to details...");
+      navigate(`/product-detail/${product.code}/true`);
+    }
+  }
+
+  // create product and redirect to the same 'AddNewProduct' page (if the user wants to add more product)
+
+  const handleSaveAndCreateNew = async () => {
+    const product = await createProduct();
+
+    if (product) {
+      toast.success("Product created! You can add another.");
+
+      setProductName("");
+      setQuantity("");
+      setLocation("");
+      setDepartment("");
+      setRemarks("");
+      setCoverImage(null);
+      setProductImages([]);
+    }
+  }
+
+  // product created and user remains on the same page to add more products 
 
   return (
     <div className="min-h-screen bg-gray-50 space-y-4">
@@ -383,16 +396,16 @@ const AddProduct = () => {
 
         {/* Save Buttons */}
 
-        <div className="flex gap-4 mt-15 justify-end">
+        <div className="flex flex-row gap-3 mt-10 justify-end">
           <button
-            onClick={handlesubmit}
+            onClick={handleSave}
             className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg shadow hover:bg-emerald-600 transition cursor-pointer font-semibold"
           >
             <Save size={18} />
             Save
           </button>
           <button
-            onClick={handlesubmit}
+            onClick={handleSaveAndCreateNew}
             className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg shadow hover:bg-emerald-600 transition cursor-pointer font-semibold"
           >
             <Plus size={18} />
@@ -400,6 +413,9 @@ const AddProduct = () => {
           </button>
         </div>
       </div>
+
+
+
     </div>
   );
 };

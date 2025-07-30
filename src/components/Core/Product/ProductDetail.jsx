@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { FaPlus } from "react-icons/fa";
-import { FaPencilAlt,FaTrash } from "react-icons/fa";
+import { FaPencilAlt, FaTrash } from "react-icons/fa";
 
 import {
   FaQrcode,
@@ -42,7 +42,7 @@ function ProductDetail() {
 
   // to show loader while uploading 
 
-  const [isUploading, setIsUploading] = useState(false) ; 
+  const [isUploading, setIsUploading] = useState(false);
 
   // edit mode
   const [editingId, setEditingId] = useState(null);
@@ -71,32 +71,34 @@ function ProductDetail() {
 
     const formData = new FormData();
     Array.from(files).forEach(file => {
-      formData.append("image", file); 
+      formData.append("image", file);
     });
 
     try {
       await axios.post(
         `${import.meta.env.VITE_API_URL}/qr/products/${code}/images/upload/`,
         formData,
-        { headers: {
-          "Content-Type": "multipart/form-data", 
-          "Authorization": `Bearer ${token}`
-        } }
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "Authorization": `Bearer ${token}`
+          }
+        }
       );
 
       // fetching the updated product details to get new images 
 
-      await getProductDetail() ; 
-      toast.success('Image uploaded successfully!') ; 
+      await getProductDetail();
+      toast.success('Image uploaded successfully!');
     } catch (err) {
-      
+
       // trying to show backend error message if available 
 
-      const errorMsg = err?.response?.data?.errors_data?.image?.[0] || err?.response?.data?.message || "Image upload failed!" ; 
+      const errorMsg = err?.response?.data?.errors_data?.image?.[0] || err?.response?.data?.message || "Image upload failed!";
 
-      toast.error(errorMsg) ; 
+      toast.error(errorMsg);
     } finally {
-      setIsUploading(false) ; 
+      setIsUploading(false);
     }
   };
 
@@ -451,10 +453,13 @@ function ProductDetail() {
       // Create temporary anchor element for download
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${(data.name || data.code).replace(
-        /[^a-zA-Z0-9\s]/g,
-        "_"
-      )}_QR.png`;
+
+      // link.download = `${(data.name || data.code).replace(
+      //   /[^a-zA-Z0-9\s]/g,
+      //   "_"
+      // )}_QR.png`;
+
+      link.download = `${data.code}.png`
 
       // Append to body, click, and remove
       document.body.appendChild(link);
@@ -580,7 +585,7 @@ function ProductDetail() {
                       className="w-full h-full object-cover rounded"
                     />
                     <button
-                      className="absolute top-1 right-1 bg-white rounded-full p-1 shadow"
+                      className="absolute top-1 right-1 bg-white rounded-full p-1 shadow cursor-pointer"
                       onClick={() =>
                         setEditFields({ ...editFields, cover_image: null })
                       }
@@ -625,8 +630,8 @@ function ProductDetail() {
                   {!data?.belongs_to_department
                     ? "N/A"
                     : departments.find(
-                        (dep) => dep.key === data.belongs_to_department
-                      )?.label || data.belongs_to_department}
+                      (dep) => dep.key === data.belongs_to_department
+                    )?.label || data.belongs_to_department}
                 </span>
               </div>
 
@@ -640,12 +645,11 @@ function ProductDetail() {
                   {!data?.quantity && data?.quantity !== 0
                     ? "N/A"
                     : `
-                      ${data.quantity} ${
-                        Number(data.quantity) === 1 ||
-                        Number(data.quantity) === 0
-                          ? "item"
-                          : "items"
-                      }
+                      ${data.quantity} ${Number(data.quantity) === 1 ||
+                      Number(data.quantity) === 0
+                      ? "item"
+                      : "items"
+                    }
                     `}
                 </span>
               </div>
@@ -810,7 +814,7 @@ function ProductDetail() {
                                   </p>
                                 </div>
                               ) : (
-                                <p className="text-gray-800 text-sm lg:text-base break-words">
+                                <p className="text-gray-800 text-sm lg:text-base break-words whitespace-pre-line">
                                   {remark.remark}
                                 </p>
                               )}
@@ -856,11 +860,13 @@ function ProductDetail() {
               Cover Image
             </label>
             {!data?.cover_image ? (
-              <label className="border-2 border-dashed border-indigo-300 rounded-md bg-gray-50 flex flex-col items-center justify-center h-48 lg:h-52 text-center px-4 py-6 text-gray-500 cursor-pointer transition">
-                <p className="mt-1 font-medium text-gray-600 text-sm lg:text-base">
-                  Upload cover image
-                </p>
-              </label>
+              <div className="border-2 border-dashed border-indigo-300 rounded-md bg-gray-50 flex items-center justify-center h-48 lg:h-52 relative">
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <span className="bg-blue-300 text-white text-[15px] font-semibold px-4 py-2 rounded-full shadow">
+                    No cover image uploaded
+                  </span>
+                </span>
+              </div>
             ) : (
               <div className="w-full h-48 lg:h-auto lg:flex-1">
                 <img
@@ -913,13 +919,12 @@ function ProductDetail() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="absolute inset-0" onClick={closeModal}></div>
           <div className="relative max-w-3xl w-full flex justify-center items-center p-4">
-            {/* Move the button up top-right corner, outside the image */}
 
             <button
-              className="absolute -top-8 cursor-pointer right-4 text-white bg-black/60 rounded-full p-2 hover:bg-black/80 transition-transform duration-200 hover:scale-110 z-10"
+              className="absolute top-4 right-4 cursor-pointer text-white bg-black/60 rounded-full p-2 hover:bg-black/80 transition-transform duration-200 hover:scale-110 z-20"
               onClick={closeModal}
               aria-label="Close"
-              style={{ boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2" }}
+              style={{ boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)" }} // <-- fixed parenthesis
             >
               <FaTimes className="text-2xl" />
             </button>

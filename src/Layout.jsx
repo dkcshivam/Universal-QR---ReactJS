@@ -21,7 +21,7 @@ const Layout = () => {
       {/* footer */}
       <footer className="bg-gray-100 mt-4 hidden md:block">
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
-          © {new Date().getFullYear()} My App. All rights reserved.
+          © {new Date().getFullYear()} Universal QR. All rights reserved.
         </div>
       </footer>
 
