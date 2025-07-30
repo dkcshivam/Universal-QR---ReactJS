@@ -2,7 +2,7 @@ import axios from "axios";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IoHome } from "react-icons/io5";
-import { FaSignInAlt } from "react-icons/fa";
+import { FaSignInAlt, FaEye, FaEyeSlash } from "react-icons/fa";
 import {toast} from "react-toastify";
 
 const Login = () => {
@@ -10,7 +10,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const BASE_URL = import.meta.env.VITE_API_URL;
+  const [showPassword, setShowPassword] = useState(false) ; 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,7 +20,7 @@ const Login = () => {
     }
 
     try {
-      const res = await axios.post(`${BASE_URL}/login/`, {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/login/`, {
         username: email,
         password,
       });
@@ -90,8 +90,9 @@ const Login = () => {
             >
               Password
             </label>
-            <input
-              type="password"
+            <div className="relative">
+              <input
+              type={showPassword ? "text" : "password"}
               id="password"
               name="password"
               placeholder="Enter your password"
@@ -100,6 +101,15 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            <span
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-500"
+            >
+              {
+                showPassword ? <FaEyeSlash/> : <FaEye/>
+              }
+            </span>
+            </div>
           </div>
 
           <div className="flex flex-row gap-6 justify-center mt-10">

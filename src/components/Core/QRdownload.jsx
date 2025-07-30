@@ -17,7 +17,7 @@ function QRdownload() {
           `${import.meta.env.VITE_API_URL}/qr/products`
         );
 
-        setProducts(response.data.data);
+        setProducts(Array.isArray(response.data.data.results) ? response.data.data.results : []);
       } catch (error) {
         console.log("Error in fetching all products:", error);
         toast.error("Failed to fetch all products");
@@ -128,7 +128,7 @@ function QRdownload() {
           </tr>
         </thead>
         <tbody>
-          {products.map((product) => (
+          { Array.isArray(products) && products.map((product) => (
             <tr key={product.id}>
               <td>
                 <input

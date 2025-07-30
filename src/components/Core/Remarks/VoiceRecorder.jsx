@@ -9,6 +9,7 @@ import {
 } from "react-icons/fi";
 
 const VoiceRecorder = ({ onSave, onCancel }) => {
+
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -16,6 +17,11 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
   const [audioUrl, setAudioUrl] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
+
+  // audio progress bar 
+
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
 
   const mediaRecorderRef = useRef(null);
   const audioRef = useRef(null);
@@ -373,12 +379,15 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
           </div>
 
           {/* Audio Player */}
+
           <audio
             ref={audioRef}
             src={audioUrl}
             onEnded={() => setIsPlaying(false)}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
+            onTimeUpdate={e => setAudioProgress(e.target.currentTime)}
+            onLoadedMetadata={e => setAudioDuration(e.target.duration)}
             onError={(e) => console.error("Audio error:", e)}
             onLoadStart={() => console.log("Audio load started")}
             onCanPlay={() => console.log("Audio can play")}
@@ -387,34 +396,44 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
             preload="metadata"
           />
 
+          {/* audio progress bar */}
+
+          <div className="w-full flex items-center justify-center mt-2">
+            <div className="w-full max-w-xs h-2 rounded bg-gray-300 relative overflow-hidden">
+              <div
+                className="h-2 rounded bg-blue-500 transition-all duration-200"
+                style={{
+                  width: audioDuration
+                    ? `${(audioProgress / audioDuration) * 100}%`
+                    : "0%",
+                }}
+              />
+            </div>
+          </div>
+
           {/* Action Buttons */}
-          <div className="flex items-center justify-center gap-3">
-            {/* Play/Pause */}
+
+          <div className="">
             <button
               onClick={isPlaying ? pauseAudio : playAudio}
-              className="w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center transition-colors duration-200"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500 text-white font-semibold text-base shadow cursor-pointer transition-all duration-200 hover:bg-blue-600"
             >
-              {isPlaying ? (
-                <FiPause className="w-4 h-4" />
-              ) : (
-                <FiPlay className="w-4 h-4" />
-              )}
+              {isPlaying ? <FiPause className="w-5 h-5" /> : <FiPlay className="w-5 h-5" />}
+              <span>{isPlaying ? "Pause" : "Replay"}</span>
             </button>
-
-            {/* Delete */}
             <button
               onClick={deleteRecording}
-              className="w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors duration-200"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-500 text-white font-semibold text-base shadow cursor-pointer transition-all duration-200 hover:bg-red-600"
             >
-              <FiTrash2 className="w-4 h-4" />
+              <FiTrash2 className="w-5 h-5" />
+              <span>Delete</span>
             </button>
-
-            {/* Save */}
             <button
               onClick={saveRecording}
-              className="w-10 h-10 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center transition-colors duration-200"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500 text-white font-semibold text-base shadow cursor-pointer transition-all duration-200 hover:bg-green-600"
             >
-              <FiCheck className="w-4 h-4" />
+              <FiCheck className="w-5 h-5" />
+              <span>Save</span>
             </button>
           </div>
 

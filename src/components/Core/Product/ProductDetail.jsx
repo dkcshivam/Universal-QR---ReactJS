@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { FaPlus } from "react-icons/fa";
-import { FaPencilAlt,FaTrash } from "react-icons/fa";
+import { FaPencilAlt, FaTrash } from "react-icons/fa";
 
 import {
   FaQrcode,
@@ -40,6 +40,10 @@ function ProductDetail() {
 
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // to show loader while uploading 
+
+  const [isUploading, setIsUploading] = useState(false);
+
   // edit mode
   const [editingId, setEditingId] = useState(null);
   const [editedText, setEditedText] = useState("");
@@ -67,31 +71,40 @@ function ProductDetail() {
 
     const formData = new FormData();
     Array.from(files).forEach(file => {
-      formData.append("image", file); 
+      formData.append("image", file);
     });
 
     try {
       await axios.post(
         `${import.meta.env.VITE_API_URL}/qr/products/${code}/images/upload/`,
         formData,
-        { headers: {
-          "Content-Type": "multipart/form-data", 
-          "Authorization": `Bearer ${token}`
-        } }
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "Authorization": `Bearer ${token}`
+          }
+        }
       );
 
       // fetching the updated product details to get new images 
 
-      await getProductDetail() ; 
-
+      await getProductDetail();
+      toast.success('Image uploaded successfully!');
     } catch (err) {
-      console.error("Image upload failed", err);
+
+      // trying to show backend error message if available 
+
+      const errorMsg = err?.response?.data?.errors_data?.image?.[0] || err?.response?.data?.message || "Image upload failed!";
+
+      toast.error(errorMsg);
+    } finally {
+      setIsUploading(false);
     }
   };
 
   useEffect(() => {
     axios
-      .get(`${import.meta.env.VITE_API_URL}/qr/departments/`, {
+      .get(`${import.meta.env.VITE_API_URL}/qr/departments/`,token && {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -155,7 +168,7 @@ function ProductDetail() {
       const response = await axios.put(
         `${API_BASE_URL}/qr/products/${code}/edit/`,
         formData,
-        {
+        token && {
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
@@ -175,7 +188,11 @@ function ProductDetail() {
 
   const getProductDetail = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`);
+      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`,token && {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (res.status === 200) {
         const productData = res?.data?.data;
         setData(productData);
@@ -186,13 +203,18 @@ function ProductDetail() {
     }
   };
   const handleSave = async (remarkId) => {
-    // Call API here to save the updated remark
-    // Example:
-    try {
+
+    try {  
       await axios.put(
-        `${API_BASE_URL}/qr/products/${code}/remarks/${remarkId}/edit/`,
+        `${API_BASE_URL}/qr/products/${code}/remarks/update/${remarkId}/`,
         {
           remark: editedText,
+        },
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -210,7 +232,7 @@ function ProductDetail() {
   const handleDeleteRemark = async (remarkId) => {
     try {
       await axios.delete(
-        `${API_BASE_URL}/qr/products/${code}/remarks/${remarkId}/delete/`,
+        `${API_BASE_URL}/qr/products/${code}/remarks/delete/${remarkId}/`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -229,7 +251,7 @@ function ProductDetail() {
   // Get remarks for the product
   const getRemarks = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/qr/remarks/${code}/`, {
+      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/remarks/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -264,7 +286,7 @@ function ProductDetail() {
       };
 
       const res = await axios.post(
-        `${API_BASE_URL}/qr/remarks/${code}/`,
+        `${API_BASE_URL}/qr/products/${code}/remarks/create/`,
         payload,
         {
           headers: {
@@ -431,10 +453,13 @@ function ProductDetail() {
       // Create temporary anchor element for download
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${(data.name || data.code).replace(
-        /[^a-zA-Z0-9\s]/g,
-        "_"
-      )}_QR.png`;
+
+      // link.download = `${(data.name || data.code).replace(
+      //   /[^a-zA-Z0-9\s]/g,
+      //   "_"
+      // )}_QR.png`;
+
+      link.download = `${data.code}.png`
 
       // Append to body, click, and remove
       document.body.appendChild(link);
@@ -505,7 +530,7 @@ function ProductDetail() {
 
                 {/* Edit Product Button */}
 
-                {isEditMode && has_update_power ? (
+                {isEditMode && isEditable ? (
                   <button
                     className="inline-flex items-center justify-center gap-2 bg-green-600 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-green-700"
                     onClick={handleUpdateProduct}
@@ -515,7 +540,7 @@ function ProductDetail() {
                     <span className="sm:hidden">Update</span>
                   </button>
                 ) : (
-                  data.has_update_power && (
+                  data.isEditable && (
                     <button
                       className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-[#7594c7]"
                       onClick={handleEditClick}
@@ -560,7 +585,7 @@ function ProductDetail() {
                       className="w-full h-full object-cover rounded"
                     />
                     <button
-                      className="absolute top-1 right-1 bg-white rounded-full p-1 shadow"
+                      className="absolute top-1 right-1 bg-white rounded-full p-1 shadow cursor-pointer"
                       onClick={() =>
                         setEditFields({ ...editFields, cover_image: null })
                       }
@@ -605,8 +630,8 @@ function ProductDetail() {
                   {!data?.belongs_to_department
                     ? "N/A"
                     : departments.find(
-                        (dep) => dep.key === data.belongs_to_department
-                      )?.label || data.belongs_to_department}
+                      (dep) => dep.key === data.belongs_to_department
+                    )?.label || data.belongs_to_department}
                 </span>
               </div>
 
@@ -620,12 +645,11 @@ function ProductDetail() {
                   {!data?.quantity && data?.quantity !== 0
                     ? "N/A"
                     : `
-                      ${data.quantity} ${
-                        Number(data.quantity) === 1 ||
-                        Number(data.quantity) === 0
-                          ? "item"
-                          : "items"
-                      }
+                      ${data.quantity} ${Number(data.quantity) === 1 ||
+                      Number(data.quantity) === 0
+                      ? "item"
+                      : "items"
+                    }
                     `}
                 </span>
               </div>
@@ -790,7 +814,7 @@ function ProductDetail() {
                                   </p>
                                 </div>
                               ) : (
-                                <p className="text-gray-800 text-sm lg:text-base break-words">
+                                <p className="text-gray-800 text-sm lg:text-base break-words whitespace-pre-line">
                                   {remark.remark}
                                 </p>
                               )}
@@ -836,11 +860,13 @@ function ProductDetail() {
               Cover Image
             </label>
             {!data?.cover_image ? (
-              <label className="border-2 border-dashed border-indigo-300 rounded-md bg-gray-50 flex flex-col items-center justify-center h-48 lg:h-52 text-center px-4 py-6 text-gray-500 cursor-pointer transition">
-                <p className="mt-1 font-medium text-gray-600 text-sm lg:text-base">
-                  Upload cover image
-                </p>
-              </label>
+              <div className="border-2 border-dashed border-indigo-300 rounded-md bg-gray-50 flex items-center justify-center h-48 lg:h-52 relative">
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <span className="bg-blue-300 text-white text-[15px] font-semibold px-4 py-2 rounded-full shadow">
+                    No cover image uploaded
+                  </span>
+                </span>
+              </div>
             ) : (
               <div className="w-full h-48 lg:h-auto lg:flex-1">
                 <img
@@ -865,8 +891,10 @@ function ProductDetail() {
 
             <div className="mt-6">
               <ProductImageUpload
+                has_update_power={data.isEditable}
                 onUpload={handleImageUpload}
                 images={data?.images || []}
+                isUploading={isUploading}
               />
             </div>
           </div>
@@ -891,13 +919,12 @@ function ProductDetail() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="absolute inset-0" onClick={closeModal}></div>
           <div className="relative max-w-3xl w-full flex justify-center items-center p-4">
-            {/* Move the button up top-right corner, outside the image */}
 
             <button
-              className="absolute -top-8 cursor-pointer right-4 text-white bg-black/60 rounded-full p-2 hover:bg-black/80 transition-transform duration-200 hover:scale-110 z-10"
+              className="absolute top-4 right-4 cursor-pointer text-white bg-black/60 rounded-full p-2 hover:bg-black/80 transition-transform duration-200 hover:scale-110 z-20"
               onClick={closeModal}
               aria-label="Close"
-              style={{ boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2" }}
+              style={{ boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)" }} // <-- fixed parenthesis
             >
               <FaTimes className="text-2xl" />
             </button>

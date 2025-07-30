@@ -9,6 +9,7 @@ export default defineConfig({
     tailwindcss()
   ],
   server: {
-    port: 3001 
+    port: 3001, 
+    allowedHosts: ['sonu.local', '128.100.10.28']
   }
 })
