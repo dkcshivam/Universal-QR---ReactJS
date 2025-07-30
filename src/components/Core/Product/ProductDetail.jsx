@@ -232,7 +232,7 @@ function ProductDetail() {
   const handleDeleteRemark = async (remarkId) => {
     try {
       await axios.delete(
-        `${API_BASE_URL}/qr/products/${code}/products/${remarkId}/remarks/delete/`,
+        `${API_BASE_URL}/qr/products/${code}/remarks/delete/${remarkId}/`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

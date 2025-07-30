@@ -135,10 +135,9 @@ const AddProduct = () => {
 
   const handleSave = async () => {
     const product = await createProduct();
-
     if (product) {
       toast.success("Product created! Redirecting to details...");
-      navigate(`/product-detail/${product.code}/true`);
+      navigate(`/product-detail/${product.product_code}/`);
     }
   }
 
