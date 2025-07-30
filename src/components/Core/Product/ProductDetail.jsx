@@ -3,13 +3,14 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { FaPlus } from "react-icons/fa";
 import { FaPencilAlt, FaTrash } from "react-icons/fa";
+import { GiFastBackwardButton } from "react-icons/gi";
 
 import {
   FaQrcode,
   FaCommentAlt,
   FaKeyboard,
   FaMicrophone,
-  FaTimes
+  FaTimes,
 } from "react-icons/fa";
 import { Edit } from "lucide-react";
 import VoiceRecorder from "../Remarks/VoiceRecorder";
@@ -17,17 +18,18 @@ import AudioPlayer from "../Remarks/AudioPlayer";
 import { toast } from "react-toastify";
 import EditProductModal from "./EditProductModal";
 import ProductImageUpload from "./ProductImageUpload";
+import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 function ProductDetail() {
+  const navigate = useNavigate();
   const token = localStorage.getItem("access_token");
 
   const { code } = useParams();
 
-  const [uploadedImages, setUploadedImages] = useState([]);
   const [data, setData] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null);
+
   const [newRemark, setNewRemark] = useState("");
   const [showRemarkForm, setShowRemarkForm] = useState(false);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
@@ -40,7 +42,7 @@ function ProductDetail() {
 
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // to show loader while uploading 
+  // to show loader while uploading
 
   const [isUploading, setIsUploading] = useState(false);
 
@@ -68,9 +70,8 @@ function ProductDetail() {
   // uploading image (product image)
 
   const handleImageUpload = async (files) => {
-
     const formData = new FormData();
-    Array.from(files).forEach(file => {
+    Array.from(files).forEach((file) => {
       formData.append("image", file);
     });
 
@@ -81,20 +82,22 @@ function ProductDetail() {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            "Authorization": `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
-      // fetching the updated product details to get new images 
+      // fetching the updated product details to get new images
 
       await getProductDetail();
-      toast.success('Image uploaded successfully!');
+      toast.success("Image uploaded successfully!");
     } catch (err) {
+      // trying to show backend error message if available
 
-      // trying to show backend error message if available 
-
-      const errorMsg = err?.response?.data?.errors_data?.image?.[0] || err?.response?.data?.message || "Image upload failed!";
+      const errorMsg =
+        err?.response?.data?.errors_data?.image?.[0] ||
+        err?.response?.data?.message ||
+        "Image upload failed!";
 
       toast.error(errorMsg);
     } finally {
@@ -104,11 +107,14 @@ function ProductDetail() {
 
   useEffect(() => {
     axios
-      .get(`${import.meta.env.VITE_API_URL}/qr/departments/`,token && {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      .get(
+        `${import.meta.env.VITE_API_URL}/qr/departments/`,
+        token && {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       .then((res) => {
         setDepartments(res.data.data || []);
       })
@@ -188,11 +194,14 @@ function ProductDetail() {
 
   const getProductDetail = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`,token && {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await axios.get(
+        `${API_BASE_URL}/qr/products/${code}/`,
+        token && {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       if (res.status === 200) {
         const productData = res?.data?.data;
         setData(productData);
@@ -203,8 +212,7 @@ function ProductDetail() {
     }
   };
   const handleSave = async (remarkId) => {
-
-    try {  
+    try {
       await axios.put(
         `${API_BASE_URL}/qr/products/${code}/remarks/update/${remarkId}/`,
         {
@@ -251,11 +259,14 @@ function ProductDetail() {
   // Get remarks for the product
   const getRemarks = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/remarks/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await axios.get(
+        `${API_BASE_URL}/qr/products/${code}/remarks/`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       if (res.status === 200) {
         const remarksData = res?.data?.data || [];
         console.log("Remarks data:", remarksData);
@@ -372,14 +383,6 @@ function ProductDetail() {
     }
   }, [code]);
 
-  // const openModal = (imageSrc) => {
-  //   setSelectedImage(imageSrc);
-  // };
-
-  // const closeModal = () => {
-  //   setSelectedImage(null);
-  // };
-
   const handleAddTextRemark = async () => {
     if (newRemark.trim()) {
       const success = await submitTextRemark(newRemark.trim());
@@ -459,7 +462,7 @@ function ProductDetail() {
       //   "_"
       // )}_QR.png`;
 
-      link.download = `${data.code}.png`
+      link.download = `${data.code}.png`;
 
       // Append to body, click, and remove
       document.body.appendChild(link);
@@ -507,6 +510,10 @@ function ProductDetail() {
             <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-4">
               <div className="flex-1">
                 <h1 className="text-xl lg:text-3xl text-[#1e293b] font-bold capitalize break-words">
+                  <GiFastBackwardButton
+                    onClick={() => navigate(-1)}
+                    className="cursor-pointer mb-2"
+                  />{" "}
                   {data.name}{" "}
                   <span className="text-sm lg:text-lg text-gray-400 block lg:inline">
                     (#{data.code})
@@ -630,8 +637,8 @@ function ProductDetail() {
                   {!data?.belongs_to_department
                     ? "N/A"
                     : departments.find(
-                      (dep) => dep.key === data.belongs_to_department
-                    )?.label || data.belongs_to_department}
+                        (dep) => dep.key === data.belongs_to_department
+                      )?.label || data.belongs_to_department}
                 </span>
               </div>
 
@@ -645,11 +652,12 @@ function ProductDetail() {
                   {!data?.quantity && data?.quantity !== 0
                     ? "N/A"
                     : `
-                      ${data.quantity} ${Number(data.quantity) === 1 ||
-                      Number(data.quantity) === 0
-                      ? "item"
-                      : "items"
-                    }
+                      ${data.quantity} ${
+                        Number(data.quantity) === 1 ||
+                        Number(data.quantity) === 0
+                          ? "item"
+                          : "items"
+                      }
                     `}
                 </span>
               </div>
@@ -919,7 +927,6 @@ function ProductDetail() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="absolute inset-0" onClick={closeModal}></div>
           <div className="relative max-w-3xl w-full flex justify-center items-center p-4">
-
             <button
               className="absolute top-4 right-4 cursor-pointer text-white bg-black/60 rounded-full p-2 hover:bg-black/80 transition-transform duration-200 hover:scale-110 z-20"
               onClick={closeModal}
