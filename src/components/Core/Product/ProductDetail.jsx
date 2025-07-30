@@ -447,10 +447,13 @@ function ProductDetail() {
       // Create temporary anchor element for download
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${(data.name || data.code).replace(
-        /[^a-zA-Z0-9\s]/g,
-        "_"
-      )}_QR.png`;
+
+      // link.download = `${(data.name || data.code).replace(
+      //   /[^a-zA-Z0-9\s]/g,
+      //   "_"
+      // )}_QR.png`;
+
+      link.download = `${data.code}.png`
 
       // Append to body, click, and remove
       document.body.appendChild(link);
@@ -805,7 +808,7 @@ function ProductDetail() {
                                   </p>
                                 </div>
                               ) : (
-                                <p className="text-gray-800 text-sm lg:text-base break-words">
+                                <p className="text-gray-800 text-sm lg:text-base break-words whitespace-pre-line">
                                   {remark.remark}
                                 </p>
                               )}

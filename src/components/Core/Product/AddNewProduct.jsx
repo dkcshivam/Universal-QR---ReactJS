@@ -101,7 +101,7 @@ const AddProduct = () => {
         productData.append("product_images", img.file);
       })
 
-      const response = await axios.post(`${BASE_URL}/qr/products/create`,
+      const response = await axios.post(`${BASE_URL}/qr/products/create/`,
         productData,
         {
           headers: {
@@ -396,7 +396,7 @@ const AddProduct = () => {
 
         {/* Save Buttons */}
 
-        <div className="flex gap-4 mt-15 justify-end">
+        <div className="flex flex-row gap-3 mt-10 justify-end">
           <button
             onClick={handleSave}
             className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg shadow hover:bg-emerald-600 transition cursor-pointer font-semibold"
@@ -412,15 +412,10 @@ const AddProduct = () => {
             Save & Create New
           </button>
         </div>
-        <div className="mt-2 text-sm text-gray-500 text-right">
-          <div>
-            <span className="font-semibold text-emerald-600">Save:</span> Creates the product and redirects you to the homepage.
-          </div>
-          <div>
-            <span className="font-semibold text-emerald-600">Save & Create New:</span> Creates the product and keeps you on this page to add another product.
-          </div>
-        </div>
       </div>
+
+
+
     </div>
   );
 };
