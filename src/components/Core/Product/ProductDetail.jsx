@@ -344,10 +344,10 @@ function ProductDetail() {
           type: audioData.mimeType || "audio/mp3",
         }
       );
-      formData.append("remark_audio", audioFile);
+      formData.append("audio_recording", audioFile);
 
       const res = await axios.post(
-        `${API_BASE_URL}/qr/remarks/${code}/`,
+        `${API_BASE_URL}/qr/products/${code}/remarks/create/`,
         formData,
         {
           headers: {

@@ -12,7 +12,7 @@ const SearchResults = () => {
   useEffect(() => {
     if (query && query.trim()) {
       setLoading(true);
-      axios(`${import.meta.env.VITE_API_URL}/qr/search-elastic?q=${encodeURIComponent(query.trim())}`)
+      axios(`${import.meta.env.VITE_API_URL}/qr/search?q=${encodeURIComponent(query.trim())}`)
         .then(res => {
           setResults(Array.isArray(res.data.data.results) ? res.data.data.results : []);
         })
