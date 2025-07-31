@@ -1,12 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Header from "./components/Header/Header";
 import MobileFooter from "./components/Footer/MobileFooter";
 import { useLocation } from "react-router-dom";
 
 const Layout = () => {
+
   const { pathname } = useLocation();
-  console.log(pathname, " jai maa kali");
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 overflow-x-hidden">
       {/* Header at the top */}

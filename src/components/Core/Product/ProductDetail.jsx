@@ -557,7 +557,7 @@ function ProductDetail() {
                   {data.name}
                 </span>
                 <span className="text-sm lg:text-lg text-gray-400">
-                  (#{data.code})
+                  ({data.code})
                 </span>
                 <button
                   type="button"

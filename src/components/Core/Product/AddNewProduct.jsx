@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { toast } from "react-toastify";
 import CameraModal from "./CameraModal";
+import { FiAlertCircle } from "react-icons/fi";
+
 
 const AddProduct = () => {
   const [productName, setProductName] = useState("");
@@ -27,6 +29,15 @@ const AddProduct = () => {
   const navigate = useNavigate();
 
   const BASE_URL = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    if (showCameraModal) {
+      document.body.classList.add("hide-footer");
+    }
+    else {
+      document.body.classList.remove("hide-footer");
+    }
+  }, [showCameraModal])
 
   const handleCoverChange = (e) => {
     const file = e.target.files[0];
@@ -176,7 +187,7 @@ const AddProduct = () => {
           className="inline-flex items-center gap-2 cursor-pointer px-4 py-2 bg-blue-400 hover:bg-blue-500 rounded-lg text-white transition-colors duration-200 shadow-sm hover:shadow-md"
         >
           <FaArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="text-sm sm:text-base font-medium">Go Back</span>
+          <span className="text-sm sm:text-base font-medium">Back</span>
         </button>
 
         <div className="flex justify-center flex-1 gap-2">
@@ -418,6 +429,23 @@ const AddProduct = () => {
             Save & Create New
           </button>
         </div>
+
+        {/* Info Box for End Users */}
+
+        <div className="mt-6 rounded-lg p-4 text-sm text-black">
+          <ul className="list-disc pl-5 mt-2">
+            <li>
+              <span className="font-semibold">Save:</span> Creates the product and redirects you to its detail page.
+            </li>
+            <li>
+              <span className="font-semibold">Save &amp; Create New:</span> Creates the product and keeps you on this page so you can add more products.
+            </li>
+          </ul>
+          <div className="mt-2">
+            <span className="font-medium">💡 Tip:</span> Use "Save &amp; Create New" if you need to add multiple products quickly!
+          </div>
+        </div>
+
       </div>
 
       {/* camera modal */}

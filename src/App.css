@@ -585,3 +585,9 @@ body {
     padding: 0 !important;
   }
 }
+
+/* hiding the mobile footer in camera modal - add new product  */
+
+.hide-footer .mobile-footer{
+  display: none !important;
+}
