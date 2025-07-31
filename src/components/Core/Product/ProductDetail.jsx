@@ -252,7 +252,9 @@ function ProductDetail() {
       toast.error("Failed to delete remark. Please try again.");
     }
   };
+
   // Get remarks for the product
+
   const getRemarks = async () => {
     try {
       const res = await axios.get(
@@ -276,6 +278,7 @@ function ProductDetail() {
   };
 
   // Submit text remark to API
+
   const submitTextRemark = async (remarkText) => {
     try {
       setIsSubmittingRemark(true);
@@ -383,6 +386,7 @@ function ProductDetail() {
     if (newRemark.trim()) {
       const success = await submitTextRemark(newRemark.trim());
       if (success) {
+        toast.success("Remark added successfully!") ; 
         setNewRemark("");
         setShowRemarkForm(false);
       }
@@ -739,14 +743,14 @@ function ProductDetail() {
                       />
                       <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 mt-3">
                         <button
-                          className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors duration-200 text-sm lg:text-base"
+                          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-semibold cursor-pointer text-gray-600 hover:text-gray-800 transition-colors duration-200 text-sm lg:text-base"
                           onClick={handleCancelRemark}
                           disabled={isSubmittingRemark}
                         >
                           Cancel
                         </button>
                         <button
-                          className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200 text-sm lg:text-base"
+                          className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200 text-sm lg:text-base cursor-pointer"
                           onClick={handleAddTextRemark}
                           disabled={isSubmittingRemark || !newRemark.trim()}
                         >
@@ -781,7 +785,7 @@ function ProductDetail() {
                       return (
                         <div
                           key={remark.id}
-                          className="bg-gray-50 p-3 lg:p-4 rounded-lg border space-y-2"
+                          className="bg-gray-50 p-3 lg:p-4 rounded-lg border space-y-2 relative"
                         >
                           <div className="flex flex-col sm:flex-row sm:justify-between gap-1 text-xs text-gray-400">
                             <span>
@@ -840,29 +844,32 @@ function ProductDetail() {
                               )}
 
                               {/* Show Edit button if user has permission */}
-                              {remark.isEditable && !isEditing && (
-                                <>
-                                  <button
-                                    onClick={() => {
-                                      setEditingId(remark.id);
-                                      setEditedText(remark.remark);
-                                    }}
-                                    className="text-gray-500 hover:text-blue-600 text-sm flex items-center gap-1 mt-1"
-                                    title="Edit Remark"
-                                  >
-                                    <FaPencilAlt className="text-xs" />
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      handleDeleteRemark(remark.id);
-                                    }}
-                                    className="text-gray-500 hover:text-blue-600 text-sm flex items-center gap-1 mt-1"
-                                    title="delete Remark"
-                                  >
-                                    <FaTrash className="text-xs" />
-                                  </button>
-                                </>
-                              )}
+
+                                {remark.isEditable && !isEditing && (
+                                  <div className="absolute right-3 bottom-3 flex gap-2" >
+                                    <button
+                                      onClick={() => {
+                                        setEditingId(remark.id);
+                                        setEditedText(remark.remark);
+                                      }}
+                                      className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold cursor-pointer transition-all duration-200 hover:bg-blue-500 hover:text-white shadow"
+                                      title="Edit Remark"
+                                    >
+                                      <FaPencilAlt className="text-xs" />
+                                      <span className="ml-1">Edit</span>
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        handleDeleteRemark(remark.id);
+                                      }}
+                                      className="inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold cursor-pointer transition-all duration-200 hover:bg-red-500 hover:text-white shadow"
+                                      title="Delete Remark"
+                                    >
+                                      <FaTrash className="text-xs" />
+                                      <span className="ml-1">Delete</span>
+                                    </button>
+                                  </div>
+                                )}
                             </>
                           )}
                         </div>

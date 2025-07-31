@@ -322,10 +322,12 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
           </div>
 
           {/* Main Control Button */}
-          <div className="flex justify-center">
+
+          <div className="flex flex-col items-center gap-3 mt-4">
             {!isRecording ? (
               <button
                 onClick={startRecording}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500 text-white font-semibold text-base shadow cursor-pointer transition-all duration-200 hover:bg-blue-600"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500 text-white font-semibold text-base shadow cursor-pointer transition-all duration-200 hover:bg-blue-600"
               >
                 <FiMic className="w-7 h-7" />
@@ -335,7 +337,9 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
               </button>
             ) : (
               <div className="flex items-center gap-3">
+
                 {/* Pause/Resume */}
+                
                 <button
                   onClick={isPaused ? resumeRecording : pauseRecording}
                   className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-base shadow cursor-pointer transition-all duration-200 ${
@@ -370,8 +374,9 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
 
           {/* Cancel Button */}
 
+
           {!isRecording && (
-            <div className="flex justify-center">
+            <div className="flex justify-center mt-4">
               <button
                 onClick={onCancel}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-200 text-gray-700 font-semibold text-base shadow cursor-pointer hover:bg-gray-300 transition-colors duration-200 mt-2"
@@ -423,12 +428,24 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
             <button
               onClick={saveRecording}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500 text-white font-semibold text-base shadow cursor-pointer transition-all duration-200 hover:bg-green-600"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500 text-white font-semibold text-base shadow cursor-pointer transition-all duration-200 hover:bg-green-600"
             >
               <FiCheck className="w-5 h-5" />
               <span>Save</span>
             </button>
           </div>
 
+          {/* Cancel Option */}
+
+          <div className="flex justify-center mt-6">
+            <button
+              onClick={onCancel}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-200 text-gray-700 font-semibold text-base shadow cursor-pointer hover:bg-gray-300 transition-colors duration-200"
+            >
+              <FiMicOff className="w-5 h-5"/>
+              Cancel
+            </button>
+          </div>
         </div>
       )}
     </div>
