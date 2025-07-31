@@ -13,12 +13,11 @@ import CreateMultipleProduct from "./components/Core/CreateMultipleProduct";
 import QRScanner from "./components/Core/Product/ScanQR";
 import SearchResults from "./components/Header/SearchResults";
 import AddProduct from "./components/Core/Product/AddNewProduct";
-import { useState } from 'react';
+import { useState } from "react";
 import ProductDetail from "./components/Core/Product/ProductDetail";
-
+import CreateUser from "./components/Auth/CreateUser";
 
 function App() {
-
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("mine");
   const handleQRResult = (result) => {
@@ -42,7 +41,7 @@ function App() {
             path="/scan"
             element={<QRScanner onResult={handleQRResult} />}
           />
-          <Route path="/add-product" element={<AddProduct />} />
+          <Route path="/add-product" element={<AddProduct/>} />
           <Route path="/product-display" element={<ProductGrid />} />
           <Route path="/download-qr" element={<QRdownload />} />
           <Route
@@ -52,8 +51,10 @@ function App() {
           {/* ProductDetail */}
           <Route path="/product-detail/:code/" element={<ProductDetail />} />
           {/* Search Results  */}
-          <Route path="/search" element={<SearchResults/>} />
+          <Route path="/search" element={<SearchResults />} />
           <Route path="*" element={<NotFound />} />
+          {/* admin creates user */}
+          <Route path="/admin" element={<CreateUser/>}/>  
         </Route>
       </Routes>
       <ToastContainer position="top-right" autoClose={3000} />

@@ -1,16 +1,19 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect } from "react";
 
 const Pagination = ({
   totalItems,
   itemsPerPage,
   currentPage,
   onPageChange,
-  totalPages: totalPagesProp 
+  totalPages: totalPagesProp,
 }) => {
-
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const start = (currentPage - 1) * itemsPerPage + 1;
-  const end = start + itemsPerPage - 1 > totalItems ? totalItems : start + itemsPerPage - 1;
+  const end =
+    start + itemsPerPage - 1 > totalItems
+      ? totalItems
+      : start + itemsPerPage - 1;
 
   // Generate page numbers to display
   const getPageNumbers = () => {
@@ -46,6 +49,13 @@ const Pagination = ({
 
     return result;
   };
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }, [currentPage]);
 
   const pages = getPageNumbers();
 

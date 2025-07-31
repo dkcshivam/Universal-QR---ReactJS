@@ -1,15 +1,17 @@
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaRegCopy } from "react-icons/fa";
 import { FaPencilAlt, FaTrash } from "react-icons/fa";
+import { GiFastBackwardButton } from "react-icons/gi";
+import { FaArrowLeft } from "react-icons/fa";
 
 import {
   FaQrcode,
   FaCommentAlt,
   FaKeyboard,
   FaMicrophone,
-  FaTimes
+  FaTimes,
 } from "react-icons/fa";
 import { Edit } from "lucide-react";
 import VoiceRecorder from "../Remarks/VoiceRecorder";
@@ -17,17 +19,18 @@ import AudioPlayer from "../Remarks/AudioPlayer";
 import { toast } from "react-toastify";
 import EditProductModal from "./EditProductModal";
 import ProductImageUpload from "./ProductImageUpload";
+import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 function ProductDetail() {
+  const navigate = useNavigate();
   const token = localStorage.getItem("access_token");
 
   const { code } = useParams();
 
-  const [uploadedImages, setUploadedImages] = useState([]);
   const [data, setData] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null);
+
   const [newRemark, setNewRemark] = useState("");
   const [showRemarkForm, setShowRemarkForm] = useState(false);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
@@ -40,7 +43,7 @@ function ProductDetail() {
 
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // to show loader while uploading 
+  // to show loader while uploading
 
   const [isUploading, setIsUploading] = useState(false);
 
@@ -68,9 +71,8 @@ function ProductDetail() {
   // uploading image (product image)
 
   const handleImageUpload = async (files) => {
-
     const formData = new FormData();
-    Array.from(files).forEach(file => {
+    Array.from(files).forEach((file) => {
       formData.append("image", file);
     });
 
@@ -81,20 +83,22 @@ function ProductDetail() {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            "Authorization": `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
-      // fetching the updated product details to get new images 
+      // fetching the updated product details to get new images
 
       await getProductDetail();
-      toast.success('Image uploaded successfully!');
+      toast.success("Image uploaded successfully!");
     } catch (err) {
+      // trying to show backend error message if available
 
-      // trying to show backend error message if available 
-
-      const errorMsg = err?.response?.data?.errors_data?.image?.[0] || err?.response?.data?.message || "Image upload failed!";
+      const errorMsg =
+        err?.response?.data?.errors_data?.image?.[0] ||
+        err?.response?.data?.message ||
+        "Image upload failed!";
 
       toast.error(errorMsg);
     } finally {
@@ -104,7 +108,7 @@ function ProductDetail() {
 
   useEffect(() => {
     axios
-      .get(`${import.meta.env.VITE_API_URL}/qr/departments/`,token && {
+      .get(`${import.meta.env.VITE_API_URL}/qr/departments/`, token && {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -188,7 +192,7 @@ function ProductDetail() {
 
   const getProductDetail = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`,token && {
+      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`, token && {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -204,7 +208,7 @@ function ProductDetail() {
   };
   const handleSave = async (remarkId) => {
 
-    try {  
+    try {
       await axios.put(
         `${API_BASE_URL}/qr/products/${code}/remarks/update/${remarkId}/`,
         {
@@ -251,11 +255,14 @@ function ProductDetail() {
   // Get remarks for the product
   const getRemarks = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/remarks/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await axios.get(
+        `${API_BASE_URL}/qr/products/${code}/remarks/`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       if (res.status === 200) {
         const remarksData = res?.data?.data || [];
         console.log("Remarks data:", remarksData);
@@ -372,14 +379,6 @@ function ProductDetail() {
     }
   }, [code]);
 
-  // const openModal = (imageSrc) => {
-  //   setSelectedImage(imageSrc);
-  // };
-
-  // const closeModal = () => {
-  //   setSelectedImage(null);
-  // };
-
   const handleAddTextRemark = async () => {
     if (newRemark.trim()) {
       const success = await submitTextRemark(newRemark.trim());
@@ -459,7 +458,7 @@ function ProductDetail() {
       //   "_"
       // )}_QR.png`;
 
-      link.download = `${data.code}.png`
+      link.download = `${data.code}.png`;
 
       // Append to body, click, and remove
       document.body.appendChild(link);
@@ -503,54 +502,75 @@ function ProductDetail() {
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
           {/* Left Side: Product Info */}
           <div className="flex-1 flex flex-col gap-6 p-4 lg:p-8 bg-white rounded-md shadow-md">
+
             {/* Header Section */}
-            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-4">
-              <div className="flex-1">
-                <h1 className="text-xl lg:text-3xl text-[#1e293b] font-bold capitalize break-words">
-                  {data.name}{" "}
-                  <span className="text-sm lg:text-lg text-gray-400 block lg:inline">
-                    (#{data.code})
-                  </span>
-                </h1>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-row items-stretch sm:items-center gap-2 lg:gap-4">
-                {/* Download QR Button */}
-
+            
+            <div className="mb-4 flex flex-col gap-2">
+              {/* Top row: Back button + actions */}
+              <div className="flex items-center justify-between">
                 <button
-                  className="inline-flex items-center justify-center gap-2 bg-blue-500 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 md:flex-none lg:text-base hover:bg-blue-600"
-                  onClick={handleDownloadQR}
-                  disabled={!data?.qr}
+                  onClick={() => navigate(-1)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
+                  aria-label="Go Back"
                 >
-                  <FaQrcode className="text-white" />
-                  <span className="hidden sm:inline">Download QR</span>
-                  <span className="sm:hidden">QR Code</span>
+                  <FaArrowLeft className="w-4 h-4" />
+                  <span>Back</span>
                 </button>
-
-                {/* Edit Product Button */}
-
-                {isEditMode && isEditable ? (
+                <div className="flex items-center gap-2">
+                  {/* Download QR Button */}
                   <button
-                    className="inline-flex items-center justify-center gap-2 bg-green-600 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-green-700"
-                    onClick={handleUpdateProduct}
+                    className="inline-flex items-center justify-center gap-2 bg-blue-500 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm lg:text-base hover:bg-blue-600"
+                    onClick={handleDownloadQR}
+                    disabled={!data?.qr}
                   >
-                    <Edit className="text-white w-4 h-4" />
-                    <span className="hidden sm:inline">Update Product</span>
-                    <span className="sm:hidden">Update</span>
+                    <FaQrcode className="text-white" />
+                    <span className="hidden sm:inline">Download QR</span>
+                    <span className="sm:hidden">QR Code</span>
                   </button>
-                ) : (
-                  data.isEditable && (
+                  {/* Edit Product Button */}
+                  {isEditMode && isEditable ? (
                     <button
-                      className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm flex-1 sm:flex-none lg:text-base hover:bg-[#7594c7]"
-                      onClick={handleEditClick}
+                      className="inline-flex items-center justify-center gap-2 bg-green-600 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm lg:text-base hover:bg-green-700"
+                      onClick={handleUpdateProduct}
                     >
                       <Edit className="text-white w-4 h-4" />
-                      <span className="hidden sm:inline">Edit Product</span>
-                      <span className="sm:hidden">Edit</span>
+                      <span className="hidden sm:inline">Update Product</span>
+                      <span className="sm:hidden">Update</span>
                     </button>
-                  )
-                )}
+                  ) : (
+                    data.isEditable && (
+                      <button
+                        className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm lg:text-base hover:bg-[#7594c7]"
+                        onClick={handleEditClick}
+                      >
+                        <Edit className="text-white w-4 h-4" />
+                        <span className="hidden sm:inline">Edit Product</span>
+                        <span className="sm:hidden">Edit</span>
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
+              {/* Bottom row: Product name, code, copy */}
+              <div className="flex items-center gap-2 flex-wrap mt-2">
+                <span className="text-xl lg:text-3xl text-[#1e293b] font-bold capitalize break-words">
+                  {data.name}
+                </span>
+                <span className="text-sm lg:text-lg text-gray-400">
+                  ({data.code})
+                </span>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs lg:text-sm font-semibold cursor-pointer transition-all duration-200 hover:bg-blue-500 hover:text-white"
+                  onClick={() => {
+                    navigator.clipboard.writeText(data.code);
+                    toast.success("Product code copied!");
+                  }}
+                  aria-label="Copy Product Code"
+                >
+                  <FaRegCopy className="text-base" />
+                  <span>Copy</span>
+                </button>
               </div>
             </div>
 
@@ -919,7 +939,6 @@ function ProductDetail() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="absolute inset-0" onClick={closeModal}></div>
           <div className="relative max-w-3xl w-full flex justify-center items-center p-4">
-
             <button
               className="absolute top-4 right-4 cursor-pointer text-white bg-black/60 rounded-full p-2 hover:bg-black/80 transition-transform duration-200 hover:scale-110 z-20"
               onClick={closeModal}

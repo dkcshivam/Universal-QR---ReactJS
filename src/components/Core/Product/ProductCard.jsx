@@ -30,9 +30,14 @@ const ProductCard = ({ product, index, activeTab }) => {
         }
       </div>
 
-      <h3 className="text-[16px] font-bold text-[#333] mb-[15px] leading-[1.3]">
+      <h3 className="text-[16px] font-bold text-[#333] mb-[3px] leading-[1.3]">
         {product?.name}
       </h3>
+      <div className="mb-[3px]">
+        <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1" >
+          Code: {product?.code || "N/A"}
+        </span>
+      </div>
       <div className="flex justify-between items-center gap-[10px] mt-2">
         <div className="flex items-center gap-[5px] text-[14px] text-[#666]">
           <FaMapMarkerAlt className="text-blue-600" />

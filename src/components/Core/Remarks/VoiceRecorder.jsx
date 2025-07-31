@@ -9,6 +9,7 @@ import {
 } from "react-icons/fi";
 
 const VoiceRecorder = ({ onSave, onCancel }) => {
+
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -16,6 +17,11 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
   const [audioUrl, setAudioUrl] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
+
+  // audio progress bar 
+
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
 
   const mediaRecorderRef = useRef(null);
   const audioRef = useRef(null);
@@ -320,41 +326,55 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
             {!isRecording ? (
               <button
                 onClick={startRecording}
-                className="w-16 h-16 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500 text-white font-semibold text-base shadow cursor-pointer transition-all duration-200 hover:bg-blue-600"
               >
                 <FiMic className="w-7 h-7" />
+                <span>
+                  Start Recording 
+                </span>
               </button>
             ) : (
               <div className="flex items-center gap-3">
                 {/* Pause/Resume */}
                 <button
                   onClick={isPaused ? resumeRecording : pauseRecording}
-                  className="w-12 h-12 bg-yellow-500 hover:bg-yellow-600 text-white rounded-full flex items-center justify-center transition-colors duration-200"
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-base shadow cursor-pointer transition-all duration-200 ${
+                      isPaused ? "bg-blue-500 text-white hover:bg-blue-600" : "bg-yellow-500 text-white hover:bg-yellow-600"
+                    }`}
                 >
                   {isPaused ? (
                     <FiPlay className="w-5 h-5" />
                   ) : (
                     <FiPause className="w-5 h-5" />
                   )}
+                  <span>
+                    {
+                      isPaused ? "Resume Recording" : "Pause Recording"
+                    }
+                  </span>
                 </button>
 
                 {/* Stop */}
                 <button
                   onClick={stopRecording}
-                  className="w-12 h-12 bg-gray-500 hover:bg-gray-600 text-white rounded-full flex items-center justify-center transition-colors duration-200"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-400 text-white font-semibold text-base shadow cursor-pointer transition-all duration-200 hover:bg-red-500"
                 >
                   <FiMicOff className="w-5 h-5" />
+                  <span>
+                    Stop Recording 
+                  </span>
                 </button>
               </div>
             )}
           </div>
 
           {/* Cancel Button */}
+
           {!isRecording && (
             <div className="flex justify-center">
               <button
                 onClick={onCancel}
-                className="text-gray-500 hover:text-gray-700 text-sm"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-200 text-gray-700 font-semibold text-base shadow cursor-pointer hover:bg-gray-300 transition-colors duration-200 mt-2"
               >
                 Cancel
               </button>
@@ -373,12 +393,15 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
           </div>
 
           {/* Audio Player */}
+
           <audio
             ref={audioRef}
             src={audioUrl}
             onEnded={() => setIsPlaying(false)}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
+            onTimeUpdate={e => setAudioProgress(e.target.currentTime)}
+            onLoadedMetadata={e => setAudioDuration(e.target.duration)}
             onError={(e) => console.error("Audio error:", e)}
             onLoadStart={() => console.log("Audio load started")}
             onCanPlay={() => console.log("Audio can play")}
@@ -388,45 +411,24 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
           />
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-center gap-3">
-            {/* Play/Pause */}
-            <button
-              onClick={isPlaying ? pauseAudio : playAudio}
-              className="w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center transition-colors duration-200"
-            >
-              {isPlaying ? (
-                <FiPause className="w-4 h-4" />
-              ) : (
-                <FiPlay className="w-4 h-4" />
-              )}
-            </button>
 
-            {/* Delete */}
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-3 mt-4">
             <button
               onClick={deleteRecording}
-              className="w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors duration-200"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-400 text-white font-semibold text-base shadow cursor-pointer transition-all duration-200 hover:bg-red-500"
             >
-              <FiTrash2 className="w-4 h-4" />
+              <FiTrash2 className="w-5 h-5" />
+              <span>Delete</span>
             </button>
-
-            {/* Save */}
             <button
               onClick={saveRecording}
-              className="w-10 h-10 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center transition-colors duration-200"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500 text-white font-semibold text-base shadow cursor-pointer transition-all duration-200 hover:bg-green-600"
             >
-              <FiCheck className="w-4 h-4" />
+              <FiCheck className="w-5 h-5" />
+              <span>Save</span>
             </button>
           </div>
 
-          {/* Cancel Option */}
-          <div className="flex justify-center">
-            <button
-              onClick={onCancel}
-              className="text-gray-500 hover:text-gray-700 text-sm"
-            >
-              Cancel
-            </button>
-          </div>
         </div>
       )}
     </div>
