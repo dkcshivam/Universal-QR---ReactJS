@@ -1,12 +1,37 @@
-# React + Vite
+ - header (voice record -> helpline): frontend 
+ 
+ - search products by name or number (larger screen), search products (name)
+ 
+ - add multiple product (product name, location, dept required), give all the input fields, when enter one character in input field then create the next rows ✅ 
+ 
+ - product name < 3 (validation) ✅ 
+ 
+ - when user not logged in, the site should be viewable (no edit delete button, should be visible), if tries creating updating anything in the site, then ask for login 
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ - user remark (delete icon for only that particular user)
 
-Currently, two official plugins are available:
+ - image (delete icon only for that particular user)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+ - add to home screen in mobile view (pwa)
 
-## Expanding the ESLint configuration
+ - edit button in product information page (should be visible only to the user who created the product)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+ - product display page 
+
+ - create multiple products ✅
+
+ - bulk qr download testing (product_code) ✅
+
+ - quantity by default will be 0 ✅
+
+ - product list ✅ 
+
+ - mobile responsiveness (hide qr download and bulk create in mobile view) ✅ 
+
+- header section redesign for larger screen ✅
+
+- search implement ✅  
+
+- update ✅ (name, quantity, belong to department, cover image and location )
+
+- after search result, it should be redirecting to that particular page 
