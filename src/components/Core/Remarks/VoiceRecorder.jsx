@@ -328,7 +328,7 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
               <button
                 onClick={startRecording}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500 text-white font-semibold text-base shadow cursor-pointer transition-all duration-200 hover:bg-blue-600"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500 text-white font-semibold text-base shadow cursor-pointer transition-all duration-200 hover:bg-blue-600"
+                
               >
                 <FiMic className="w-7 h-7" />
                 <span>
@@ -428,7 +428,7 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
             <button
               onClick={saveRecording}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500 text-white font-semibold text-base shadow cursor-pointer transition-all duration-200 hover:bg-green-600"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500 text-white font-semibold text-base shadow cursor-pointer transition-all duration-200 hover:bg-green-600"
+              
             >
               <FiCheck className="w-5 h-5" />
               <span>Save</span>

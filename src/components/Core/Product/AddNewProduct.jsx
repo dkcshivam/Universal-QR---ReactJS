@@ -250,17 +250,7 @@ const AddProduct = () => {
         </div>
 
         {/* Remarks */}
-        <div>
-          <label className="block font-semibold mb-1">Remarks</label>
-          <textarea
-            value={remarks}
-            onChange={(e) => setRemarks(e.target.value)}
-            placeholder="Add any additional notes or remarks..."
-            // maxLength={500}
-            className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-            rows={4}
-          />
-        </div>
+
 
         {/* Cover Image */}
         <div>

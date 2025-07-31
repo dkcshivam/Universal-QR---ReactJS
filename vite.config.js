@@ -10,6 +10,6 @@ export default defineConfig({
   ],
   server: {
     port: 3001, 
-    allowedHosts: ['sonu.local', '128.100.10.28']
+    allowedHosts: ['vishal.local', '128.100.10.222']
   }
 })

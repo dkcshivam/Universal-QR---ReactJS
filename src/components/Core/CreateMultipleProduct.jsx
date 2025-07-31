@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { FaPlus, FaTrash, FaTimes } from "react-icons/fa";
 import { toast } from "react-toastify";
-import { FaSave } from "react-icons/fa";
+import { FaSave, FaArrowLeft } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+
 import axios from "axios";
 function CreateMultipleProduct() {
   const createNewProductRow = () => ({
@@ -122,7 +124,7 @@ function CreateMultipleProduct() {
     console.log("Saving the following products: ", data);
 
     const token = localStorage.getItem("access_token");
-    const res = await axios.post(`${BASE_URL}/qr/bulk-create/`, data, {
+    const res = await axios.post(`${BASE_URL}/qr/products/bulk-create/`, data, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "multipart/form-data",
@@ -132,6 +134,7 @@ function CreateMultipleProduct() {
 
     toast.success(`${data.length} products saved successfully!`);
     setProductRows([createNewProductRow()]);
+    navigate("/"); // Redirect to products page after saving
   };
 
   async function fetchDepartments() {
@@ -146,9 +149,17 @@ function CreateMultipleProduct() {
   useEffect(() => {
     fetchDepartments();
   }, []);
-
+const navigate = useNavigate();
   return (
-    <div className="fixed left-0 right-0 w-screen min-h-screen bg-white shadow-md overflow-x-auto p-4 box-border">
+    <div className=" left-0 right-0  min-h-screen bg-white shadow-md overflow-x-auto p-4 box-border overflow-auto">
+      <button
+        onClick={() => navigate(-1)}
+        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
+        aria-label="Go Back"
+      >
+        <FaArrowLeft className="w-4 h-4" />
+        <span>Back</span>
+      </button>
       <div className="flex items-center justify-between mb-5 px-2">
         <h1 className="text-xl font-semibold">Create Multiple Products</h1>
         <button

@@ -9,7 +9,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-
+  const [hide, sethide] = useState(false)
   const [showPassword, setShowPassword] = useState(false) ; 
 
   const handleSubmit = async (e) => {
@@ -18,7 +18,7 @@ const Login = () => {
       alert("Please fill in all fields");
       return;
     }
-
+    sethide(true) ;
     try {
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/login/`, {
         username: email,
@@ -37,10 +37,12 @@ const Login = () => {
         navigate("/");
       } else {
         toast.error(res.data.message || "Login failed");
+        sethide(false) ;
       }
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Login failed. Please check your credentials.");
+      sethide(false) ;
     }
   };
 
@@ -114,6 +116,7 @@ const Login = () => {
 
           <div className="flex flex-row gap-6 justify-center mt-10">
             <button
+            disabled={hide}
               type="submit"
               className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-md text-base shadow flex items-center justify-center gap-2 transition-all cursor-pointer"
             >

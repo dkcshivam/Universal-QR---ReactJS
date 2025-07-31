@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
-
+import { useNavigate } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
 // Sample product data based on your image
 
 function QRdownload() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState(new Set());
 
@@ -110,6 +112,14 @@ function QRdownload() {
 
   return (
     <div className="">
+      <button
+                  onClick={() => navigate(-1)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
+                  aria-label="Go Back"
+                >
+                  <FaArrowLeft className="w-4 h-4" />
+                  <span>Back</span>
+                </button>
       <div className="table-header">
         <h1>Product List</h1>
         <button

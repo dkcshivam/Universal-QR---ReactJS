@@ -2,7 +2,8 @@ import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import ProductCard from "../Core/Product/ProductCard";
 import axios from "axios";
-
+import { FaArrowLeft } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 const SearchResults = () => {
   const location = useLocation();
   const query = new URLSearchParams(location.search).get("q");
@@ -23,9 +24,17 @@ const SearchResults = () => {
       setLoading(false);
     }
   }, [query]);
-
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen p-4">
+           <button
+                        onClick={() => navigate(-1)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
+                        aria-label="Go Back"
+                      >
+                        <FaArrowLeft className="w-4 h-4" />
+                        <span>Back</span>
+                      </button>
       <h2 className="text-xl font-bold mb-4">Search Results for "{query}"</h2>
 
         {/* Show count of matched results */}

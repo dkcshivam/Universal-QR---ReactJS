@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { FaPlus, FaRegCopy } from "react-icons/fa";
 import { FaPencilAlt, FaTrash } from "react-icons/fa";
-import { GiFastBackwardButton } from "react-icons/gi";
 import { FaArrowLeft } from "react-icons/fa";
 
 import {
@@ -62,7 +61,7 @@ function ProductDetail() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const [departments, setDepartments] = useState([]);
-
+  const [image, setimage] = useState([])
   const [enlargedImage, setEnlargedImage] = useState(null);
 
   const openModal = (imgSrc) => setEnlargedImage(imgSrc);
@@ -90,7 +89,7 @@ function ProductDetail() {
 
       // fetching the updated product details to get new images
 
-      await getProductDetail();
+      await Imagesupload();
       toast.success("Image uploaded successfully!");
     } catch (err) {
       // trying to show backend error message if available
@@ -105,7 +104,49 @@ function ProductDetail() {
       setIsUploading(false);
     }
   };
+  const handleImageDelete = async (imageId) => {
+    if (!token) {
+      toast.error("Please login to delete product images.");
+      return;
+    }
 
+    try {
+      await axios.delete(`http://shivam-mac.local:8000/api/v1.0/qr/products/${code}/images/${imageId}/delete/`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // fetching the updated product details to get new images
+
+       
+      toast.success("Image deleted successfully!");
+      await Imagesupload()
+    } catch (err) {
+      const errorMsg =
+        err?.response?.data?.message || "Image deletion failed!";
+      toast.error(errorMsg);
+    }
+  }
+  const Imagesupload=() => {
+axios
+      .get(`${import.meta.env.VITE_API_URL}/qr/products/${code}/images/`, token && {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        setimage(res.data.data || []);
+      })
+      .catch((err) => {
+        setimage([]);
+      });
+  }
+  useEffect(() => {
+    Imagesupload();
+  }, []);
   useEffect(() => {
     axios
       .get(`${import.meta.env.VITE_API_URL}/qr/departments/`, token && {
@@ -278,7 +319,7 @@ function ProductDetail() {
   };
 
   // Submit text remark to API
-
+  
   const submitTextRemark = async (remarkText) => {
     try {
       setIsSubmittingRemark(true);
@@ -920,7 +961,8 @@ function ProductDetail() {
               <ProductImageUpload
                 has_update_power={data.isEditable}
                 onUpload={handleImageUpload}
-                images={data?.images || []}
+                ondelete={handleImageDelete}
+                images={image || []}
                 isUploading={isUploading}
               />
             </div>

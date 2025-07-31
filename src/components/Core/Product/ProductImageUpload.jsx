@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 const ProductImageUpload = ({
   has_update_power,
   onUpload,
+  ondelete,
   images,
   isUploading,
 }) => {
@@ -159,7 +160,7 @@ const ProductImageUpload = ({
                                 title="Delete Image"
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    handleDeleteClick(img.id);
+                                    ondelete(img.id);
                                 }}
                             >
                                 <FaTrash className="text-red-600 hover:text-white transition-colors duration-200" />
