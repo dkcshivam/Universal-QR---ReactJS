@@ -122,7 +122,7 @@ function CreateMultipleProduct() {
     console.log("Saving the following products: ", data);
 
     const token = localStorage.getItem("access_token");
-    const res = await axios.post(`${BASE_URL}/qr/products/bulk-create/`, data, {
+    const res = await axios.post(`${BASE_URL}/qr/bulk-create/`, data, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "multipart/form-data",
