@@ -111,7 +111,7 @@ function ProductDetail() {
     }
 
     try {
-      await axios.delete(`http://shivam-mac.local:8000/api/v1.0/qr/products/${code}/images/${imageId}/delete/`,
+      await axios.delete(`${import.meta.env.VITE_API_URL}/qr/products/${code}/images/${imageId}/delete/`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -131,7 +131,7 @@ function ProductDetail() {
     }
   }
   const Imagesupload=() => {
-axios
+      axios
       .get(`${import.meta.env.VITE_API_URL}/qr/products/${code}/images/`, token && {
         headers: {
           Authorization: `Bearer ${token}`,
