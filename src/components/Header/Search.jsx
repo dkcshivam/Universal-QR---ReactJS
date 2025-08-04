@@ -205,7 +205,7 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
                 <button
                   type="button"
                   onClick={handleCloseClick}
-                  className="pr-3 text-gray-400 hover:text-gray-600"
+                  className="pr-3 text-gray-400 hover:text-gray-600 absolute right-0"
                 >
                   <FaTimes className="h-4 w-4" />
                 </button>

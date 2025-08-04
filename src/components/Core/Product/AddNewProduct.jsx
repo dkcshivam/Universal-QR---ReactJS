@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Save, Plus } from "lucide-react";
+import { Save, Plus, SunMoon } from "lucide-react";
 import { FiUpload, FiCamera } from "react-icons/fi";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -7,7 +7,6 @@ import { FaArrowLeft } from "react-icons/fa";
 import { toast } from "react-toastify";
 import CameraModal from "./CameraModal";
 import { FiAlertCircle } from "react-icons/fi";
-
 
 const AddProduct = () => {
   const [productName, setProductName] = useState("");
@@ -33,11 +32,10 @@ const AddProduct = () => {
   useEffect(() => {
     if (showCameraModal) {
       document.body.classList.add("hide-footer");
-    }
-    else {
+    } else {
       document.body.classList.remove("hide-footer");
     }
-  }, [showCameraModal])
+  }, [showCameraModal]);
 
   const handleCoverChange = (e) => {
     const file = e.target.files[0];
@@ -85,6 +83,10 @@ const AddProduct = () => {
   }
   useEffect(() => {
     fetchDepartments();
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }, []);
 
   // product create
@@ -117,39 +119,40 @@ const AddProduct = () => {
 
       productImages.forEach((img) => {
         productData.append("product_images", img.file);
-      })
+      });
 
-      const response = await axios.post(`${BASE_URL}/qr/products/create/`,
+      const response = await axios.post(
+        `${BASE_URL}/qr/products/create/`,
         productData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         }
-      )
+      );
 
       if (response.status === 201) {
-        return response.data.data; // returning the created product data 
+        return response.data.data; // returning the created product data
       }
 
       return null;
     } catch (error) {
       if (error.response) {
-        const errorMessage = error.response.data.message || error.response.data.error || "Failed to create product";
+        const errorMessage =
+          error.response.data.message ||
+          error.response.data.error ||
+          "Failed to create product";
         toast.error(errorMessage);
-      }
-      else if (error.request) {
+      } else if (error.request) {
         toast.error("Network error. Please check your connection.");
-      }
-      else {
-        toast.error("An unexpected error occured.")
+      } else {
+        toast.error("An unexpected error occured.");
       }
     }
-
   }
 
-  // create product and redirect to product-detail page 
+  // create product and redirect to product-detail page
 
   const handleSave = async () => {
     const product = await createProduct();
@@ -157,7 +160,7 @@ const AddProduct = () => {
       toast.success("Product created! Redirecting to details...");
       navigate(`/product-detail/${product.product_code}/`);
     }
-  }
+  };
 
   // create product and redirect to the same 'AddNewProduct' page (if the user wants to add more product)
 
@@ -175,9 +178,9 @@ const AddProduct = () => {
       setCoverImage(null);
       setProductImages([]);
     }
-  }
+  };
 
-  // product created and user remains on the same page to add more products 
+  // product created and user remains on the same page to add more products
 
   return (
     <div className="min-h-screen bg-gray-50 space-y-4">
@@ -251,10 +254,11 @@ const AddProduct = () => {
 
         {/* Remarks */}
 
-
         {/* Cover Image */}
         <div>
-          <label className="block font-medium text-gray-700 mb-3">Cover Image</label>
+          <label className="block font-medium text-gray-700 mb-3">
+            Cover Image
+          </label>
           {!coverImage ? (
             <label className="border-2 border-dashed border-blue-300 rounded-md bg-gray-50 flex flex-col items-center justify-center h-52 text-center px-4 py-6 text-gray-500 cursor-pointer transition">
               <input
@@ -425,17 +429,20 @@ const AddProduct = () => {
         <div className="mt-6 rounded-lg p-4 text-sm text-black">
           <ul className="list-disc pl-5 mt-2">
             <li>
-              <span className="font-semibold">Save:</span> Creates the product and redirects you to its detail page.
+              <span className="font-semibold">Save:</span> Creates the product
+              and redirects you to its detail page.
             </li>
             <li>
-              <span className="font-semibold">Save &amp; Create New:</span> Creates the product and keeps you on this page so you can add more products.
+              <span className="font-semibold">Save &amp; Create New:</span>{" "}
+              Creates the product and keeps you on this page so you can add more
+              products.
             </li>
           </ul>
           <div className="mt-2">
-            <span className="font-medium">💡 Tip:</span> Use "Save &amp; Create New" if you need to add multiple products quickly!
+            <span className="font-medium">💡 Tip:</span> Use "Save &amp; Create
+            New" if you need to add multiple products quickly!
           </div>
         </div>
-
       </div>
 
       {/* camera modal */}
@@ -446,7 +453,6 @@ const AddProduct = () => {
           onClose={() => setShowCameraModal(false)}
         />
       )}
-
     </div>
   );
 };

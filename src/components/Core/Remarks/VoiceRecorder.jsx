@@ -418,13 +418,13 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
           {/* Action Buttons */}
 
           <div className="flex flex-col sm:flex-row justify-center items-center gap-3 mt-4">
-            <button
+            {/* <button
               onClick={deleteRecording}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-400 text-white font-semibold text-base shadow cursor-pointer transition-all duration-200 hover:bg-red-500"
             >
               <FiTrash2 className="w-5 h-5" />
               <span>Delete</span>
-            </button>
+            </button> */}
             <button
               onClick={saveRecording}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500 text-white font-semibold text-base shadow cursor-pointer transition-all duration-200 hover:bg-green-600"

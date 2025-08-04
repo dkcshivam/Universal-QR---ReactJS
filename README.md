@@ -39,25 +39,26 @@
 **Testing Bugs**
 
 - [x] first time open website if refres default camera is open
-- [X] Scroll is not work properly ---1
+- [x] Scroll is not work properly ---1
 - [x] after login not any option to going home page
 - [x] What is the work of helf desk at header
 - [x] Product images is not deleted
-- [X] Multiple images not uploads in product image -- only allow to upload one image
+- [x] Multiple images not uploads in product image -- only allow to upload one image
 - [ ] The filter ribbon should be hidden if not showing any button in mobile screen -- 2
-- [X] The "X" button in the search bar is appering outside the search box when its open -- 1
-- [X] Pagination should not be visible if only one page of products -- 3
+- [x] The "X" button in the search bar is appering outside the search box when its open -- 1
+- [x] Pagination should not be visible if only one page of products -- 3
 - [ ] There should be a minimum height for the product_container, also the overflow-y should be hidden for less data -- 3
 - [x] Bulk create api response - 413 Content Too Large -- 1
 - [x] Image deletion failed while deleting product images in mobile devices -- 1
-- [ ] The mobile footer for Scan QR and Add Product should be hidden when a modal is opened -- 1
-- [ ] The "edit" & "Delete" buttons are collapsing with the reviews -- 1
-- [ ] there should not be an edit button for voice reviews -- 1
-- [ ] Not able to scroll the textarea for edit section of review -- 1
+- [X] The mobile footer for Scan QR and Add Product should be hidden when a modal is opened -- 1
+- [x] The "edit" & "Delete" buttons are collapsing with the reviews -- 1
+- [x] there should not be an edit button for voice reviews -- 1
+- [x] Not able to scroll the textarea for edit section of review -- 1
 - [ ] Even though the "bulk-create" call is failed the toast says - "Saving the products will take some time" -- 3
 - [ ] The Card Design breaks for long words like "Hardgoods_Display" -- 2
-- [ ] edit/ api responed with - 413 Content Too Large -- 1
+- [x] edit/ api responed with - 413 Content Too Large -- 1
 - [ ] There is no button to go to scan qr page from the desktop mode -- 2
-- [ ] Username should be checked in lowercase for login -- 1
-- [ ] The Add Product button should be hidden when user is not logged in -- 1
-- [ ] What is the purpose of Cancel button when there are "Delete" and "Save" buttons to finalize the voice reviews -- 1 - remove the delete button.
+- [x] Username should be checked in lowercase for login -- 1
+- [x] The Add Product button should be hidden when user is not logged in -- 1
+- [x] What is the purpose of Cancel button when there are "Delete" and "Save" buttons to finalize the voice reviews -- 1 - remove the delete button.
+- [x] If a user is not signed in, the reviews are not visible to them -- 1
