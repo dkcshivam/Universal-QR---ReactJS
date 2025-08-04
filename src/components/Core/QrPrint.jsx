@@ -122,7 +122,7 @@ const handlePrint = () => {
 
   return (
     <div>
-      <div className="onprint" style={{ margin: "20px" }}>
+      <div className=" onprint" style={{ margin: "20px" }}>
         <input
           type="file"
           accept="image/*"
