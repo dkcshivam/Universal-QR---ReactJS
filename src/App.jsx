@@ -16,7 +16,9 @@ import AddProduct from "./components/Core/Product/AddNewProduct";
 import { useState } from "react";
 import ProductDetail from "./components/Core/Product/ProductDetail";
 import CreateUser from "./components/Auth/CreateUser";
-
+import QrPrint from "./components/Core/QrPrint";
+// import Printpage from "./components/Core/blukprintsetup";
+import ProductFlow from "./components/Core/ProductFlow";
 function App() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("mine");
@@ -44,6 +46,7 @@ function App() {
           <Route path="/add-product" element={<AddProduct/>} />
           <Route path="/product-display" element={<ProductGrid />} />
           <Route path="/download-qr" element={<QRdownload />} />
+          <Route path="/print-qr" element={<QrPrint />} />
           <Route
             path="/upload-multiple-product"
             element={<CreateMultipleProduct />}
@@ -55,6 +58,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
           {/* admin creates user */}
           <Route path="/admin" element={<CreateUser/>}/>  
+          <Route path="/bulk-print-setup" element={<ProductFlow />} />
         </Route>
       </Routes>
       <ToastContainer position="top-right" autoClose={3000} />

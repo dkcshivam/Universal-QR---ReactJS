@@ -17,7 +17,7 @@ const CreateUser = () => {
     useEffect(() => {
         const user = localStorage.getItem("user");
         const is_admin = localStorage.getItem("is_admin");
-        setIsAdmin(user === "admin" && is_admin === "true");
+        setIsAdmin( is_admin === "true");
     }, []);
 
     const handleSubmit = async (e) => {
