@@ -39,14 +39,14 @@
 **Testing Bugs**
 
 - [x] first time open website if refres default camera is open
-- [ ] Scroll is not work properly ---1
+- [X] Scroll is not work properly ---1
 - [x] after login not any option to going home page
 - [x] What is the work of helf desk at header
 - [x] Product images is not deleted
-- [ ] Multiple images not uploads in product image -- only allow to upload one image
+- [X] Multiple images not uploads in product image -- only allow to upload one image
 - [ ] The filter ribbon should be hidden if not showing any button in mobile screen -- 2
-- [ ] The "X" button in the search bar is appering outside the search box when its open -- 1
-- [ ] Pagination should not be visible if only one page of products -- 3
+- [X] The "X" button in the search bar is appering outside the search box when its open -- 1
+- [X] Pagination should not be visible if only one page of products -- 3
 - [ ] There should be a minimum height for the product_container, also the overflow-y should be hidden for less data -- 3
 - [x] Bulk create api response - 413 Content Too Large -- 1
 - [x] Image deletion failed while deleting product images in mobile devices -- 1

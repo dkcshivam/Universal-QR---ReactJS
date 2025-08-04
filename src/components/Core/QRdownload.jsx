@@ -113,13 +113,13 @@ function QRdownload() {
   return (
     <div className="">
       <button
-                  onClick={() => navigate(-1)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
-                  aria-label="Go Back"
-                >
-                  <FaArrowLeft className="w-4 h-4" />
-                  <span>Back</span>
-                </button>
+        onClick={() => navigate(-1)}
+        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
+        aria-label="Go Back"
+      >
+        <FaArrowLeft className="w-4 h-4" />
+        <span>Back</span>
+      </button>
       <div className="table-header">
         <h1>Product List</h1>
         <button
@@ -142,47 +142,48 @@ function QRdownload() {
           </tr>
         </thead>
         <tbody>
-          { Array.isArray(products) && products.map((product) => (
-            <tr key={product.id}>
-              <td>
-                <input
-                  type="checkbox"
-                  checked={selectedProducts.has(product.id)}
-                  onChange={() => handleSelectOne(product.id)}
-                  className="cursor-pointer"
-                />
-              </td>
-              <td>
-                {product.cover_image ? (
-                  <img
-                    src={product.cover_image}
-                    alt={product.name}
-                    className="product-table-img"
-                    style={{
-                      width: 50,
-                      height: 50,
-                      objectFit: "cover",
-                      borderRadius: 1,
-                    }}
+          {Array.isArray(products) &&
+            products.map((product) => (
+              <tr key={product.id}>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={selectedProducts.has(product.id)}
+                    onChange={() => handleSelectOne(product.id)}
+                    className="cursor-pointer"
                   />
-                ) : (
-                  <span className="text-gray-400 text-xs">No Image</span>
-                )}
-              </td>
-              <td className="capitalize">{product.name}</td>
-              <td>{product.quantity}</td>
-              <td className="capitalize">
-                {product.location || (
-                  <span className="text-gray-400 text-xs">N/A</span>
-                )}
-              </td>
-              <td className="capitalize">
-                {product.belongs_to_department || (
-                  <span className="text-gray-400 text-xs">N/A</span>
-                )}
-              </td>
-            </tr>
-          ))}
+                </td>
+                <td>
+                  {product.cover_image ? (
+                    <img
+                      src={product.cover_image}
+                      alt={product.name}
+                      className="product-table-img"
+                      style={{
+                        width: 50,
+                        height: 50,
+                        objectFit: "cover",
+                        borderRadius: 1,
+                      }}
+                    />
+                  ) : (
+                    <span className="text-gray-400 text-xs">No Image</span>
+                  )}
+                </td>
+                <td className="capitalize">{product.name}</td>
+                <td>{product.quantity}</td>
+                <td className="capitalize">
+                  {product.location || (
+                    <span className="text-gray-400 text-xs">N/A</span>
+                  )}
+                </td>
+                <td className="capitalize">
+                  {product.belongs_to_department || (
+                    <span className="text-gray-400 text-xs">N/A</span>
+                  )}
+                </td>
+              </tr>
+            ))}
         </tbody>
       </table>
     </div>

@@ -981,7 +981,6 @@ function ProductDetail() {
         onSave={handleSaveEdit}
         loading={isUpdating}
       />
-
       {/* Enlarged view for cover and product image */}
 
       {enlargedImage && (
