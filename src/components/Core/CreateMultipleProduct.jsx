@@ -116,7 +116,7 @@ function CreateMultipleProduct() {
     }
 
     // remove empty last row if present
-    // sethide(true);
+    sethide(true);
     const filteredRows = productRows.filter(
       (row) =>
         row.name.trim() !== "" ||
@@ -135,7 +135,7 @@ function CreateMultipleProduct() {
         product_images: product.productImages,
       });
     }
-    toast.success("Saving the products will take some time ");
+    
     const token = localStorage.getItem("access_token");
     const res = await axios.post(`${BASE_URL}/qr/products/bulk-create/`, data, {
       headers: {
@@ -145,10 +145,10 @@ function CreateMultipleProduct() {
     });
     if (res.status !== 201) {
       toast.error("Failed to save products.");
-      // sethide(false);
+      sethide(false);
       return;
     }
-
+    // toast.success("Saving the products will take some time ");
     console.log("Saving the following products: ", res);
 
     toast.success(`${data.length} products saved successfully!`);
