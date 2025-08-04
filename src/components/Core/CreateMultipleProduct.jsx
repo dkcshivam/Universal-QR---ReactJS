@@ -3,8 +3,9 @@ import { FaPlus, FaTrash, FaTimes } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { FaSave, FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-
+import Lottie from "lottie-react";
 import axios from "axios";
+import { set } from "lodash";
 function CreateMultipleProduct() {
   const createNewProductRow = () => ({
     id: Date.now() + Math.random(),
@@ -20,7 +21,19 @@ function CreateMultipleProduct() {
   const [departments, setDepartments] = useState([]);
   const [productRows, setProductRows] = useState([createNewProductRow()]);
   const BASE_URL = import.meta.env.VITE_API_URL;
+  const [hide, sethide] = useState(false);
+  const [lottieData, setLottieData] = useState(null) ; 
 
+   // Number of products per page
+
+  // in Vite (CRA), the public folder is not part of the module system. Files in 'public' are served as static assets, not imported as modules
+
+  useEffect(() => {
+    fetch('/media/lottie-spinner.json') 
+      .then(res => res.json())
+      .then(data => setLottieData(data)) ; 
+     
+  }, [hide])
   const handleInputChange = (index, event) => {
     const { name, value } = event.target;
     const updatedRows = [...productRows];
@@ -103,13 +116,14 @@ function CreateMultipleProduct() {
     }
 
     // remove empty last row if present
-
+    // sethide(true);
     const filteredRows = productRows.filter(
       (row) =>
         row.name.trim() !== "" ||
         row.location.trim() !== "" ||
         row.department.trim() !== ""
     );
+
     let data = [];
     for (const product of productRows.slice(0, -1)) {
       data.push({
@@ -121,8 +135,7 @@ function CreateMultipleProduct() {
         product_images: product.productImages,
       });
     }
-    console.log("Saving the following products: ", data);
-
+    toast.success("Saving the products will take some time ");
     const token = localStorage.getItem("access_token");
     const res = await axios.post(`${BASE_URL}/qr/products/bulk-create/`, data, {
       headers: {
@@ -130,11 +143,18 @@ function CreateMultipleProduct() {
         "Content-Type": "multipart/form-data",
       },
     });
+    if (res.status !== 201) {
+      toast.error("Failed to save products.");
+      // sethide(false);
+      return;
+    }
+
     console.log("Saving the following products: ", res);
 
     toast.success(`${data.length} products saved successfully!`);
     setProductRows([createNewProductRow()]);
-    navigate("/"); // Redirect to products page after saving
+    // navigate("/"); // Redirect to products page after saving
+    
   };
 
   async function fetchDepartments() {
@@ -149,8 +169,16 @@ function CreateMultipleProduct() {
   useEffect(() => {
     fetchDepartments();
   }, []);
-const navigate = useNavigate();
-  return (
+  const navigate = useNavigate();
+  return hide ? (
+    <div className="flex items-center justify-center h-[60vh]">
+      <Lottie
+        animationData={lottieData}
+        loop={true}
+        style={{ width: 120, height: 120 }}
+      />
+    </div>
+  ) : (
     <div className=" left-0 right-0  min-h-screen bg-white shadow-md overflow-x-auto p-4 box-border overflow-auto">
       <button
         onClick={() => navigate(-1)}
@@ -163,6 +191,7 @@ const navigate = useNavigate();
       <div className="flex items-center justify-between mb-5 px-2">
         <h1 className="text-xl font-semibold">Create Multiple Products</h1>
         <button
+          disabled={hide}
           className="save-all-btn flex items-center gap-2"
           onClick={handleSaveAll}
         >
