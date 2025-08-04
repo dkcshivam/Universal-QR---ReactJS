@@ -61,7 +61,7 @@ function ProductDetail() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const [departments, setDepartments] = useState([]);
-  const [image, setimage] = useState([])
+  const [image, setimage] = useState([]);
   const [enlargedImage, setEnlargedImage] = useState(null);
 
   const openModal = (imgSrc) => setEnlargedImage(imgSrc);
@@ -104,6 +104,7 @@ function ProductDetail() {
       setIsUploading(false);
     }
   };
+
   const handleImageDelete = async (imageId) => {
     if (!token) {
       toast.error("Please login to delete product images.");
@@ -111,7 +112,8 @@ function ProductDetail() {
     }
 
     try {
-      await axios.delete(`http://shivam-mac.local:8000/api/v1.0/qr/products/${code}/images/${imageId}/delete/`,
+      await axios.delete(
+        `http://shivam-mac.local:8000/api/v1.0/qr/products/${code}/images/${imageId}/delete/`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -121,39 +123,50 @@ function ProductDetail() {
 
       // fetching the updated product details to get new images
 
-       
       toast.success("Image deleted successfully!");
-      await Imagesupload()
+      await Imagesupload();
     } catch (err) {
-      const errorMsg =
-        err?.response?.data?.message || "Image deletion failed!";
+      const errorMsg = err?.response?.data?.message || "Image deletion failed!";
       toast.error(errorMsg);
     }
-  }
-  const Imagesupload=() => {
-axios
-      .get(`${import.meta.env.VITE_API_URL}/qr/products/${code}/images/`, token && {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+  };
+
+  const Imagesupload = () => {
+    axios
+      .get(
+        `${import.meta.env.VITE_API_URL}/qr/products/${code}/images/`,
+        token && {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       .then((res) => {
         setimage(res.data.data || []);
       })
       .catch((err) => {
         setimage([]);
       });
-  }
+  };
+
   useEffect(() => {
     Imagesupload();
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }, []);
+
   useEffect(() => {
     axios
-      .get(`${import.meta.env.VITE_API_URL}/qr/departments/`, token && {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      .get(
+        `${import.meta.env.VITE_API_URL}/qr/departments/`,
+        token && {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       .then((res) => {
         setDepartments(res.data.data || []);
       })
@@ -233,11 +246,14 @@ axios
 
   const getProductDetail = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/qr/products/${code}/`, token && {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await axios.get(
+        `${API_BASE_URL}/qr/products/${code}/`,
+        token && {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       if (res.status === 200) {
         const productData = res?.data?.data;
         setData(productData);
@@ -248,7 +264,6 @@ axios
     }
   };
   const handleSave = async (remarkId) => {
-
     try {
       await axios.put(
         `${API_BASE_URL}/qr/products/${code}/remarks/update/${remarkId}/`,
@@ -300,7 +315,7 @@ axios
     try {
       const res = await axios.get(
         `${API_BASE_URL}/qr/products/${code}/remarks/`,
-        {
+        token && {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -319,7 +334,7 @@ axios
   };
 
   // Submit text remark to API
-  
+
   const submitTextRemark = async (remarkText) => {
     try {
       setIsSubmittingRemark(true);
@@ -427,7 +442,7 @@ axios
     if (newRemark.trim()) {
       const success = await submitTextRemark(newRemark.trim());
       if (success) {
-        toast.success("Remark added successfully!") ; 
+        toast.success("Remark added successfully!");
         setNewRemark("");
         setShowRemarkForm(false);
       }
@@ -547,9 +562,8 @@ axios
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
           {/* Left Side: Product Info */}
           <div className="flex-1 flex flex-col gap-6 p-4 lg:p-8 bg-white rounded-md shadow-md">
-
             {/* Header Section */}
-            
+
             <div className="mb-4 flex flex-col gap-2">
               {/* Top row: Back button + actions */}
               <div className="flex items-center justify-between">
@@ -695,8 +709,8 @@ axios
                   {!data?.belongs_to_department
                     ? "N/A"
                     : departments.find(
-                      (dep) => dep.key === data.belongs_to_department
-                    )?.label || data.belongs_to_department}
+                        (dep) => dep.key === data.belongs_to_department
+                      )?.label || data.belongs_to_department}
                 </span>
               </div>
 
@@ -710,11 +724,12 @@ axios
                   {!data?.quantity && data?.quantity !== 0
                     ? "N/A"
                     : `
-                      ${data.quantity} ${Number(data.quantity) === 1 ||
-                      Number(data.quantity) === 0
-                      ? "item"
-                      : "items"
-                    }
+                      ${data.quantity} ${
+                        Number(data.quantity) === 1 ||
+                        Number(data.quantity) === 0
+                          ? "item"
+                          : "items"
+                      }
                     `}
                 </span>
               </div>
@@ -874,20 +889,21 @@ axios
                                       />
                                     </div>
                                   )}
-                                  <p className="text-gray-600 text-sm break-words">
+                                  <p className="text-gray-600 text-sm md:w-[80%] break-words">
                                     {remark.remark}
                                   </p>
                                 </div>
                               ) : (
-                                <p className="text-gray-800 text-sm lg:text-base break-words whitespace-pre-line">
+                                <p className="text-gray-800 text-sm lg:text-base md:w-[80%] break-words whitespace-pre-line">
                                   {remark.remark}
                                 </p>
                               )}
 
                               {/* Show Edit button if user has permission */}
 
-                                {remark.isEditable && !isEditing && (
-                                  <div className="absolute right-3 bottom-3 flex gap-2" >
+                              {remark.isEditable && !isEditing && (
+                                <div className="absolute right-3 top-3 md:top-auto md:bottom-3 flex gap-2">
+                                  {remark.remark_type === "text" && (
                                     <button
                                       onClick={() => {
                                         setEditingId(remark.id);
@@ -899,18 +915,19 @@ axios
                                       <FaPencilAlt className="text-xs" />
                                       <span className="ml-1">Edit</span>
                                     </button>
-                                    <button
-                                      onClick={() => {
-                                        handleDeleteRemark(remark.id);
-                                      }}
-                                      className="inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold cursor-pointer transition-all duration-200 hover:bg-red-500 hover:text-white shadow"
-                                      title="Delete Remark"
-                                    >
-                                      <FaTrash className="text-xs" />
-                                      <span className="ml-1">Delete</span>
-                                    </button>
-                                  </div>
-                                )}
+                                  )}
+                                  <button
+                                    onClick={() => {
+                                      handleDeleteRemark(remark.id);
+                                    }}
+                                    className="inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold cursor-pointer transition-all duration-200 hover:bg-red-500 hover:text-white shadow"
+                                    title="Delete Remark"
+                                  >
+                                    <FaTrash className="text-xs" />
+                                    <span className="ml-1">Delete</span>
+                                  </button>
+                                </div>
+                              )}
                             </>
                           )}
                         </div>
