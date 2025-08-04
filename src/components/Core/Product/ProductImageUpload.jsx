@@ -110,7 +110,6 @@ const ProductImageUpload = ({
           )}
           <input
             type="file"
-            multiple
             ref={fileInputRef}
             style={{ display: "none" }}
             onChange={handleChange}

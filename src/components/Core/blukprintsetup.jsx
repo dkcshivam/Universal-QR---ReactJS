@@ -103,7 +103,7 @@ const QRSheetExample = ({ exampleData }) => {
                   {item.qr_link && (
                     <img
                       src={typeof item.qr_link === "string"
-                        ? `http://localhost:8000/` + item.qr_link
+                        ? `${import.meta.env.VITE_API_URL}` + item.qr_link
                         : URL.createObjectURL(item.qr_link)}
                       alt="Cover"
                     />
@@ -113,7 +113,7 @@ const QRSheetExample = ({ exampleData }) => {
                   {item.qr_link && (
                     <img
                       src={typeof item.qr_link === "string"
-                        ? `http://localhost:8000/` + item.qr_link
+                        ? `${import.meta.env.VITE_API_URL}` + item.qr_link
                         : URL.createObjectURL(item.qr_link)}
                       alt="Cover"
                     />

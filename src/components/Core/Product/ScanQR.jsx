@@ -367,6 +367,7 @@ const QRScanner = ({ onResult }) => {
 
   const handleCloseFullScreen = () => {
     setShowFullScreen(false);
+    navigate('/'); // Go back to previous page
     // Don't navigate automatically - let parent handle navigation
   };
 

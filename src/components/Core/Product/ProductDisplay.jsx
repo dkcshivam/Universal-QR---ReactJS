@@ -16,7 +16,6 @@ const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lottieData, setLottieData] = useState(null) ; 
 
-  const itemsPerPage = 20; // Number of products per page
 
   // in Vite (CRA), the public folder is not part of the module system. Files in 'public' are served as static assets, not imported as modules
 
@@ -92,7 +91,7 @@ const [products, setProducts] = useState([]);
               <ProductCard key={index} product={product} index={index} activeTab={activeTab} />
             ))}
           </div>
-          {products?.length > 0 ? (
+          {products?.length > 100 ? (
             <Pagination
               totalItems={pagination.count}
               itemsPerPage={100}
@@ -101,9 +100,15 @@ const [products, setProducts] = useState([]);
               onPageChange={handlePageChange}
             />
           ) : (
-            <div className="flex items-center justify-center py-4">
-              <span className="text-gray-500">No products found.</span>
-            </div>
+            products?.length > 0 ? (
+              <div className="flex items-center justify-center py-4">
+                <span className="text-gray-500">No more products to display.</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-[60vh]">
+                <span className="text-gray-500">No products found.</span>
+              </div>
+            )
           )}
         </>
       )}
