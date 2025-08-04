@@ -8,4 +8,6 @@ services:
       NODE_ENV: production
     expose:
       - "3001"
+    ports:
+      - "3000:3001"
     

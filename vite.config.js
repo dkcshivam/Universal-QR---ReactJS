@@ -10,6 +10,6 @@ export default defineConfig({
   ],
   server: {
     port: 3001, 
-    allowedHosts: ['vishal.local', '128.100.10.222']
+    allowedHosts: ['vishal.local', '128.100.10.222','universal-qr.ai.dkcexportstna.in']
   }
 })

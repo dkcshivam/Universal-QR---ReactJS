@@ -3,8 +3,6 @@ build
 dist
 .dockerignore
 Dockerfile
-.env
-.env.local
 .git
 .gitignore
 README.md
