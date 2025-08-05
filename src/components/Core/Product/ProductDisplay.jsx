@@ -98,7 +98,7 @@ const ProductGrid = ({ activeTab }) => {
               />
             ))}
           </div>
-          {products?.length > 100 ? (
+          {pagination?.total_pages > 1 ? (
             <Pagination
               totalItems={pagination.count}
               itemsPerPage={100}
@@ -106,7 +106,7 @@ const ProductGrid = ({ activeTab }) => {
               totalPages={pagination.total_pages}
               onPageChange={handlePageChange}
             />
-          ) : products?.length > 0 ? (
+          ) : pagination?.total_pages === 1 ? (
             <div className="flex items-center justify-center py-4">
               <span className="text-gray-500">
                 No more products to display.

@@ -153,7 +153,7 @@ function CreateMultipleProduct() {
 
     toast.success(`${data.length} products saved successfully!`);
     setProductRows([createNewProductRow()]);
-    // navigate("/"); // Redirect to products page after saving
+    navigate("/"); // Redirect to products page after saving
     
   };
 
