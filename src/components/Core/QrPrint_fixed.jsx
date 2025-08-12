@@ -9,7 +9,7 @@ const QRSheetUploader = () => {
   const [imageURLs, setImageURLs] = useState([]);
   const printRef = useRef();
   const fileInputRef = useRef();
-  
+
   const handleUpload = async (event) => {
     const files = Array.from(event.target.files || []);
     if (files.length === 0) return;
@@ -26,12 +26,13 @@ const QRSheetUploader = () => {
     });
 
     const urls = await Promise.all(
-      files.map((file) =>
-        new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.readAsDataURL(file);
-        })
+      files.map(
+        (file) =>
+          new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.readAsDataURL(file);
+          })
       )
     );
 
@@ -49,36 +50,34 @@ const QRSheetUploader = () => {
             @page { size: A4; margin: 0; }
             body { margin: 0; padding: 0; font-family: sans-serif; }
             .page {
-              width: ${inchToPx(8.27)};
-              height: ${inchToPx(11.69)};
-              padding: ${inchToPx(0.625)} ${inchToPx(0.3125)};
+              width: 2in;
+              height: 2in;
               display: flex;
               flex-direction: column;
               box-sizing: border-box;
             }
             .row {
               display: flex;
-              margin-bottom: ${inchToPx(0.4)};
+      flex-direction: row;
+      height: 2in;
+      margin-bottom: 0.5in;
             }
-            .cell {
-              width: ${inchToPx(1)};
-              height: ${inchToPx(1)};
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              text-align: center;
-              font-size: 10px;
-              border: 1px dashed #999;
-              box-sizing: border-box;
-            }
+               .cell {
+      width: 2in;
+      height: 2in;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
             .cell img {
-              max-width: 100%;
-              max-height: 100%;
-              object-fit: contain;
-            }
-            .gap {
-              width: ${inchToPx(0.5)};
-            }
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .gap {
+      width: 0.3in;
+      height: 2in;
+    }
           </style>
         </head>
         <body onload="window.__triggerPrint && window.__triggerPrint()">

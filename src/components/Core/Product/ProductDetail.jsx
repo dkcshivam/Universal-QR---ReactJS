@@ -211,7 +211,7 @@ function ProductDetail() {
       formData.append("quantity", editFields.quantity);
       formData.append("location", editFields.location);
 
-      // image as file
+      // Only append cover_image if it's a new file upload
 
       if (
         editFields.cover_image &&
