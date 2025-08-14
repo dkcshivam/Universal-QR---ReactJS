@@ -3,7 +3,7 @@ import React, { useState, useRef } from "react";
 const inchToPx = (inch) => `${inch * 96}px`; // 96 DPI
 
 const totalRows = 17;
-const qrPerRow = 5;
+const qrPerRow = 2;
 
 const QRSheetUploader = () => {
   const [imageURLs, setImageURLs] = useState([]);
@@ -46,7 +46,7 @@ const QRSheetUploader = () => {
         <head>
           <title>Print QR Sheet</title>
           <style>
-            @page { size: A4; margin: 0; }
+            @page {  margin: 0; }
             body { margin: 0; padding: 0; font-family: sans-serif; }
             .page {
               width: ${inchToPx(8.27)};
