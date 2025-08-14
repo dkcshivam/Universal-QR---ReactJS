@@ -65,7 +65,7 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
         mimeType = ""; // Let browser choose
       }
 
-      console.log("Using MIME type:", mimeType);
+      ("Using MIME type:", mimeType);
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: mimeType || undefined,
@@ -75,24 +75,20 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
       chunksRef.current = [];
 
       mediaRecorder.ondataavailable = (event) => {
-        console.log("Data available:", event.data.size, "bytes");
         if (event.data.size > 0) {
           chunksRef.current.push(event.data);
         }
       };
 
       mediaRecorder.onstop = async () => {
-        console.log("Recording stopped, chunks:", chunksRef.current.length);
         const blob = new Blob(chunksRef.current, {
           type: mimeType || "audio/wav",
         });
-        console.log("Created blob:", blob.size, "bytes, type:", blob.type);
 
         // Convert to MP3
         const mp3Blob = await convertToMp3(blob);
 
         const url = URL.createObjectURL(mp3Blob);
-        console.log("Created URL:", url);
 
         setAudioBlob(mp3Blob);
         setAudioUrl(url);
@@ -109,7 +105,6 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
         setRecordingTime((prev) => prev + 1);
       }, 1000);
 
-      console.log("Recording started");
     } catch (error) {
       console.error("Error accessing microphone:", error);
       alert("Could not access microphone. Please check permissions.");
@@ -194,7 +189,6 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
-      console.log("Stopping recording...");
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       setIsPaused(false);
@@ -229,12 +223,10 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
   };
 
   const playAudio = () => {
-    console.log("Attempting to play audio:", audioUrl);
     if (audioRef.current && audioUrl) {
       audioRef.current
         .play()
         .then(() => {
-          console.log("Audio started playing");
           setIsPlaying(true);
         })
         .catch((error) => {
@@ -262,11 +254,7 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
 
   const saveRecording = () => {
     if (audioBlob && audioUrl) {
-      console.log("Saving recording:", {
-        audioBlob,
-        audioUrl,
-        duration: recordingTime,
-      });
+
       onSave({
         audioBlob,
         audioUrl,

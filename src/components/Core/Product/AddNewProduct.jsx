@@ -24,10 +24,54 @@ const AddProduct = () => {
   const productCameraInputRef = useRef(null);
 
   const [showCameraModal, setShowCameraModal] = useState(false);
-
+  const [productCode, setProductCode] = useState("");
   const navigate = useNavigate();
 
   const BASE_URL = import.meta.env.VITE_API_URL;
+  const FORM_STORAGE_KEY = "addProductFormData";
+
+  // Save form data to localStorage
+  const saveFormData = () => {
+    const formData = {
+      productName,
+      quantity,
+      location,
+      department,
+      remarks,
+      productCode,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(formData));
+  };
+
+  // Load form data from localStorage
+  const loadFormData = () => {
+    try {
+      const savedData = localStorage.getItem(FORM_STORAGE_KEY);
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        // Only restore if data is less than 24 hours old
+        if (Date.now() - parsedData.timestamp < 24 * 60 * 60 * 1000) {
+          setProductName(parsedData.productName || "");
+          setQuantity(parsedData.quantity || "");
+          setLocation(parsedData.location || "");
+          setDepartment(parsedData.department || "");
+          setRemarks(parsedData.remarks || "");
+          setProductCode(parsedData.productCode || "");
+        } else {
+          // Clear old data
+          localStorage.removeItem(FORM_STORAGE_KEY);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading form data:", error);
+    }
+  };
+
+  // Clear saved form data
+  const clearFormData = () => {
+    localStorage.removeItem(FORM_STORAGE_KEY);
+  };
 
   useEffect(() => {
     if (showCameraModal) {
@@ -49,7 +93,26 @@ const AddProduct = () => {
   };
 
   const handleCameraCapture = (imageSrc) => {
-    setCoverImage({ file: null, url: imageSrc });
+    // Convert base64 data URL to File object
+    fetch(imageSrc)
+      .then((res) => res.blob())
+      .then((blob) => {
+        const file = new File([blob], `camera-image-${Date.now()}.jpg`, {
+          type: "image/jpeg",
+          lastModified: Date.now(),
+        });
+
+        const imageObj = {
+          file,
+          url: imageSrc,
+        };
+        setCoverImage(imageObj);
+      })
+      .catch((error) => {
+        console.error("Error converting image:", error);
+        // Fallback: keep original behavior
+        setCoverImage({ file: null, url: imageSrc });
+      });
   };
 
   const handleProductImagesChange = (e) => {
@@ -83,11 +146,46 @@ const AddProduct = () => {
   }
   useEffect(() => {
     fetchDepartments();
+    loadFormData(); // Load saved form data on component mount
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     });
   }, []);
+
+  // Save form data whenever inputs change
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (productName || quantity || location || department || remarks) {
+        saveFormData();
+      }
+    }, 1000); // Debounce saving by 1 second
+
+    return () => clearTimeout(timeoutId);
+  }, [productName, quantity, location, department, remarks]);
+
+  // Handle app visibility change (when user switches apps)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // App going to background - save data immediately
+        saveFormData();
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      // Save data before page unload
+      saveFormData();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [productName, quantity, location, department, remarks]);
 
   // product create
 
@@ -111,6 +209,7 @@ const AddProduct = () => {
       productData.append("quantity", quantity || "");
       productData.append("department", department || "");
       productData.append("remark", remarks || "");
+      productData.append("product_code", productCode || "");
       productData.append("location", location || "");
 
       if (coverImage) {
@@ -157,6 +256,7 @@ const AddProduct = () => {
   const handleSave = async () => {
     const product = await createProduct();
     if (product) {
+      clearFormData(); // Clear saved data after successful creation
       toast.success("Product created! Redirecting to details...");
       navigate(`/product-detail/${product.product_code}/`);
     }
@@ -168,6 +268,7 @@ const AddProduct = () => {
     const product = await createProduct();
 
     if (product) {
+      clearFormData(); // Clear saved data after successful creation
       toast.success("Product created! You can add another.");
 
       setProductName("");
@@ -177,6 +278,7 @@ const AddProduct = () => {
       setRemarks("");
       setCoverImage(null);
       setProductImages([]);
+      setProductCode("");
     }
   };
 
@@ -235,7 +337,16 @@ const AddProduct = () => {
             />
           </div>
         </div>
-
+        <div>
+          <label className="block font-semibold mb-1">Add Custom Product Code</label>
+          <input
+            type="text"
+            value={productCode}
+            onChange={(e) => setProductCode(e.target.value)}
+            placeholder="Enter product code..."
+            className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
         {/* Department */}
         <div>
           <label className="block font-semibold mb-1">Department</label>
