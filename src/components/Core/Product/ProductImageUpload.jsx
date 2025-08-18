@@ -9,6 +9,7 @@ const ProductImageUpload = ({
   has_update_power,
   onUpload,
   ondelete,
+  Imagesupload,
   images,
   isUploading,
 }) => {
@@ -67,10 +68,10 @@ const ProductImageUpload = ({
                 }
             });
 
-            toast.success("Image deleted successfully! Kindly refresh the page to see the changes.", {
-                autoClose: 4000 // 5 seconds
+            toast.success("Image deleted successfully", {
+                autoClose: 4000 // 4 seconds
             });
-
+            Imagesupload();
             setDeleteImageId(null);
             setDeleteModalOpen(false);
 

@@ -24,6 +24,7 @@ const AddProduct = () => {
   const productCameraInputRef = useRef(null);
 
   const [showCameraModal, setShowCameraModal] = useState(false);
+  const [showProductCodeModal, setShowProductCodeModal] = useState(false);
   const [productCode, setProductCode] = useState("");
   const navigate = useNavigate();
 
@@ -50,8 +51,8 @@ const AddProduct = () => {
       const savedData = localStorage.getItem(FORM_STORAGE_KEY);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
-        // Only restore if data is less than 24 hours old
-        if (Date.now() - parsedData.timestamp < 24 * 60 * 60 * 1000) {
+        // Only restore if data is less than 1 day old
+        if (Date.now() - parsedData.timestamp <  24 * 60 * 60 * 1000) {
           setProductName(parsedData.productName || "");
           setQuantity(parsedData.quantity || "");
           setLocation(parsedData.location || "");
@@ -71,6 +72,49 @@ const AddProduct = () => {
   // Clear saved form data
   const clearFormData = () => {
     localStorage.removeItem(FORM_STORAGE_KEY);
+  };
+
+  // Handle product code modal close/save
+  const handleProductCodeModalClose = async (shouldSave = false) => {
+    if (shouldSave) {
+      // Validate product code if user wants to save
+      if (!productCode.trim()) {
+        toast.error("Please enter a product code");
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem("access_token");
+        
+        // Call the validation API
+        const response = await axios.get(
+          `${BASE_URL}/qr/validate-code/${productCode.trim()}/`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        // If API doesn't throw error, code is available
+        toast.success("Product code is available and saved!");
+        setShowProductCodeModal(false);
+        
+      } catch (error) {
+        // If API returns error, code already exists
+        if (error.response) {
+          toast.error("Product code already exists. Please choose a different code.");
+        } else {
+          toast.error("Error validating product code. Please try again.");
+        }
+        // Clear the input field and keep modal open
+        setProductCode("");
+        return;
+      }
+    } else {
+      // Just close modal without saving
+      setShowProductCodeModal(false);
+    }
   };
 
   useEffect(() => {
@@ -156,17 +200,17 @@ const AddProduct = () => {
   // Save form data whenever inputs change
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (productName || quantity || location || department || remarks) {
+      if (productName || quantity || location || department || remarks || productCode) {
         saveFormData();
       }
     }, 1000); // Debounce saving by 1 second
 
     return () => clearTimeout(timeoutId);
-  }, [productName, quantity, location, department, remarks]);
+  }, [productName, quantity, location, department, remarks, productCode]);
 
   // Handle app visibility change (when user switches apps)
   useEffect(() => {
-    const handleVisibilityChange = () => {
+    const handleVisibilityChange = () => { 
       if (document.hidden) {
         // App going to background - save data immediately
         saveFormData();
@@ -185,7 +229,7 @@ const AddProduct = () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [productName, quantity, location, department, remarks]);
+  }, [productName, quantity, location, department, remarks,productCode]);
 
   // product create
 
@@ -209,7 +253,7 @@ const AddProduct = () => {
       productData.append("quantity", quantity || "");
       productData.append("department", department || "");
       productData.append("remark", remarks || "");
-      productData.append("product_code", productCode || "");
+      productData.append("code", productCode || "");
       productData.append("location", location || "");
 
       if (coverImage) {
@@ -337,16 +381,24 @@ const AddProduct = () => {
             />
           </div>
         </div>
+        
+        {/* Add Custom Product Code Button */}
         <div>
-          <label className="block font-semibold mb-1">Add Custom Product Code</label>
-          <input
-            type="text"
-            value={productCode}
-            onChange={(e) => setProductCode(e.target.value)}
-            placeholder="Enter product code..."
-            className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <button
+            type="button"
+            onClick={() => setShowProductCodeModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-md text-gray-700 transition-colors duration-200"
+          >
+            <Plus size={16} />
+            Add Custom Product Code
+          </button>
+          {productCode && (
+            <div className="mt-2 text-sm text-gray-600">
+              Product Code: <span className="font-medium">{productCode}</span>
+            </div>
+          )}
         </div>
+        
         {/* Department */}
         <div>
           <label className="block font-semibold mb-1">Department</label>
@@ -555,6 +607,54 @@ const AddProduct = () => {
           </div>
         </div>
       </div>
+
+      {/* Product Code Modal */}
+      {showProductCodeModal && (
+        <div className="fixed inset-0 bg-white bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50 p-4" style={{backgroundColor: 'rgba(128, 128, 128, 0.3)'}}>
+          <div className="bg-white rounded-lg w-full max-w-md p-6 shadow-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Add Custom Product Code</h3>
+              <button
+                onClick={() => handleProductCodeModalClose(false)}
+                className="text-gray-400 hover:text-gray-600 text-xl"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block font-medium text-gray-700 mb-2">
+                  Product Code
+                </label>
+                <input
+                  type="text"
+                  value={productCode}
+                  onChange={(e) => setProductCode(e.target.value)}
+                  placeholder="Enter custom product code..."
+                  className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  autoFocus
+                />
+              </div>
+              
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => handleProductCodeModalClose(false)}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleProductCodeModalClose(true)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* camera modal */}
 

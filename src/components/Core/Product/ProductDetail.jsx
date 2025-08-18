@@ -202,6 +202,7 @@ const handleDeleteProduct = async () => {
       },
     });
     toast.success("Product deleted successfully!");
+    navigate("/");
     // Optionally, redirect or update UI
   } catch (error) {
     console.error("Error deleting product:", error);
@@ -998,6 +999,7 @@ const handleDeleteProduct = async () => {
                 has_update_power={data.isEditable}
                 onUpload={handleImageUpload}
                 ondelete={handleImageDelete}
+                Imagesupload={Imagesupload}
                 images={image || []}
                 isUploading={isUploading}
               />
