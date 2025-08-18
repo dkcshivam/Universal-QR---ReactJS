@@ -27,18 +27,15 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
 
   const fetchSearchResults = async (query) => {
 
-    console.log("API hit with query: ", query);
 
     setLoading(true);
     setError(null);
     setHasSearched(true) ; 
 
-    console.log("fetchSearchResults called with query:", query);
 
     try {
       const response = await axios(`${import.meta.env.VITE_API_URL}/qr/search?q=${encodeURIComponent(query)}`);
 
-      console.log("search response: ", response);
 
       // setResults(response.data.data || []);
 
@@ -47,7 +44,6 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
 
     } catch (error) {
       setError(error.message || "Error searching");
-      console.log("Fetch search results error: ", error);
       setResults([]);
     } finally {
       setLoading(false);
@@ -149,7 +145,7 @@ const Search = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
     setSearchQuery(e.target.value);
     setHasSearched(false) ; // reset search flag on new input
   };
-  console.log(isMobile, isCollapsed, isExpanded);
+ 
 
   const baseClasses = isMobile
     ? "transition-all duration-300 ease-in-out"

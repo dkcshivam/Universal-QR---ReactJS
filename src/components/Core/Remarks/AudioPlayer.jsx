@@ -34,13 +34,10 @@ const AudioPlayer = ({ audioUrl, duration }) => {
   // Parse initial duration from props
   useEffect(() => {
     if (duration) {
-    console.log(duration)
 
       const formatted = formatTime(duration);
-      console.log(formatted)
       const min = formatted.split(":");
       const total = (min[0] || 0) * 60 + (min[1] || 0);
-      console.log(total)
       setAudioDuration(total);
     }
   }, [duration]);

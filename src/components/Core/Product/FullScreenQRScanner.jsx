@@ -48,7 +48,6 @@ const FullScreenQRScanner = ({ onResult, onClose }) => {
     hints.set(DecodeHintType.CHARACTER_SET, "UTF-8");
 
     codeReader.current = new BrowserQRCodeReader(300, hints);
-    console.log("Full-screen QR scanner initialized");
   };
 
   const getVideoInputDevices = async () => {
@@ -90,18 +89,12 @@ const FullScreenQRScanner = ({ onResult, onClose }) => {
         deviceIndex = devices.findIndex(
           (d) => d.deviceId === backCamera.deviceId
         );
-        console.log(
-          "Using back camera:",
-          backCamera.label || backCamera.deviceId
-        );
+
       } else if (devices.length > 0) {
         // If no back camera found, use the last device (often the back camera on mobile)
         deviceIndex = devices.length - 1;
         deviceId = devices[deviceIndex].deviceId;
-        console.log(
-          "Using last available camera:",
-          devices[deviceIndex].label || devices[deviceIndex].deviceId
-        );
+
       }
 
       if (deviceId) {
@@ -138,7 +131,6 @@ const FullScreenQRScanner = ({ onResult, onClose }) => {
         }
 
         stream = await navigator.mediaDevices.getUserMedia(constraints);
-        console.log("Camera access granted");
         stream.getTracks().forEach((track) => track.stop());
       } catch (permissionErr) {
         console.error("Camera permission denied:", permissionErr);
@@ -162,7 +154,6 @@ const FullScreenQRScanner = ({ onResult, onClose }) => {
           videoRef.current,
           (result, err) => {
             if (result) {
-              console.log("QR Result found:", result.getText());
               onResult(result.getText());
               // Don't auto-close, let parent handle navigation
             }

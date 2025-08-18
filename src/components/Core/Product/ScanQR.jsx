@@ -55,9 +55,7 @@ const QRScanner = ({ onResult }) => {
 
     // Use slower scanning interval (500ms) for more thorough processing of complex QR codes
     codeReader.current = new BrowserQRCodeReader(500, hints);
-    console.log(
-      "ZXing QR code reader initialized with settings optimized for large data QR codes"
-    );
+
   };
 
   const getVideoInputDevices = async () => {
@@ -71,7 +69,6 @@ const QRScanner = ({ onResult }) => {
       let devices;
       try {
         devices = await codeReader.current.listVideoInputDevices();
-        console.log("Available video devices:", devices);
       } catch (enumError) {
         console.warn(
           "Device enumeration failed (common on mobile before permission):",

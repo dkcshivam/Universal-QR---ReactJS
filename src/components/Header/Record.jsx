@@ -6,7 +6,7 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
   const [isPaused, setIsPaused] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [recordingLevel, setRecordingLevel] = useState(0);
-  const [hasPermission, setHasPermission] = useState(null);
+  const [hasPermission, setHasPermission] = useState(true); // Start with true, check only when needed
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -14,108 +14,69 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
   const animationRef = useRef(null);
 
   useEffect(() => {
-    console.log("Record component mounted");
-
-    // Check microphone permission with better error handling
-    const checkPermission = async () => {
-      console.log("Checking microphone permission...");
-      try {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          console.log("MediaDevices API available, requesting permission...");
-          const stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-          });
-          console.log("Microphone permission granted");
-          setHasPermission(true);
-          // Immediately stop the stream since we're just checking permission
-          stream.getTracks().forEach((track) => {
-            console.log("Stopping track:", track.label);
-            track.stop();
-          });
-        } else {
-          console.log("MediaDevices API not available");
-          setHasPermission(false);
-        }
-      } catch (error) {
-        console.log(
-          "Microphone access denied or error:",
-          error.name,
-          error.message
-        );
-        setHasPermission(false);
-      }
-    };
-
-    checkPermission();
+    // Removed automatic permission check - will check only when user clicks record
 
     return () => {
-      console.log("Record component unmounting, cleaning up...");
+      // Clean up any ongoing recording
+      if (mediaRecorderRef.current && isRecording) {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch (error) {
+          console.log("Error stopping recording on unmount:", error);
+        }
+      }
       if (timerRef.current) {
         clearInterval(timerRef.current);
-        console.log("Timer cleared");
       }
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
-        console.log("Animation frame cleared");
       }
     };
-  }, []);
+  }, [isRecording]);
 
   const startRecording = async () => {
-    console.log("Starting recording...");
     try {
-      console.log("Calling onToggle(true) to expand component");
       onToggle(true);
 
-      console.log("Requesting microphone access...");
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      console.log("Microphone stream obtained:", stream);
+      
+      // Set permission to true since we successfully got the stream
+      setHasPermission(true);
 
       mediaRecorderRef.current = new MediaRecorder(stream);
       audioChunksRef.current = [];
-      console.log("MediaRecorder created");
 
       mediaRecorderRef.current.ondataavailable = (event) => {
-        console.log("Data available from recorder, size:", event.data.size);
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
 
       mediaRecorderRef.current.onstop = () => {
-        console.log("MediaRecorder stopped");
         const audioBlob = new Blob(audioChunksRef.current, {
           type: "audio/wav",
         });
-        console.log("Recording stopped, audio blob:", audioBlob);
 
         // Stop all tracks
         stream.getTracks().forEach((track) => {
-          console.log("Stopping track on recording stop:", track.label);
           track.stop();
         });
       };
 
-      console.log("Starting MediaRecorder...");
       mediaRecorderRef.current.start();
       setIsRecording(true);
       setIsPaused(false);
-      console.log("Recording state updated to true");
 
       // Start timer
-      console.log("Starting timer...");
       timerRef.current = setInterval(() => {
         setRecordingTime((prev) => {
-          console.log("Timer tick:", prev + 1);
           return prev + 1;
         });
       }, 1000);
 
       // Start audio level animation
-      console.log("Starting animation...");
       animateRecording();
     } catch (error) {
-      console.error("Error starting recording:", error);
       console.error("Error details:", {
         name: error.name,
         message: error.message,
@@ -127,24 +88,19 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
   };
 
   const stopRecording = () => {
-    console.log("Stopping recording...");
     if (mediaRecorderRef.current && isRecording) {
-      console.log("MediaRecorder exists and is recording, stopping...");
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       setIsPaused(false);
       setRecordingTime(0);
       setRecordingLevel(0);
       onToggle(false);
-      console.log("Recording state updated to false");
 
       if (timerRef.current) {
-        console.log("Clearing timer...");
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
       if (animationRef.current) {
-        console.log("Clearing animation frame...");
         cancelAnimationFrame(animationRef.current);
         animationRef.current = null;
       }
@@ -156,13 +112,11 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
   };
 
   const pauseRecording = () => {
-    console.log("Pause/Resume button clicked");
-    console.log("Current state:", { isRecording, isPaused });
+   
 
     if (mediaRecorderRef.current && isRecording) {
       try {
         if (isPaused) {
-          console.log("Resuming recording...");
           mediaRecorderRef.current.resume();
           setIsPaused(false);
           timerRef.current = setInterval(() => {
@@ -170,7 +124,6 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
           }, 1000);
           animateRecording();
         } else {
-          console.log("Pausing recording...");
           mediaRecorderRef.current.pause();
           setIsPaused(true);
           if (timerRef.current) {
@@ -197,11 +150,6 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
   };
 
   const animateRecording = () => {
-    console.log("Animation frame called:", {
-      isRecording,
-      isPaused,
-      animationRef: !!animationRef.current,
-    });
 
     if (isRecording && !isPaused) {
       setRecordingLevel(Math.random() * 100);
@@ -212,20 +160,11 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
   };
 
   const handleRecordClick = () => {
-    console.log("Record button clicked");
-    console.log("Current state:", { hasPermission, isRecording });
-
-    if (!hasPermission) {
-      console.log("No microphone permission, cannot start recording");
-      return;
-    }
 
     try {
       if (!isRecording) {
-        console.log("Not recording, starting recording...");
-        startRecording();
+        startRecording(); // This will request permission if needed
       } else {
-        console.log("Currently recording, stopping recording...");
         stopRecording();
       }
     } catch (error) {
@@ -239,9 +178,8 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
   };
 
   const handleContainerClick = () => {
-    if (!hasPermission) return;
     if (!isRecording && !isExpanded) {
-      startRecording();
+      startRecording(); // This will request permission if needed
     } else if (isExpanded && !isRecording) {
       // Allow collapse if expanded but not recording
       onToggle(false);
@@ -250,8 +188,7 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
 
   const handleRecordButtonClick = (e) => {
     e.stopPropagation();
-    if (!hasPermission) return;
-    handleRecordClick();
+    handleRecordClick(); // This will handle permission internally
   };
 
   const formatTime = (seconds) => {
@@ -265,20 +202,7 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
     }
   };
 
-  // Add error boundary for rendering
-  if (hasPermission === null) {
-    console.log("Permission still being checked, showing loading state");
-  }
 
-  console.log("Rendering Record component with state:", {
-    isRecording,
-    isPaused,
-    hasPermission,
-    isExpanded,
-    isCollapsed,
-    isMobile,
-  });
-  console.log(isMobile, isCollapsed, isExpanded);
   const baseClasses = isMobile
     ? "transition-all duration-300 ease-in-out"
     : "transition-all duration-300 ease-in-out";
@@ -295,12 +219,7 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
         /* Collapsed Icon State */
         <button
           onClick={handleContainerClick}
-          disabled={!hasPermission}
-          className={`w-full h-full rounded-lg flex items-center justify-center transition-all duration-300 cursor-pointer ${
-            hasPermission
-              ? "bg-gray-100 hover:bg-gray-200 text-gray-600"
-              : "bg-gray-100 text-gray-400 cursor-not-allowed"
-          }`}
+          className="w-full h-full rounded-lg flex items-center justify-center transition-all duration-300 cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-600"
         >
           <FaMicrophone className="h-4 w-4" />
         </button>
@@ -318,13 +237,10 @@ const Record = ({ isExpanded, onToggle, isCollapsed, isMobile }) => {
           <div className="pl-3 pr-2">
             <button
               onClick={handleRecordButtonClick}
-              disabled={!hasPermission}
               className={`p-2 rounded-full transition-all duration-300 ${
                 isRecording
                   ? "bg-red-600 hover:bg-red-700 text-white"
-                  : hasPermission
-                  ? "bg-blue-600 hover:bg-blue-700 text-white"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
               }`}
             >
               {isRecording ? (

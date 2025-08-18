@@ -16,14 +16,13 @@ import AddProduct from "./components/Core/Product/AddNewProduct";
 import { useState } from "react";
 import ProductDetail from "./components/Core/Product/ProductDetail";
 import CreateUser from "./components/Auth/CreateUser";
-import QrPrint from "./components/Core/QrPrint";
+import QrPrint from "./components/Core/QrPrint_fixed";
 // import Printpage from "./components/Core/blukprintsetup";
 import ProductFlow from "./components/Core/ProductFlow";
 function App() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("mine");
   const handleQRResult = (result) => {
-    console.log("QR Code detected:", result);
     alert(`QR Code detected at App.jsx: ${result}`);
     navigate(`/product-detail/${result}`);
   };

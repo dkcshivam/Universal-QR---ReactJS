@@ -5,9 +5,10 @@ import { FiPlus, FiCamera } from "react-icons/fi";
 const MobileFooter = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
+  const { pathname } = useLocation();
   // Hide footer when on scan page (full-screen scanner)
   const isOnScanPage = location.pathname === "/scan";
+  const isOnAddProductPage = location.pathname === "/add-product";
 
   const handleAddProduct = () => {
     navigate("/add-product");
@@ -29,13 +30,15 @@ const MobileFooter = () => {
       <div className="mobile-footer md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
         <div className="flex items-center justify-around py-3 px-2 gap-4">
           {/* Add Product Button */}
-          <button
+          {!isOnAddProductPage &&(
+            <button
             onClick={handleAddProduct}
             className="flex items-center justify-center px-3 py-2 gap-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200 shadow-md flex-1 mx-2"
           >
             <FiPlus className="w-6 h-6 mb-1" />
             <span className="text-sm font-medium">Add Product</span>
           </button>
+          )}
 
           {/* Scan QR Button */}
           <button

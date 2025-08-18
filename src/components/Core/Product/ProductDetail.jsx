@@ -189,7 +189,26 @@ function ProductDetail() {
     toast.success("You are in edit mode.");
     setIsEditModalOpen(true);
   };
+const handleDeleteProduct = async () => {
+  if (!token) {
+    toast.error("Please login to delete product.");
+    return;
+  }
 
+  try {
+    await axios.delete(`${API_BASE_URL}/qr/products/${code}/delete/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    toast.success("Product deleted successfully!");
+    navigate("/");
+    // Optionally, redirect or update UI
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    toast.error("Product deletion failed!");
+  }
+};
   const handleFieldChange = (e) => {
     setEditFields({
       ...editFields,
@@ -211,7 +230,7 @@ function ProductDetail() {
       formData.append("quantity", editFields.quantity);
       formData.append("location", editFields.location);
 
-      // image as file
+      // Only append cover_image if it's a new file upload
 
       if (
         editFields.cover_image &&
@@ -220,7 +239,6 @@ function ProductDetail() {
         formData.append("cover_image", editFields.cover_image);
       }
 
-      console.log("Saving: ", editFields);
 
       const response = await axios.put(
         `${API_BASE_URL}/qr/products/${code}/edit/`,
@@ -233,12 +251,10 @@ function ProductDetail() {
         }
       );
 
-      console.log("update response: ", response);
 
       await getProductDetail();
       toast.success("Product updated successfully!");
     } catch (error) {
-      console.log("handle update product failed: ", error);
       toast.error("Product update failed! Please try again.");
     }
   };
@@ -257,7 +273,6 @@ function ProductDetail() {
         const productData = res?.data?.data;
         setData(productData);
       }
-      console.log("Product data:", res.data.data);
     } catch (error) {
       console.error("Error fetching product:", error);
     }
@@ -322,7 +337,6 @@ function ProductDetail() {
       );
       if (res.status === 200) {
         const remarksData = res?.data?.data || [];
-        console.log("Remarks data:", remarksData);
         setRemarks(remarksData);
       }
     } catch (error) {
@@ -362,7 +376,6 @@ function ProductDetail() {
       );
 
       if (res.status === 200 || res.status === 201) {
-        console.log("Text remark created:", res.data);
         // Refresh remarks list
         await getRemarks();
         return true;
@@ -416,7 +429,6 @@ function ProductDetail() {
       );
 
       if (res.status === 200 || res.status === 201) {
-        console.log("Voice remark created:", res.data);
         // Refresh remarks list
         await getRemarks();
         return true;
@@ -488,7 +500,6 @@ function ProductDetail() {
       }
 
       // Show loading state (optional)
-      console.log("Downloading QR code...");
 
       // Fetch the image as a blob
       const response = await fetch(data.qr, {
@@ -527,7 +538,6 @@ function ProductDetail() {
       // Clean up object URL to free memory
       window.URL.revokeObjectURL(url);
 
-      console.log("QR code downloaded successfully for:", data.name);
     } catch (error) {
       console.error("Error downloading QR code:", error);
 
@@ -597,6 +607,7 @@ function ProductDetail() {
                     </button>
                   ) : (
                     data.isEditable && (
+                      <>
                       <button
                         className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm lg:text-base hover:bg-[#7594c7]"
                         onClick={handleEditClick}
@@ -605,6 +616,16 @@ function ProductDetail() {
                         <span className="hidden sm:inline">Edit Product</span>
                         <span className="sm:hidden">Edit</span>
                       </button>
+                      <button
+                        className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm lg:text-base hover:bg-[#7594c7]"
+                        onClick={handleDeleteProduct}
+                      >
+                        <Edit className="text-white w-4 h-4" />
+                        <span className="hidden sm:inline">Delete Product</span>
+                        <span className="sm:hidden">Delete</span>
+                      </button>
+                      </>
+                      
                     )
                   )}
                 </div>
@@ -978,6 +999,7 @@ function ProductDetail() {
                 has_update_power={data.isEditable}
                 onUpload={handleImageUpload}
                 ondelete={handleImageDelete}
+                Imagesupload={Imagesupload}
                 images={image || []}
                 isUploading={isUploading}
               />

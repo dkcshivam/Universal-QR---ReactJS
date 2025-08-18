@@ -149,7 +149,6 @@ function CreateMultipleProduct() {
       return;
     }
     // toast.success("Saving the products will take some time ");
-    console.log("Saving the following products: ", res);
 
     toast.success(`${data.length} products saved successfully!`);
     setProductRows([createNewProductRow()]);

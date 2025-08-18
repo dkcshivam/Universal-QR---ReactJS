@@ -6,12 +6,6 @@ const ProductFlow = () => {
   const [exampleData, setExampleData] = useState([]);
   const [showQR, setShowQR] = useState(false);
 
-  const handleSubmit = (products) => {
-    console.log("Products submitted:", products);
-    setExampleData(products);
-    setShowQR(true);
-  };
-
   return (
     <div>
       {!showQR ? (
