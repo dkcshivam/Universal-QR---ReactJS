@@ -331,14 +331,22 @@ const AddProduct = () => {
   return (
     <div className="min-h-screen bg-gray-50 space-y-4">
       <div className="flex items-center justify-start bg-white w-full md:max-w-4xl rounded-2xl mx-auto shadow-md gap-2 p-4">
-        <button
+<div>
+          <button
           onClick={() => window.history.back()}
-          className="inline-flex items-center gap-2 cursor-pointer px-4 py-2 bg-blue-400 hover:bg-blue-500 rounded-lg text-white transition-colors duration-200 shadow-sm hover:shadow-md"
+          className="mr-4 inline-flex items-center gap-2 cursor-pointer px-4 py-2 bg-blue-400 hover:bg-blue-500 rounded-lg text-white transition-colors duration-200 shadow-sm hover:shadow-md"
         >
           <FaArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           <span className="text-sm sm:text-base font-medium">Back</span>
         </button>
-
+      <button
+        onClick={() => navigate("/")}
+        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
+        aria-label="Go Back"
+      >
+        <span>Home</span>
+      </button>
+</div>
         <div className="flex justify-center flex-1 gap-2">
           <h1 className="text-xl font-bold text-gray-800">Add New Product</h1>
         </div>

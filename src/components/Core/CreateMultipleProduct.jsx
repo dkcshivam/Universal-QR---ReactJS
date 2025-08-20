@@ -179,14 +179,23 @@ function CreateMultipleProduct() {
     </div>
   ) : (
     <div className=" left-0 right-0  min-h-screen bg-white shadow-md overflow-x-auto p-4 box-border overflow-auto">
-      <button
+      <div>
+        <button
         onClick={() => navigate(-1)}
+        className="mr-4 mb-2 inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
+        aria-label="Go Back"
+      >
+        <FaArrowLeft className="w-4 h-4  " />
+        <span>Back</span>
+      </button>
+      <button
+        onClick={() => navigate("/")}
         className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
         aria-label="Go Back"
       >
-        <FaArrowLeft className="w-4 h-4 " />
-        <span>Back</span>
+        <span>Home</span>
       </button>
+      </div>
       <div className="flex items-center justify-between mb-5 px-2">
         <h1 className="text-xl font-semibold">Create Multiple Products</h1>
         <button
