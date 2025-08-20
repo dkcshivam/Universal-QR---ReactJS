@@ -558,7 +558,13 @@ const handleDeleteProduct = async () => {
     if (!dateString) return "";
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString("en-GB"); // DD/MM/YYYY format
+      
+      // Get day, month, and year
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = date.toLocaleDateString("en-GB", { month: "short" }); // Gets "Aug", "Jan", etc.
+      const year = date.getFullYear();
+      
+      return `${day}-${month}-${year}`; // Format: "12-Aug-2004"
     } catch (error) {
       return dateString.split("T")?.[0]?.split("-")?.reverse()?.join("/") || "";
     }
@@ -576,14 +582,24 @@ const handleDeleteProduct = async () => {
             <div className="mb-4 flex flex-col gap-2">
               {/* Top row: Back button + actions */}
               <div className="flex items-center justify-between">
-                <button
+                <div>
+
+                  <button
                   onClick={() => navigate(-1)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
+                  className="mr-4 mb-3 inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
                   aria-label="Go Back"
                 >
                   <FaArrowLeft className="w-4 h-4" />
                   <span>Back</span>
                 </button>
+                      <button
+                        onClick={() => navigate("/")}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
+                        aria-label="Go Back"
+                      >
+                        <span>Home</span>
+                      </button>
+                </div>
                 <div className="flex items-center gap-2">
                   {/* Download QR Button */}
                   <button
@@ -762,6 +778,22 @@ const handleDeleteProduct = async () => {
                 </div>
                 <span className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100">
                   {!data?.location ? "N/A" : data.location}
+                </span>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
+                  Created At
+                </div>
+                <span className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100">
+                  {formatDate(data?.created_at) || "N/A"}
+                </span>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
+                  LAST UPDATED AT
+                </div>
+                <span className="inline-block bg-blue-50 px-3 py-1 rounded-full text-xs lg:text-sm font-medium border border-blue-100">
+                  {formatDate(data?.updated_at) || "N/A"}
                 </span>
               </div>
             </div>

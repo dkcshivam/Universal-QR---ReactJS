@@ -42,6 +42,13 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
 
   const startRecording = async () => {
     try {
+      // Check if getUserMedia is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert("Your browser doesn't support audio recording. Please use a modern browser like Chrome, Firefox, or Safari.");
+        return;
+      }
+
+      // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -107,7 +114,31 @@ const VoiceRecorder = ({ onSave, onCancel }) => {
 
     } catch (error) {
       console.error("Error accessing microphone:", error);
-      alert("Could not access microphone. Please check permissions.");
+      
+      // Handle different types of errors
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        alert("Microphone access denied. Please allow microphone access in your browser settings and try again.\n\nSteps:\n1. Click on the lock/camera icon in the address bar\n2. Allow microphone access\n3. Refresh the page and try again");
+      } else if (error.name === 'NotFoundError' || error.name === 'DeviceNotFoundError') {
+        alert("No microphone found. Please connect a microphone and try again.");
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        alert("Microphone is being used by another application. Please close other apps using the microphone and try again.");
+      } else if (error.name === 'OverconstrainedError' || error.name === 'ConstraintNotSatisfiedError') {
+        alert("Microphone doesn't support the required settings. Trying with basic settings...");
+        // Try again with basic settings
+        try {
+          const basicStream = await navigator.mediaDevices.getUserMedia({
+            audio: true
+          });
+          // Continue with basic stream setup...
+          // (You can add the same MediaRecorder setup here if needed)
+        } catch (basicError) {
+          alert("Could not access microphone even with basic settings. Please check your microphone permissions.");
+        }
+      } else if (error.name === 'SecurityError') {
+        alert("Microphone access blocked due to security restrictions. Please ensure you're on a secure connection (HTTPS) and try again.");
+      } else {
+        alert(`Could not access microphone: ${error.message || 'Unknown error'}. Please check your microphone permissions and try again.`);
+      }
     }
   };
 

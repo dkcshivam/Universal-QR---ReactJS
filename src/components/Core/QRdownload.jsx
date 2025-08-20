@@ -175,14 +175,23 @@ function QRdownload() {
 
   return (
     <div className="">
-      <button
+<div>
+        <button
         onClick={() => navigate(-1)}
-        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
+        className="mr-4 mb-3 inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
         aria-label="Go Back"
       >
         <FaArrowLeft className="w-4 h-4" />
         <span>Back</span>
       </button>
+            <button
+              onClick={() => navigate("/")}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
+              aria-label="Go Back"
+            >
+              <span>Home</span>
+            </button>
+</div>
       <div className="table-header">
         <h1>Product List</h1>
         <button
