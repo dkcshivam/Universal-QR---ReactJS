@@ -1,14 +1,37 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import QRCode from "qrcode";
 
-const inchToPx = (inch) => `${inch * 96}px`; // 96 DPI
 
 const totalRows = 17;
-const qrPerRow = 2;
+const qrPerRow = 1;
 
 const QRSheetUploader = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [imageURLs, setImageURLs] = useState([]);
+  const [totalSelected, setTotalSelected] = useState(0);
   const printRef = useRef();
   const fileInputRef = useRef();
+
+  // Get data from navigation state
+  useEffect(() => {
+    if (location.state) {
+      const { selectedProducts: products, totalSelected: total } = location.state;
+      if (products && products.length > 0) {
+        let qrimages = products.map(prod => prod.qr);
+        setImageURLs(qrimages);
+        setTotalSelected(total);
+      }
+    } else {
+      toast.info("No products selected. Please go back and select products to print.");
+    }
+  }, [location.state]);
+
+  // Generate QR codes for selected products
+ 
+
 
   const handleUpload = async (event) => {
     const files = Array.from(event.target.files || []);
@@ -50,7 +73,7 @@ const QRSheetUploader = () => {
             @page {  margin: 0; }
             body { margin: 0; padding: 0; font-family: sans-serif; }
             .page {
-              width: 2in;
+              width: 4in;
               height: 2in;
               display: flex;
               flex-direction: column;
@@ -62,8 +85,8 @@ const QRSheetUploader = () => {
       // height: 2in;
             }
                .cell {
-      width: 2in;
-      height: 2in;
+      width: 4in;
+      height: 1.9in;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -121,16 +144,54 @@ const QRSheetUploader = () => {
   return (
     <div>
       <div className="no-print" style={{ margin: "20px" }}>
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          ref={fileInputRef}
-          onChange={handleUpload}
-        />
-        <button onClick={handlePrint} style={{ marginLeft: "10px" }}>
-          Print QR Sheet
+        {/* Navigation and Info */}
+        <div style={{ marginBottom: "20px" }}>
+          <button 
+            onClick={() => navigate(-1)}
+            style={{ 
+              marginRight: "10px", 
+              padding: "8px 16px",
+              backgroundColor: "#6366f1",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer"
+            }}
+          >
+            ← Back
+          </button>
+
+        </div>
+
+        {/* Manual Upload Option */}
+        <div style={{ marginBottom: "10px", padding: "10px", backgroundColor: "#f9fafb", borderRadius: "4px" }}>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            ref={fileInputRef}
+            onChange={handleUpload}
+          />
+        </div>
+
+        <button 
+          onClick={handlePrint} 
+          style={{ 
+            padding: "10px 20px",
+            backgroundColor: "#059669",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            fontSize: "16px"
+          }}
+          disabled={imageURLs.length === 0}
+        >
+          Print QR Sheet ({imageURLs.length} QR codes)
         </button>
+
+
+
       </div>
 
       <div className="page" ref={printRef}>

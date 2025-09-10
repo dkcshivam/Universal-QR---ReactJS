@@ -17,7 +17,7 @@ import { useState } from "react";
 import ProductDetail from "./components/Core/Product/ProductDetail";
 import CreateUser from "./components/Auth/CreateUser";
 import QrPrint from "./components/Core/QrPrint_fixed";
-// import Printpage from "./components/Core/blukprintsetup";
+import Printpage from "./components/Core/PrintProductTable";
 import ProductFlow from "./components/Core/ProductFlow";
 function App() {
   const navigate = useNavigate();
@@ -56,7 +56,9 @@ function App() {
           <Route path="/search" element={<SearchResults />} />
           <Route path="*" element={<NotFound />} />
           {/* admin creates user */}
-          <Route path="/admin" element={<CreateUser/>}/>  
+          <Route path="/admin" element={<CreateUser/>}/> 
+          <Route path="/bulkQRprint" element={<Printpage/>}/>  
+
           <Route path="/bulk-print-setup" element={<ProductFlow />} />
         </Route>
       </Routes>

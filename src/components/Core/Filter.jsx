@@ -85,7 +85,7 @@ const SearchFilter = ({ onAddProduct, activeTab, setActiveTab }) => {
             <span
               className="text-sm font-medium cursor-pointer"
             >
-              Download QR Code
+              Print QR Code
             </span>
           </button>
         </div>
