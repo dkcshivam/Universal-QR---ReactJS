@@ -89,7 +89,7 @@ function ProductDetail() {
 
       // fetching the updated product details to get new images
 
-      await Imagesupload();
+      Imagesupload();
       toast.success("Image uploaded successfully!");
     } catch (err) {
       // trying to show backend error message if available
@@ -105,31 +105,33 @@ function ProductDetail() {
     }
   };
 
-  const handleImageDelete = async (imageId) => {
-    if (!token) {
-      toast.error("Please login to delete product images.");
-      return;
-    }
+  // const handleImageDelete = async (imageId) => {
+  //   if (!token) {
+  //     toast.error("Please login to delete product images.");
+  //     return;
+  //   }
 
-    try {
-      await axios.delete(
-        `http://shivam-mac.local:8000/api/v1.0/qr/products/${code}/images/${imageId}/delete/`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  //   try {
+  //     await axios.delete(
+  //       `${
+  //         import.meta.env.VITE_API_URL
+  //       }/qr/products/${code}/images/${imageId}/delete/`,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
 
-      // fetching the updated product details to get new images
+  //     // fetching the updated product details to get new images
 
-      toast.success("Image deleted successfully!");
-      await Imagesupload();
-    } catch (err) {
-      const errorMsg = err?.response?.data?.message || "Image deletion failed!";
-      toast.error(errorMsg);
-    }
-  };
+  //     toast.success("Image deleted successfully!");
+  //     Imagesupload();
+  //   } catch (err) {
+  //     const errorMsg = err?.response?.data?.message || "Image deletion failed!";
+  //     toast.error(errorMsg);
+  //   }
+  // };
 
   const Imagesupload = () => {
     axios
@@ -142,7 +144,8 @@ function ProductDetail() {
         }
       )
       .then((res) => {
-        setimage(res.data.data || []);
+        console.log("images in product detail", res.data.data);
+        setimage(res.data.data);
       })
       .catch((err) => {
         setimage([]);
@@ -150,12 +153,14 @@ function ProductDetail() {
   };
 
   useEffect(() => {
-    Imagesupload();
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  }, []);
+    if (code) {
+      Imagesupload();
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+  }, [code]);
 
   useEffect(() => {
     axios
@@ -978,7 +983,7 @@ function ProductDetail() {
               <ProductImageUpload
                 has_update_power={data.isEditable}
                 onUpload={handleImageUpload}
-                ondelete={handleImageDelete}
+                getImages={Imagesupload}
                 images={image || []}
                 isUploading={isUploading}
               />
