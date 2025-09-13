@@ -164,10 +164,8 @@ const ProductImageUpload = ({
                   handleDeleteClick(img.id);
                 }}
               >
-                <FaTrash className="text-red-600 hover:text-white transition-colors duration-200" />
-                <span className="text-xs font-semibold hover:text-white transition-colors duration-200">
-                  Delete
-                </span>
+                <FaTrash />
+                <span className="text-xs font-semibold">Delete</span>
               </button>
               {/* Mobile: always visible button below image */}
               <button
@@ -175,13 +173,11 @@ const ProductImageUpload = ({
                 title="Delete Image"
                 onClick={(e) => {
                   e.stopPropagation();
-                  ondelete(img.id);
+                  handleDeleteClick(img.id);
                 }}
               >
-                <FaTrash className="text-red-600 hover:text-white transition-colors duration-200" />
-                <span className="text-xs font-semibold hover:text-white transition-colors duration-200">
-                  Delete
-                </span>
+                <FaTrash />
+                <span className="text-xs font-semibold">Delete</span>
               </button>
             </div>
           ))}
