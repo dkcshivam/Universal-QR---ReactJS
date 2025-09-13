@@ -89,7 +89,7 @@ function ProductDetail() {
 
       // fetching the updated product details to get new images
 
-      await Imagesupload();
+      Imagesupload();
       toast.success("Image uploaded successfully!");
     } catch (err) {
       // trying to show backend error message if available
@@ -105,30 +105,33 @@ function ProductDetail() {
     }
   };
 
-  const handleImageDelete = async (imageId) => {
-    if (!token) {
-      toast.error("Please login to delete product images.");
-      return;
-    }
+  // const handleImageDelete = async (imageId) => {
+  //   if (!token) {
+  //     toast.error("Please login to delete product images.");
+  //     return;
+  //   }
 
-    try {
-      await axios.delete(`${import.meta.env.VITE_API_URL}/qr/products/${code}/images/${imageId}/delete/`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  //   try {
+  //     await axios.delete(
+  //       `${
+  //         import.meta.env.VITE_API_URL
+  //       }/qr/products/${code}/images/${imageId}/delete/`,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
 
-      // fetching the updated product details to get new images
+  //     // fetching the updated product details to get new images
 
-      toast.success("Image deleted successfully!");
-      await Imagesupload();
-    } catch (err) {
-      const errorMsg = err?.response?.data?.message || "Image deletion failed!";
-      toast.error(errorMsg);
-    }
-  };
+  //     toast.success("Image deleted successfully!");
+  //     Imagesupload();
+  //   } catch (err) {
+  //     const errorMsg = err?.response?.data?.message || "Image deletion failed!";
+  //     toast.error(errorMsg);
+  //   }
+  // };
 
   const Imagesupload = () => {
     axios
@@ -149,12 +152,14 @@ function ProductDetail() {
   };
 
   useEffect(() => {
-    Imagesupload();
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  }, []);
+    if (code) {
+      Imagesupload();
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+  }, [code]);
 
   useEffect(() => {
     axios
@@ -189,32 +194,35 @@ function ProductDetail() {
     toast.success("You are in edit mode.");
     setIsEditModalOpen(true);
   };
-const handleDeleteProduct = async () => {
-  if (!token) {
-    toast.error("Please login to delete product.");
-    return;
-  }
 
-  try {
-    await axios.delete(`${API_BASE_URL}/qr/products/${code}/delete/`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    toast.success("Product deleted successfully!");
-    navigate("/");
-    // Optionally, redirect or update UI
-  } catch (error) {
-    console.error("Error deleting product:", error);
-    toast.error("Product deletion failed!");
-  }
-};
+  const handleDeleteProduct = async () => {
+    if (!token) {
+      toast.error("Please login to delete product.");
+      return;
+    }
+
+    try {
+      await axios.delete(`${API_BASE_URL}/qr/products/${code}/delete/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      toast.success("Product deleted successfully!");
+      navigate("/");
+      // Optionally, redirect or update UI
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast.error("Product deletion failed!");
+    }
+  };
+
   const handleFieldChange = (e) => {
     setEditFields({
       ...editFields,
       [e.target.name]: e.target.value,
     });
   };
+
   const handleSaveEdit = async () => {
     setIsUpdating(true); // show loader immediately
     await handleUpdateProduct();
@@ -222,6 +230,7 @@ const handleDeleteProduct = async () => {
     setIsEditModalOpen(false); // now close modal
     await getProductDetail();
   };
+
   const handleUpdateProduct = async () => {
     try {
       const formData = new FormData();
@@ -239,7 +248,6 @@ const handleDeleteProduct = async () => {
         formData.append("cover_image", editFields.cover_image);
       }
 
-
       const response = await axios.put(
         `${API_BASE_URL}/qr/products/${code}/edit/`,
         formData,
@@ -250,7 +258,6 @@ const handleDeleteProduct = async () => {
           },
         }
       );
-
 
       await getProductDetail();
       toast.success("Product updated successfully!");
@@ -277,6 +284,7 @@ const handleDeleteProduct = async () => {
       console.error("Error fetching product:", error);
     }
   };
+
   const handleSave = async (remarkId) => {
     try {
       await axios.put(
@@ -303,6 +311,7 @@ const handleDeleteProduct = async () => {
       // Optionally show toast/error
     }
   };
+
   const handleDeleteRemark = async (remarkId) => {
     try {
       await axios.delete(
@@ -537,7 +546,6 @@ const handleDeleteProduct = async () => {
 
       // Clean up object URL to free memory
       window.URL.revokeObjectURL(url);
-
     } catch (error) {
       console.error("Error downloading QR code:", error);
 
@@ -558,12 +566,12 @@ const handleDeleteProduct = async () => {
     if (!dateString) return "";
     try {
       const date = new Date(dateString);
-      
+
       // Get day, month, and year
-      const day = date.getDate().toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, "0");
       const month = date.toLocaleDateString("en-GB", { month: "short" }); // Gets "Aug", "Jan", etc.
       const year = date.getFullYear();
-      
+
       return `${day}-${month}-${year}`; // Format: "12-Aug-2004"
     } catch (error) {
       return dateString.split("T")?.[0]?.split("-")?.reverse()?.join("/") || "";
@@ -583,22 +591,21 @@ const handleDeleteProduct = async () => {
               {/* Top row: Back button + actions */}
               <div className="flex items-center justify-between">
                 <div>
-
                   <button
-                  onClick={() => navigate(-1)}
-                  className="mr-4 mb-3 inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
-                  aria-label="Go Back"
-                >
-                  <FaArrowLeft className="w-4 h-4" />
-                  <span>Back</span>
-                </button>
-                      <button
-                        onClick={() => navigate("/")}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
-                        aria-label="Go Back"
-                      >
-                        <span>Home</span>
-                      </button>
+                    onClick={() => navigate(-1)}
+                    className="mr-4 mb-3 inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
+                    aria-label="Go Back"
+                  >
+                    <FaArrowLeft className="w-4 h-4" />
+                    <span>Back</span>
+                  </button>
+                  <button
+                    onClick={() => navigate("/")}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
+                    aria-label="Go Back"
+                  >
+                    <span>Home</span>
+                  </button>
                 </div>
                 <div className="flex items-center gap-2">
                   {/* Download QR Button */}
@@ -624,24 +631,25 @@ const handleDeleteProduct = async () => {
                   ) : (
                     data.isEditable && (
                       <>
-                      <button
-                        className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm lg:text-base hover:bg-[#7594c7]"
-                        onClick={handleEditClick}
-                      >
-                        <Edit className="text-white w-4 h-4" />
-                        <span className="hidden sm:inline">Edit Product</span>
-                        <span className="sm:hidden">Edit</span>
-                      </button>
-                      <button
-                        className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm lg:text-base hover:bg-[#7594c7]"
-                        onClick={handleDeleteProduct}
-                      >
-                        <Edit className="text-white w-4 h-4" />
-                        <span className="hidden sm:inline">Delete Product</span>
-                        <span className="sm:hidden">Delete</span>
-                      </button>
+                        <button
+                          className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm lg:text-base hover:bg-[#7594c7]"
+                          onClick={handleEditClick}
+                        >
+                          <Edit className="text-white w-4 h-4" />
+                          <span className="hidden sm:inline">Edit Product</span>
+                          <span className="sm:hidden">Edit</span>
+                        </button>
+                        <button
+                          className="inline-flex items-center justify-center gap-2 bg-[#3b82f6] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-md shadow-md cursor-pointer transition-all duration-300 text-sm lg:text-base hover:bg-[#7594c7]"
+                          onClick={handleDeleteProduct}
+                        >
+                          <Edit className="text-white w-4 h-4" />
+                          <span className="hidden sm:inline">
+                            Delete Product
+                          </span>
+                          <span className="sm:hidden">Delete</span>
+                        </button>
                       </>
-                      
                     )
                   )}
                 </div>
@@ -1030,8 +1038,7 @@ const handleDeleteProduct = async () => {
               <ProductImageUpload
                 has_update_power={data.isEditable}
                 onUpload={handleImageUpload}
-                ondelete={handleImageDelete}
-                Imagesupload={Imagesupload}
+                getImages={Imagesupload}
                 images={image || []}
                 isUploading={isUploading}
               />
