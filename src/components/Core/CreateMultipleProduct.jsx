@@ -137,7 +137,8 @@ function CreateMultipleProduct() {
     }
     
     const token = localStorage.getItem("access_token");
-    const res = await axios.post(`${BASE_URL}/qr/products/bulk-create/`, data, {
+    try { 
+          const res = await axios.post(`${BASE_URL}/qr/products/bulk-create/`, data, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "multipart/form-data",
@@ -148,6 +149,14 @@ function CreateMultipleProduct() {
       sethide(false);
       return;
     }
+    } catch(err) {
+      console.error(err) ; 
+      toast.error("An error occurred while saving products.");
+      sethide(false);
+      return ; 
+    }
+
+
     // toast.success("Saving the products will take some time ");
 
     toast.success(`${data.length} products saved successfully!`);
