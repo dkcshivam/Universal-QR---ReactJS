@@ -19,7 +19,6 @@ import CreateUser from "./components/Auth/CreateUser";
 import QrPrint from "./components/Core/QrPrint_fixed";
 import Printpage from "./components/Core/PrintProductTable";
 import ProductFlow from "./components/Core/ProductFlow";
-import Vishal from "./vishal";
 function App() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("mine");
