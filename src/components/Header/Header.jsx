@@ -14,6 +14,8 @@ const Header = () => {
 
   const handleExpand = (type) => {
     setExpanded(type);
+
+    
   };
 
   const handleCollapse = () => {
