@@ -2,19 +2,25 @@ import React, { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import QRCode from "qrcode";
+import axios from "axios";
 
 
-const totalRows = 17;
+
 const qrPerRow = 1;
 
 const QRSheetUploader = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const BASE_URL = import.meta.env.VITE_API_URL;
+
   const [imageURLs, setImageURLs] = useState([]);
   const [totalSelected, setTotalSelected] = useState(0);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const printRef = useRef();
   const fileInputRef = useRef();
-
+const totalRows = imageURLs.length;
   // Get data from navigation state
   useEffect(() => {
     if (location.state) {
@@ -62,6 +68,35 @@ const QRSheetUploader = () => {
     setImageURLs(urls);
   };
 
+  const handleRegularizeQR = async () => {
+
+
+    setIsLoading(true);
+    
+    try {
+       const token = localStorage.getItem("access_token");
+      const response = await axios.post(`${BASE_URL}/qr/update-qr-codes/`, {start_date:selectedDate}, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+      const data = await response.data;
+      
+      if (response.status === 200) {
+        toast.success("QR codes regularized successfully!");
+        setShowModal(false);
+      } else {
+        toast.error(data.message || "Failed to regularize QR codes");
+      }
+    } catch (error) {
+      console.error("Error regularizing QR codes:", error);
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handlePrint = () => {
     const printContent = printRef.current.innerHTML;
     const printWindow = window.open("", "", "width=800,height=600");
@@ -73,8 +108,8 @@ const QRSheetUploader = () => {
             @page {  margin: 0; }
             body { margin: 0; padding: 0; font-family: sans-serif; }
             .page {
-              width: 4in;
-              height: 2in;
+              width: 3.93701in;
+              height: 1.9685in;
               display: flex;
               flex-direction: column;
               box-sizing: border-box;
@@ -85,16 +120,16 @@ const QRSheetUploader = () => {
       // height: 2in;
             }
                .cell {
-      width: 4in;
-      height: 1.9in;
+      width: 3.93701in;
+      height: 1.9685in;
       display: flex;
       align-items: center;
       justify-content: center;
     }
             .cell img {
             padding : 0px;
-      width: 90%;
-      height: 90%;
+      width: 99%;
+      height: 100%;
       // object-fit: contain;
     }
     .gap {
@@ -173,7 +208,21 @@ const QRSheetUploader = () => {
             onChange={handleUpload}
           />
         </div>
-
+        <button 
+          onClick={() => setShowModal(true)}
+          style={{ 
+            marginRight: "10px",
+            padding: "10px 20px",
+            backgroundColor: "#059669",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            fontSize: "16px"
+          }}
+        >
+          Regularize QR
+        </button>
         <button 
           onClick={handlePrint} 
           style={{ 
@@ -220,6 +269,76 @@ const QRSheetUploader = () => {
           .no-print { display: none !important; }
         }
       `}</style>
+
+      {/* Regularize QR Modal */}
+      {showModal && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: "white",
+            padding: "30px",
+            borderRadius: "8px",
+            width: "400px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+          }}>
+            <h2 style={{ marginTop: 0 }}>Regularize QR</h2>
+            
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ display: "block", marginBottom: "8px", fontWeight: 500 }}>Select Date:</label>
+              <input 
+                type="date" 
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "4px",
+                  fontSize: "16px"
+                }}
+              />
+            </div>
+            
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setShowModal(false)}
+                style={{
+                  marginRight: "10px",
+                  padding: "10px 15px",
+                  backgroundColor: "#f3f4f6",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRegularizeQR}
+                style={{
+                  padding: "10px 15px",
+                  backgroundColor: "#059669",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                }}
+              >
+                {isLoading ? "Processing..." : "Proceed"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
