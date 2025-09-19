@@ -103,7 +103,7 @@ const CreateUser = () => {
                                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required
                                 value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+                                onChange={(e) => setUsername(e.target.value.toLowerCase())}
                             />
                         </div>
                     </div>
@@ -126,7 +126,7 @@ const CreateUser = () => {
                                 className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                onChange={(e) => setPassword(e.target.value.toLowerCase())}
                             />
                             <span
                                 onClick={() => setShowPassword((prev) => !prev)}
