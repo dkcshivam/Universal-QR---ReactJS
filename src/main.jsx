@@ -11,13 +11,18 @@ createRoot(document.getElementById('root')).render(
     </BrowserRouter>
   </StrictMode>,
 )
-
-// registering serviceWorker
-
-if('serviceWorker' in navigator){
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(reg => console.log('Service worker registered: ', reg))
-      .catch(err => console.error('Service worker registration failed:', err))
-  })
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    for (let registration of registrations) {
+      registration.unregister();
+    }
+  });
 }
+if ("caches" in window) {
+  caches.keys().then(names => {
+    for (let name of names) {
+      caches.delete(name);
+    }
+  });
+}
+

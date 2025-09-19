@@ -81,7 +81,7 @@ const Login = () => {
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-indigo-500 transition-colors"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value.toLowerCase())}
             />
           </div>
 
@@ -101,7 +101,7 @@ const Login = () => {
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-indigo-500 transition-colors"
               required
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value.toLowerCase())}
             />
             <span
               onClick={() => setShowPassword((prev) => !prev)}
