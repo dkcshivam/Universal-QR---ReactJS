@@ -15,6 +15,7 @@ const AddProduct = () => {
   const [department, setDepartment] = useState("");
   const [remarks, setRemarks] = useState("");
   const [coverImage, setCoverImage] = useState(null);
+  const [activeCamera, setActiveCamera] = useState(null);
   const [productImages, setProductImages] = useState([]);
   const [departments, setDepartments] = useState([]);
 
@@ -52,7 +53,7 @@ const AddProduct = () => {
       if (savedData) {
         const parsedData = JSON.parse(savedData);
         // Only restore if data is less than 1 day old
-        if (Date.now() - parsedData.timestamp <  24 * 60 * 60 * 1000) {
+        if (Date.now() - parsedData.timestamp < 24 * 60 * 60 * 1000) {
           setProductName(parsedData.productName || "");
           setQuantity(parsedData.quantity || "");
           setLocation(parsedData.location || "");
@@ -85,7 +86,7 @@ const AddProduct = () => {
 
       try {
         const token = localStorage.getItem("access_token");
-        
+
         // Call the validation API
         const response = await axios.get(
           `${BASE_URL}/qr/validate-code/${productCode.trim()}/`,
@@ -99,11 +100,12 @@ const AddProduct = () => {
         // If API doesn't throw error, code is available
         toast.success("Product code is available and saved!");
         setShowProductCodeModal(false);
-        
       } catch (error) {
         // If API returns error, code already exists
         if (error.response) {
-          toast.error("Product code already exists. Please choose a different code.");
+          toast.error(
+            "Product code already exists. Please choose a different code."
+          );
         } else {
           toast.error("Error validating product code. Please try again.");
         }
@@ -150,7 +152,12 @@ const AddProduct = () => {
           file,
           url: imageSrc,
         };
-        setCoverImage(imageObj);
+        if (activeCamera === "cover") {
+          setCoverImage(imageObj);
+        } else if (activeCamera === "product") {
+          setProductImages((prev) => [...prev, imageObj]);
+        }
+        // setCoverImage(imageObj);
       })
       .catch((error) => {
         console.error("Error converting image:", error);
@@ -200,7 +207,14 @@ const AddProduct = () => {
   // Save form data whenever inputs change
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (productName || quantity || location || department || remarks || productCode) {
+      if (
+        productName ||
+        quantity ||
+        location ||
+        department ||
+        remarks ||
+        productCode
+      ) {
         saveFormData();
       }
     }, 1000); // Debounce saving by 1 second
@@ -210,7 +224,7 @@ const AddProduct = () => {
 
   // Handle app visibility change (when user switches apps)
   useEffect(() => {
-    const handleVisibilityChange = () => { 
+    const handleVisibilityChange = () => {
       if (document.hidden) {
         // App going to background - save data immediately
         saveFormData();
@@ -229,7 +243,7 @@ const AddProduct = () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [productName, quantity, location, department, remarks,productCode]);
+  }, [productName, quantity, location, department, remarks, productCode]);
 
   // product create
 
@@ -331,22 +345,22 @@ const AddProduct = () => {
   return (
     <div className="min-h-screen bg-gray-50 space-y-4">
       <div className="flex items-center justify-start bg-white w-full md:max-w-4xl rounded-2xl mx-auto shadow-md gap-2 p-4">
-<div>
+        <div>
           <button
-          onClick={() => window.history.back()}
-          className="mr-4 inline-flex items-center gap-2 cursor-pointer px-4 py-2 bg-blue-400 hover:bg-blue-500 rounded-lg text-white transition-colors duration-200 shadow-sm hover:shadow-md"
-        >
-          <FaArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="text-sm sm:text-base font-medium">Back</span>
-        </button>
-      <button
-        onClick={() => navigate("/")}
-        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
-        aria-label="Go Back"
-      >
-        <span>Home</span>
-      </button>
-</div>
+            onClick={() => window.history.back()}
+            className="mr-4 inline-flex items-center gap-2 cursor-pointer px-4 py-2 bg-blue-400 hover:bg-blue-500 rounded-lg text-white transition-colors duration-200 shadow-sm hover:shadow-md"
+          >
+            <FaArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="text-sm sm:text-base font-medium">Back</span>
+          </button>
+          <button
+            onClick={() => navigate("/")}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
+            aria-label="Go Back"
+          >
+            <span>Home</span>
+          </button>
+        </div>
         <div className="flex justify-center flex-1 gap-2">
           <h1 className="text-xl font-bold text-gray-800">Add New Product</h1>
         </div>
@@ -389,7 +403,7 @@ const AddProduct = () => {
             />
           </div>
         </div>
-        
+
         {/* Add Custom Product Code Button */}
         <div>
           <button
@@ -406,7 +420,7 @@ const AddProduct = () => {
             </div>
           )}
         </div>
-        
+
         {/* Department */}
         <div>
           <label className="block font-semibold mb-1">Department</label>
@@ -471,7 +485,10 @@ const AddProduct = () => {
             </button>
             <button
               type="button"
-              onClick={() => setShowCameraModal(true)}
+              onClick={() => {
+                setShowCameraModal(true);
+                setActiveCamera("cover");
+              }}
               className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md cursor-pointer"
             >
               <FiCamera />
@@ -549,7 +566,10 @@ const AddProduct = () => {
             </button>
             <button
               type="button"
-              onClick={() => setShowCameraModal(true)}
+              onClick={() => {
+                setShowCameraModal(true);
+                setActiveCamera("product");
+              }}
               className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md cursor-pointer"
             >
               <FiCamera />
@@ -618,10 +638,15 @@ const AddProduct = () => {
 
       {/* Product Code Modal */}
       {showProductCodeModal && (
-        <div className="fixed inset-0 bg-white bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50 p-4" style={{backgroundColor: 'rgba(128, 128, 128, 0.3)'}}>
+        <div
+          className="fixed inset-0 bg-white bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          style={{ backgroundColor: "rgba(128, 128, 128, 0.3)" }}
+        >
           <div className="bg-white rounded-lg w-full max-w-md p-6 shadow-xl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">Add Custom Product Code</h3>
+              <h3 className="text-lg font-semibold text-gray-800">
+                Add Custom Product Code
+              </h3>
               <button
                 onClick={() => handleProductCodeModalClose(false)}
                 className="text-gray-400 hover:text-gray-600 text-xl"
@@ -629,7 +654,7 @@ const AddProduct = () => {
                 ×
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block font-medium text-gray-700 mb-2">
@@ -644,7 +669,7 @@ const AddProduct = () => {
                   autoFocus
                 />
               </div>
-              
+
               <div className="flex gap-3 justify-end">
                 <button
                   onClick={() => handleProductCodeModalClose(false)}
