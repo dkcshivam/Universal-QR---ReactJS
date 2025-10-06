@@ -11,9 +11,10 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss()
     ],
-    server: {
-      port: 3001,
-      allowedHosts: '*'
-    }
+server: {
+  port: 3001,
+  allowedHosts: []
+}
+
   }
 })
