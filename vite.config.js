@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
     ],
     server: {
       port: 3001, // default fallback
-      allowedHosts: env.VITE_ALLOWED_HOSTS.split(',')
+      allowedHosts: 'all'
     }
   }
 })
