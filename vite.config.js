@@ -11,10 +11,9 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss()
     ],
-server: {
-  port: 3001,
-  allowedHosts: ['*']
-}
-
+    server: {
+      port: 3001, // default fallback
+      allowedHosts: env.VITE_ALLOWED_HOSTS.split(',')
+    }
   }
 })
