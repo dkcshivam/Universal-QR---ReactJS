@@ -13,9 +13,15 @@ const SearchResults = () => {
   useEffect(() => {
     if (query && query.trim()) {
       setLoading(true);
-      axios(`${import.meta.env.VITE_API_URL}/qr/search?q=${encodeURIComponent(query.trim())}`)
-        .then(res => {
-          setResults(Array.isArray(res.data.data.results) ? res.data.data.results : []);
+      axios(
+        `${import.meta.env.VITE_API_URL}/qr/search?q=${encodeURIComponent(
+          query.trim()
+        )}`
+      )
+        .then((res) => {
+          setResults(
+            Array.isArray(res.data.data.results) ? res.data.data.results : []
+          );
         })
         .catch(() => setResults([]))
         .finally(() => setLoading(false));
@@ -27,33 +33,32 @@ const SearchResults = () => {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen p-4">
-<div>
-             <button
-                        onClick={() => navigate(-1)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
-                        aria-label="Go Back"
-                      >
-                        <FaArrowLeft className="w-4 h-4" />
-                        <span>Back</span>
-                      </button>
-                            <button
-                              onClick={() => navigate("/")}
-                              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
-                              aria-label="Go Back"
-                            >
-                              <FaArrowLeft className="w-4 h-4 " />
-                              <span>Home</span>
-                            </button>
-</div>
-      <h2 className="text-xl font-bold mb-4">Search Results for "{query}"</h2>
+      <div>
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
+          aria-label="Go Back"
+        >
+          <FaArrowLeft className="w-4 h-4" />
+          <span>Back</span>
+        </button>
+        <button
+          onClick={() => navigate("/")}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg shadow-sm font-semibold text-sm lg:text-base cursor-pointer transition-all duration-200"
+          aria-label="Go Back"
+        >
+          <FaArrowLeft className="w-4 h-4 " />
+          <span>Home</span>
+        </button>
+      </div>
+      <h2 className="text-xl font-bold mb-4">Search Results for {query}</h2>
 
-        {/* Show count of matched results */}
 
-        <p className="text-sm text-gray-600 mb-4">
-            {
-                loading ? "Searching" : `${results.length} result${results.length !== 1 ? "s" : ""} found`
-            }
-        </p>
+      <p className="text-sm text-gray-600 mb-4">
+        {loading
+          ? "Searching"
+          : `${results.length} result${results.length !== 1 ? "s" : ""} found`}
+      </p>
 
       {loading && <p>Loading...</p>}
       {!loading && query && query.trim() && results.length === 0 && (

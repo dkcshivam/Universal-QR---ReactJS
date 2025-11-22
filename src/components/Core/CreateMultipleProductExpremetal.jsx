@@ -2,11 +2,11 @@ import React, { useEffect, useState } from "react";
 import { FaPlus, FaTrash, FaTimes } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { FaSave, FaArrowLeft } from "react-icons/fa";
-import { Link, Route, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Lottie from "lottie-react";
 import axios from "axios";
 import { set } from "lodash";
-function CreateMultipleProduct() {
+function CreateMultipleProductExpremetal() {
   const createNewProductRow = () => ({
     id: Date.now() + Math.random(),
     name: "",
@@ -27,7 +27,63 @@ function CreateMultipleProduct() {
   // Number of products per page
 
   // in Vite (CRA), the public folder is not part of the module system. Files in 'public' are served as static assets, not imported as modules
+  const handlePaste = (index, e) => {
+    e.preventDefault(); // Prevent default paste behavior
 
+    // 1. Get the text from clipboard
+    const pasteData = e.clipboardData.getData("text");
+
+    // 2. Split by newline to get array of names (filter out empty lines)
+    const pastedValues = pasteData
+      .split(/\r?\n/)
+      .filter((line) => line.trim() !== "");
+
+    if (pastedValues.length === 0) return;
+
+    const updatedRows = [...productRows];
+
+    // Get shared values from the row where paste started
+    // We will apply these to any NEW rows we have to create
+    const baseRow = updatedRows[index];
+    const sharedLocation = baseRow.location;
+    const sharedDepartment = baseRow.department;
+    const sharedQuantity = baseRow.quantity;
+
+    // 3. Loop through pasted values
+    pastedValues.forEach((value, i) => {
+      const targetIndex = index + i;
+
+      if (targetIndex < updatedRows.length) {
+        // A. If row exists, just update the name
+        updatedRows[targetIndex] = {
+          ...updatedRows[targetIndex],
+          name: value,
+        };
+      } else {
+        // B. If row doesn't exist, create new row with inherited values
+        updatedRows.push({
+          ...createNewProductRow(),
+          name: value,
+          location: sharedLocation, // Inherit
+          department: sharedDepartment, // Inherit
+          quantity: sharedQuantity, // Inherit
+        });
+      }
+    });
+
+    // 4. Ensure there is always one empty row at the bottom for new entry
+    const lastRow = updatedRows[updatedRows.length - 1];
+    if (lastRow.name !== "") {
+      updatedRows.push({
+        ...createNewProductRow(),
+        location: sharedLocation,
+        department: sharedDepartment,
+        quantity: sharedQuantity,
+      });
+    }
+
+    setProductRows(updatedRows);
+  };
   useEffect(() => {
     fetch("/media/lottie-spinner.json")
       .then((res) => res.json())
@@ -35,26 +91,44 @@ function CreateMultipleProduct() {
   }, [hide]);
   const handleInputChange = (index, event) => {
     const { name, value } = event.target;
-    const updatedRows = [...productRows];
-    updatedRows[index] = { ...updatedRows[index], [name]: value };
-    setProductRows(updatedRows);
+    let updatedRows = [...productRows];
 
-    // Auto-add new row if editing the last row and any field is changed
+    // 1. Check if the changed field is one that should be synced across ALL rows
+    if (name === "location" || name === "department" || name === "quantity") {
+      // Update this field in EVERY row to match the new value
+      updatedRows = updatedRows.map((row) => ({
+        ...row,
+        [name]: value,
+      }));
+    } else {
+      // 2. Otherwise (like for "name"), only update the specific row
+      updatedRows[index] = { ...updatedRows[index], [name]: value };
+    }
+
+    // 3. Logic to auto-add a new row (Inherits the synced values)
     if (index === productRows.length - 1) {
-      const row = updatedRows[index];
+      const currentRow = updatedRows[index];
+
       if (
-        row.name !== "" ||
-        row.location !== "" ||
-        row.department !== "" ||
-        row.coverImage ||
-        (row.productImages && row.productImages.length > 0) ||
-        row.quantity !== 1
+        currentRow.name !== "" ||
+        currentRow.location !== "" ||
+        currentRow.department !== "" ||
+        currentRow.coverImage ||
+        (currentRow.productImages && currentRow.productImages.length > 0) ||
+        (currentRow.quantity !== "" && currentRow.quantity !== 1)
       ) {
-        setProductRows([...updatedRows, createNewProductRow()]);
+        updatedRows.push({
+          ...createNewProductRow(),
+          // Ensure the new row also gets the current shared values
+          location: currentRow.location,
+          department: currentRow.department,
+          quantity: currentRow.quantity,
+        });
       }
     }
-  };
 
+    setProductRows(updatedRows);
+  };
   // Cover image upload
   const handleCoverImageChange = (index, event) => {
     const file = event.target.files[0];
@@ -168,7 +242,8 @@ function CreateMultipleProduct() {
 
   async function fetchDepartments() {
     const token = localStorage.getItem("access_token");
-    const res = await axios.get(`${BASE_URL}/qr/departments/`, {
+    const res = await axios
+    .get(`${BASE_URL}/qr/departments/`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -210,15 +285,12 @@ function CreateMultipleProduct() {
         <h1 className="text-xl font-semibold">Create Multiple Products</h1>
         <button
           disabled={hide}
-          className="save-all-btn"
+          className="save-all-btn flex items-center gap-2"
           onClick={handleSaveAll}
         >
           <FaSave />
-          Save All Products
+          Save {productRows.length} Products
         </button>
-        <Link className="save-all-btn" to={"/upload-multiple-product-exp"}>
-          Create Multiple Product Expremetal
-        </Link>
       </div>
       <table
         className="create-product-table"
@@ -256,6 +328,7 @@ function CreateMultipleProduct() {
                   name="name"
                   value={row.name}
                   onChange={(e) => handleInputChange(index, e)}
+                  onPaste={(e) => handlePaste(index, e)} // <--- ADD THIS LINE
                   placeholder="e.g., Leather Jacket"
                   className="form-input"
                   required
@@ -475,4 +548,4 @@ function CreateMultipleProduct() {
   );
 }
 
-export default CreateMultipleProduct;
+export default CreateMultipleProductExpremetal;

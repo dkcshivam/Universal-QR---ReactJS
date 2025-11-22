@@ -19,6 +19,7 @@ import CreateUser from "./components/Auth/CreateUser";
 import QrPrint from "./components/Core/QrPrint_fixed";
 import Printpage from "./components/Core/PrintProductTable";
 import ProductFlow from "./components/Core/ProductFlow";
+import CreateMultipleProductExpremetal from "./components/Core/CreateMultipleProductExpremetal";
 function App() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("mine");
@@ -42,7 +43,7 @@ function App() {
             path="/scan"
             element={<QRScanner onResult={handleQRResult} />}
           />
-          <Route path="/add-product" element={<AddProduct/>} />
+          <Route path="/add-product" element={<AddProduct />} />
           <Route path="/product-display" element={<ProductGrid />} />
           <Route path="/download-qr" element={<QRdownload />} />
           <Route path="/print-qr" element={<QrPrint />} />
@@ -50,14 +51,18 @@ function App() {
             path="/upload-multiple-product"
             element={<CreateMultipleProduct />}
           />
+          <Route
+            path="/upload-multiple-product-exp"
+            element={<CreateMultipleProductExpremetal />}
+          />
           {/* ProductDetail */}
           <Route path="/product-detail/:code/" element={<ProductDetail />} />
           {/* Search Results  */}
           <Route path="/search" element={<SearchResults />} />
           <Route path="*" element={<NotFound />} />
           {/* admin creates user */}
-          <Route path="/admin" element={<CreateUser/>}/> 
-          <Route path="/bulkQRprint" element={<Printpage/>}/>  
+          <Route path="/admin" element={<CreateUser />} />
+          <Route path="/bulkQRprint" element={<Printpage />} />
 
           <Route path="/bulk-print-setup" element={<ProductFlow />} />
         </Route>
