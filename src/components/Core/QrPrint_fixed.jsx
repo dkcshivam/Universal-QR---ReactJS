@@ -1,12 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import QRCode from "qrcode";
 import axios from "axios";
 
-
-
-const qrPerRow = 1;
+const qrPerRow = 2;
 
 const QRSheetUploader = () => {
   const location = useLocation();
@@ -16,28 +13,29 @@ const QRSheetUploader = () => {
   const [imageURLs, setImageURLs] = useState([]);
   const [totalSelected, setTotalSelected] = useState(0);
   const [showModal, setShowModal] = useState(false);
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const printRef = useRef();
   const fileInputRef = useRef();
-const totalRows = imageURLs.length;
+  const totalRows = imageURLs.length;
   // Get data from navigation state
   useEffect(() => {
     if (location.state) {
-      const { selectedProducts: products, totalSelected: total } = location.state;
+      const { selectedProducts: products, totalSelected: total } =
+        location.state;
       if (products && products.length > 0) {
-        let qrimages = products.map(prod => prod.qr);
+        let qrimages = products.map((prod) => prod.qr);
         setImageURLs(qrimages);
         setTotalSelected(total);
       }
     } else {
-      toast.info("No products selected. Please go back and select products to print.");
+      toast.info(
+        "No products selected. Please go back and select products to print."
+      );
     }
   }, [location.state]);
 
   // Generate QR codes for selected products
- 
-
 
   const handleUpload = async (event) => {
     const files = Array.from(event.target.files || []);
@@ -69,20 +67,22 @@ const totalRows = imageURLs.length;
   };
 
   const handleRegularizeQR = async () => {
-
-
     setIsLoading(true);
-    
+
     try {
-       const token = localStorage.getItem("access_token");
-      const response = await axios.post(`${BASE_URL}/qr/update-qr-codes/`, {start_date:selectedDate}, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      const token = localStorage.getItem("access_token");
+      const response = await axios.post(
+        `${BASE_URL}/qr/update-qr-codes/`,
+        { start_date: selectedDate },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const data = await response.data;
-      
+
       if (response.status === 200) {
         toast.success("QR codes regularized successfully!");
         setShowModal(false);
@@ -109,7 +109,7 @@ const totalRows = imageURLs.length;
             body { margin: 0; padding: 0; font-family: sans-serif; }
             .page {
               width: 3.93701in;
-              height: 1.9685in;
+              height: 0.984in;
               display: flex;
               flex-direction: column;
               box-sizing: border-box;
@@ -117,18 +117,15 @@ const totalRows = imageURLs.length;
             .row {
               display: flex;
       flex-direction: row;
-      // height: 2in;
+      // height: 0.984252in;
             }
                .cell {
       width: 3.93701in;
-      height: 1.9685in;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      height: 0.98in;
     }
             .cell img {
             padding : 0px;
-      width: 99%;
+      // width: 99%;
       height: 100%;
       // object-fit: contain;
     }
@@ -181,25 +178,31 @@ const totalRows = imageURLs.length;
       <div className="no-print" style={{ margin: "20px" }}>
         {/* Navigation and Info */}
         <div style={{ marginBottom: "20px" }}>
-          <button 
+          <button
             onClick={() => navigate(-1)}
-            style={{ 
-              marginRight: "10px", 
+            style={{
+              marginRight: "10px",
               padding: "8px 16px",
               backgroundColor: "#6366f1",
               color: "white",
               border: "none",
               borderRadius: "4px",
-              cursor: "pointer"
+              cursor: "pointer",
             }}
           >
             ← Back
           </button>
-
         </div>
 
         {/* Manual Upload Option */}
-        <div style={{ marginBottom: "10px", padding: "10px", backgroundColor: "#f9fafb", borderRadius: "4px" }}>
+        <div
+          style={{
+            marginBottom: "10px",
+            padding: "10px",
+            backgroundColor: "#f9fafb",
+            borderRadius: "4px",
+          }}
+        >
           <input
             type="file"
             accept="image/*"
@@ -208,9 +211,9 @@ const totalRows = imageURLs.length;
             onChange={handleUpload}
           />
         </div>
-        <button 
+        <button
           onClick={() => setShowModal(true)}
-          style={{ 
+          style={{
             marginRight: "10px",
             padding: "10px 20px",
             backgroundColor: "#059669",
@@ -218,29 +221,26 @@ const totalRows = imageURLs.length;
             border: "none",
             borderRadius: "4px",
             cursor: "pointer",
-            fontSize: "16px"
+            fontSize: "16px",
           }}
         >
           Regularize QR
         </button>
-        <button 
-          onClick={handlePrint} 
-          style={{ 
+        <button
+          onClick={handlePrint}
+          style={{
             padding: "10px 20px",
             backgroundColor: "#059669",
             color: "white",
             border: "none",
             borderRadius: "4px",
             cursor: "pointer",
-            fontSize: "16px"
+            fontSize: "16px",
           }}
           disabled={imageURLs.length === 0}
         >
           Print QR Sheet ({imageURLs.length} QR codes)
         </button>
-
-
-
       </div>
 
       <div className="page" ref={printRef}>
@@ -263,40 +263,50 @@ const totalRows = imageURLs.length;
         ))}
       </div>
 
-      {/* Hide upload controls when printing */}
       <style>{`
         @media print {
           .no-print { display: none !important; }
         }
       `}</style>
 
-      {/* Regularize QR Modal */}
       {showModal && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: "white",
-            padding: "30px",
-            borderRadius: "8px",
-            width: "400px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
-          }}>
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "white",
+              padding: "30px",
+              borderRadius: "8px",
+              width: "400px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            }}
+          >
             <h2 style={{ marginTop: 0 }}>Regularize QR</h2>
-            
+
             <div style={{ marginBottom: "20px" }}>
-              <label style={{ display: "block", marginBottom: "8px", fontWeight: 500 }}>Select Date:</label>
-              <input 
-                type="date" 
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "8px",
+                  fontWeight: 500,
+                }}
+              >
+                Select Date:
+              </label>
+              <input
+                type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 style={{
@@ -304,11 +314,11 @@ const totalRows = imageURLs.length;
                   padding: "10px",
                   border: "1px solid #d1d5db",
                   borderRadius: "4px",
-                  fontSize: "16px"
+                  fontSize: "16px",
                 }}
               />
             </div>
-            
+
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <button
                 onClick={() => setShowModal(false)}
@@ -318,7 +328,7 @@ const totalRows = imageURLs.length;
                   backgroundColor: "#f3f4f6",
                   border: "none",
                   borderRadius: "4px",
-                  cursor: "pointer"
+                  cursor: "pointer",
                 }}
               >
                 Cancel
