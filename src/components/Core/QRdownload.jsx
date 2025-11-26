@@ -24,20 +24,27 @@ function QRdownload() {
     current_page: 1,
   });
 
+  // --- 1. Modified: Added time fields to filter state ---
   const [filters, setFilters] = useState({
     code: "",
     name: "",
     quantity: "",
     location: "",
     dateFrom: "",
+    timeFrom: "", // New
     dateTo: "",
-    time: "",
+    timeTo: "", // New
     department: "",
   });
-
+  const isFilterActive = useMemo(() => {
+    return Object.values(filters).some((val) => val !== "");
+  }, [filters]);
   const [showDateModal, setShowDateModal] = useState(false);
   const [tempDateFrom, setTempDateFrom] = useState("");
   const [tempDateTo, setTempDateTo] = useState("");
+  // --- 2. Modified: Added temp states for time inputs ---
+  const [tempTimeFrom, setTempTimeFrom] = useState("");
+  const [tempTimeTo, setTempTimeTo] = useState("");
 
   const fetchProducts = async (page = 1) => {
     try {
@@ -84,14 +91,22 @@ function QRdownload() {
         .toLowerCase()
         .includes(filters.location.toLowerCase());
 
+      // --- 3. Modified: Date & Time Logic ---
       const productDateObj = new Date(product.created_at);
 
-      const dateFrom = filters.dateFrom
-        ? new Date(filters.dateFrom + "T00:00:00")
-        : null;
-      const dateTo = filters.dateTo
-        ? new Date(filters.dateTo + "T23:59:59.999")
-        : null;
+      // Construct Start Date object
+      let dateFrom = null;
+      if (filters.dateFrom) {
+        const timeString = filters.timeFrom ? filters.timeFrom : "00:00:00";
+        dateFrom = new Date(`${filters.dateFrom}T${timeString}`);
+      }
+
+      // Construct End Date object
+      let dateTo = null;
+      if (filters.dateTo) {
+        const timeString = filters.timeTo ? filters.timeTo : "23:59:59.999";
+        dateTo = new Date(`${filters.dateTo}T${timeString}`);
+      }
 
       let matchesDate = true;
       if (dateFrom && !dateTo) {
@@ -103,18 +118,7 @@ function QRdownload() {
       if (dateFrom && dateTo) {
         matchesDate = productDateObj >= dateFrom && productDateObj <= dateTo;
       }
-
-      const formattedTime = product.created_at
-        ? new Date(product.created_at).toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-          })
-        : "";
-
-      const matchesTime = formattedTime
-        .toLowerCase()
-        .includes(filters.time.toLowerCase());
+      // ----------------------------------------
 
       const matchesDepartment = (product.belongs_to_department || "")
         .toLowerCase()
@@ -126,7 +130,6 @@ function QRdownload() {
         matchesQuantity &&
         matchesLocation &&
         matchesDate &&
-        matchesTime &&
         matchesDepartment
       );
     });
@@ -192,7 +195,6 @@ function QRdownload() {
     return filteredProducts.every((p) => selectedProducts.has(p.id));
   }, [filteredProducts, selectedProducts]);
 
-  // --- 2. NEW: Handle Excel Download Function ---
   const handleExcelDownload = () => {
     if (selectedProducts.size === 0) {
       toast.warning("Please select at least one product to download Excel.");
@@ -204,12 +206,12 @@ function QRdownload() {
         custom_text: product.name,
         quantity: product.quantity,
         qr_code: product.code,
+        created_at: product.created_at, // Optional: useful to see date in excel
       })
     );
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-
-    const wscols = [{ wch: 30 }, { wch: 10 }, { wch: 20 }];
+    const wscols = [{ wch: 30 }, { wch: 10 }, { wch: 20 }, { wch: 25 }];
     worksheet["!cols"] = wscols;
 
     const workbook = XLSX.utils.book_new();
@@ -237,6 +239,15 @@ function QRdownload() {
         totalSelected: selectedProducts.size,
       },
     });
+  };
+
+  // Helper to open modal and sync state
+  const openDateModal = () => {
+    setTempDateFrom(filters.dateFrom);
+    setTempTimeFrom(filters.timeFrom);
+    setTempDateTo(filters.dateTo);
+    setTempTimeTo(filters.timeTo);
+    setShowDateModal(true);
   };
 
   return (
@@ -275,7 +286,6 @@ function QRdownload() {
             Open Print
           </button>
 
-          {/* --- 3. NEW: Excel Download Button --- */}
           <button
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium transition-colors shadow-sm
               ${
@@ -292,12 +302,9 @@ function QRdownload() {
           </button>
         </div>
 
-        {/* ... Rest of the table code remains exactly the same ... */}
         <table className="product-table">
-          {/* ... table content ... */}
           <thead>
             <tr>
-              {/* --- Select All Checkbox --- */}
               <th>
                 <input
                   type="checkbox"
@@ -363,13 +370,19 @@ function QRdownload() {
 
               {/* Date Column */}
               <th className="min-w-[150px] align-top">
-                <span className="block font-semibold">Date Range</span>
+                <span className="block font-semibold">Date & Time</span>
                 <button
                   onClick={() => {
                     if (filters.dateFrom || filters.dateTo) {
-                      setFilters({ ...filters, dateFrom: "", dateTo: "" });
+                      setFilters({
+                        ...filters,
+                        dateFrom: "",
+                        timeFrom: "",
+                        dateTo: "",
+                        timeTo: "",
+                      });
                     } else {
-                      setShowDateModal(true);
+                      openDateModal();
                     }
                   }}
                   className={`mt-1 w-full px-2 py-1 text-xs rounded border transition cursor-pointer
@@ -380,24 +393,9 @@ function QRdownload() {
                   }`}
                 >
                   {filters.dateFrom || filters.dateTo
-                    ? "Reset Date"
-                    : "Filter Date"}
+                    ? "Reset Filter"
+                    : "Filter Date/Time"}
                 </button>
-              </th>
-
-              {/* Time Column */}
-              <th className="min-w-[100px]">
-                <span className="block font-semibold">Time</span>
-                <input
-                  type="time"
-                  placeholder="Ex: 12:23 PM"
-                  className="mt-1 w-full px-2 py-1 text-xs border border-gray-300 rounded 
-                   focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-                  value={filters.time}
-                  onChange={(e) =>
-                    setFilters({ ...filters, time: e.target.value })
-                  }
-                />
               </th>
 
               <th className="min-w-[140px]">
@@ -453,27 +451,31 @@ function QRdownload() {
                     )}
                   </td>
 
-                  {/* Date Data */}
+                  {/* Date Display */}
                   <td>
                     {product.created_at ? (
-                      new Date(product.created_at).toLocaleDateString("en-GB", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })
-                    ) : (
-                      <span className="text-gray-400 text-xs">N/A</span>
-                    )}
-                  </td>
-
-                  {/* Time Data */}
-                  <td>
-                    {product.created_at ? (
-                      new Date(product.created_at).toLocaleTimeString("en-US", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })
+                      <div className="flex flex-col text-xs">
+                        <span>
+                          {new Date(product.created_at).toLocaleDateString(
+                            "en-GB",
+                            {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            }
+                          )}
+                        </span>
+                        <span className="text-gray-500">
+                          {new Date(product.created_at).toLocaleTimeString(
+                            "en-US",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: false,
+                            }
+                          )}
+                        </span>
+                      </div>
                     ) : (
                       <span className="text-gray-400 text-xs">N/A</span>
                     )}
@@ -489,7 +491,7 @@ function QRdownload() {
           </tbody>
         </table>
 
-        {pagination?.total_pages > 1 ? (
+        {!isFilterActive && pagination?.total_pages > 1 ? (
           <Pagination
             totalItems={pagination.count}
             itemsPerPage={1000}
@@ -497,6 +499,19 @@ function QRdownload() {
             totalPages={pagination.total_pages}
             onPageChange={handlePageChange}
           />
+        ) : isFilterActive ? (
+          // Logic specifically for when filters are ON
+          filteredProducts.length === 0 ? (
+            <div className="flex items-center justify-center h-[60vh]">
+              <span className="text-gray-500">No matching records found.</span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center py-4">
+              <span className="text-gray-400 text-sm italic">
+                Filtered Results (Pagination Hidden)
+              </span>
+            </div>
+          )
         ) : pagination?.total_pages === 1 ? (
           <div className="flex items-center justify-center py-4">
             <span className="text-gray-500">No more products to display.</span>
@@ -515,26 +530,45 @@ function QRdownload() {
         />
       )}
 
+      {/* --- 4. Modified: Date & Time Modal --- */}
       {showDateModal && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/10 flex items-center justify-center z-50">
-          <div className="bg-white p-5 rounded-lg shadow-xl w-80 border border-gray-200">
-            <h2 className="text-lg font-semibold mb-3">Select Date Range</h2>
+          <div className="bg-white p-5 rounded-lg shadow-xl w-96 border border-gray-200">
+            <h2 className="text-lg font-semibold mb-3">
+              Select Date & Time Range
+            </h2>
 
-            <label className="text-sm text-gray-700">From:</label>
-            <input
-              type="date"
-              className="w-full px-2 py-1 mb-3 text-sm border border-gray-300 rounded"
-              value={tempDateFrom}
-              onChange={(e) => setTempDateFrom(e.target.value)}
-            />
+            <label className="text-sm text-gray-700 block mb-1">From:</label>
+            <div className="flex gap-2 mb-3">
+              <input
+                type="date"
+                className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                value={tempDateFrom}
+                onChange={(e) => setTempDateFrom(e.target.value)}
+              />
+              <input
+                type="time"
+                className="w-32 px-2 py-1 text-sm border border-gray-300 rounded"
+                value={tempTimeFrom}
+                onChange={(e) => setTempTimeFrom(e.target.value)}
+              />
+            </div>
 
-            <label className="text-sm text-gray-700">To:</label>
-            <input
-              type="date"
-              className="w-full px-2 py-1 mb-3 text-sm border border-gray-300 rounded"
-              value={tempDateTo}
-              onChange={(e) => setTempDateTo(e.target.value)}
-            />
+            <label className="text-sm text-gray-700 block mb-1">To:</label>
+            <div className="flex gap-2 mb-3">
+              <input
+                type="date"
+                className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                value={tempDateTo}
+                onChange={(e) => setTempDateTo(e.target.value)}
+              />
+              <input
+                type="time"
+                className="w-32 px-2 py-1 text-sm border border-gray-300 rounded"
+                value={tempTimeTo}
+                onChange={(e) => setTempTimeTo(e.target.value)}
+              />
+            </div>
 
             <div className="flex justify-end gap-3 mt-4">
               <button
@@ -550,7 +584,9 @@ function QRdownload() {
                   setFilters({
                     ...filters,
                     dateFrom: tempDateFrom,
+                    timeFrom: tempTimeFrom,
                     dateTo: tempDateTo,
+                    timeTo: tempTimeTo,
                   });
                   setShowDateModal(false);
                 }}
