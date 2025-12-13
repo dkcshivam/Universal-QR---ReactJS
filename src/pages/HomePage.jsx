@@ -4,9 +4,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 const HomePage = ({ activeTab, setActiveTab }) => {
-  const [product, setProduct] = useState([]);
 
-  const BASE_URL = import.meta.env.VITE_API_URL;
 
   return (
     <div>

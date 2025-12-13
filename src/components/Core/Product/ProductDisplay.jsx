@@ -66,10 +66,10 @@ const ProductGrid = ({ activeTab }) => {
     setLoading(false);
   };
 
-  // Initial fetch on mount
-  useEffect(() => {
-    fetchProducts(1);
-  }, [activeTab]);
+  // // Initial fetch on mount
+  // useEffect(() => {
+  //   fetchProducts(1);
+  // }, [activeTab]);
 
   // Handle page change from Pagination component
   const handlePageChange = (page) => {
