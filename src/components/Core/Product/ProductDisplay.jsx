@@ -24,7 +24,7 @@ const ProductGrid = ({ activeTab }) => {
       .then((data) => setLottieData(data));
 
     fetchProducts(1);
-  }, []);
+  }, [activeTab]);
 
   // Number of products per page
   const [nextURL, setNextURL] = useState(null);
