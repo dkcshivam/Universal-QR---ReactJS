@@ -215,6 +215,7 @@ function CreateMultipleProductExpremetal() {
         `${BASE_URL}/qr/products/bulk-create/`,
         data,
         {
+          timeout: 7200000,
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
@@ -242,8 +243,7 @@ function CreateMultipleProductExpremetal() {
 
   async function fetchDepartments() {
     const token = localStorage.getItem("access_token");
-    const res = await axios
-    .get(`${BASE_URL}/qr/departments/`, {
+    const res = await axios.get(`${BASE_URL}/qr/departments/`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
