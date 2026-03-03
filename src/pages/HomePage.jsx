@@ -3,12 +3,12 @@ import ProductGrid from "../components/Core/Product/ProductDisplay";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-const HomePage = ({ activeTab, setActiveTab }) => {
+const HomePage = ({ activeTab }) => {
 
 
   return (
     <div>
-      <SearchFilter activeTab={activeTab} setActiveTab={setActiveTab} />
+      <SearchFilter />
       <ProductGrid activeTab={activeTab} />
     </div>
   );
