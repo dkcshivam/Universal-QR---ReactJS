@@ -17,19 +17,7 @@ const SearchFilter = ({ onAddProduct, activeTab, setActiveTab }) => {
         {/* Left side - Mine/All tabs (Visible on all screens) */}
 
         {token ? (
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => {
-                setActiveTab("mine") ; 
-                toast.info("Showing your products only.", {autoClose: 3000})
-              }}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === "mine"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer"
-                }`}
-            >
-              Mine
-            </button>
+          <div className="flex items-center gap-1"> 
             <button
               onClick={() => {
                 setActiveTab("all") ; 

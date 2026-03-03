@@ -22,7 +22,7 @@ import ProductFlow from "./components/Core/ProductFlow";
 import CreateMultipleProductExpremetal from "./components/Core/CreateMultipleProductExpremetal";
 function App() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("mine");
+  const [activeTab, setActiveTab] = useState("all");
   const handleQRResult = (result) => {
     alert(`QR Code detected at App.jsx: ${result}`);
     navigate(`/product-detail/${result}`);

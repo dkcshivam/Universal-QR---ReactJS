@@ -14,7 +14,7 @@ const Layout = () => {
       {pathname === "/login" ? "" : <Header />}
 
       {/* main content */}
-      <main className="flex-grow w-full py-2 px-4 sm:py-4 box-border sm:px-16">
+      <main className="grow w-full py-2 px-4 sm:py-4 box-border sm:px-16">
         <Outlet />
       </main>
 
