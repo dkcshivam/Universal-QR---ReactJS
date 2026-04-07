@@ -70,6 +70,8 @@ function ProductDetail() {
   // uploading image (product image)
 
   const handleImageUpload = async (files) => {
+    setIsUploading(true);
+    
     const formData = new FormData();
     Array.from(files).forEach((file) => {
       formData.append("image", file);
@@ -104,34 +106,6 @@ function ProductDetail() {
       setIsUploading(false);
     }
   };
-
-  // const handleImageDelete = async (imageId) => {
-  //   if (!token) {
-  //     toast.error("Please login to delete product images.");
-  //     return;
-  //   }
-
-  //   try {
-  //     await axios.delete(
-  //       `${
-  //         import.meta.env.VITE_API_URL
-  //       }/qr/products/${code}/images/${imageId}/delete/`,
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-
-  //     // fetching the updated product details to get new images
-
-  //     toast.success("Image deleted successfully!");
-  //     Imagesupload();
-  //   } catch (err) {
-  //     const errorMsg = err?.response?.data?.message || "Image deletion failed!";
-  //     toast.error(errorMsg);
-  //   }
-  // };
 
   const Imagesupload = () => {
     axios
@@ -531,11 +505,6 @@ function ProductDetail() {
       // Create temporary anchor element for download
       const link = document.createElement("a");
       link.href = url;
-
-      // link.download = `${(data.name || data.code).replace(
-      //   /[^a-zA-Z0-9\s]/g,
-      //   "_"
-      // )}_QR.png`;
 
       link.download = `${data.code}.png`;
 
