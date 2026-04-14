@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Webcam from "react-webcam";
 import { FiRefreshCw, FiCamera, FiX } from "react-icons/fi";
 

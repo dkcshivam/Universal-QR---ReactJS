@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { FaBars, FaTimes, FaUserCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Search from "./Search";
-import Record from "./Record";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -14,8 +13,6 @@ const Header = () => {
 
   const handleExpand = (type) => {
     setExpanded(type);
-
-    
   };
 
   const handleCollapse = () => {
@@ -25,7 +22,7 @@ const Header = () => {
   const handleLogout = () => {
     localStorage.clear();
 
-    toast.success("You have logged out.")
+    toast.success("You have logged out.");
 
     setTimeout(() => {
       navigate("/login");
@@ -36,61 +33,41 @@ const Header = () => {
   };
 
   // Define dynamic classes for clarity
-  const recordContainerClass = `
-    transition-all duration-300 ease-in-out
-   
-  `;
-
   const searchContainerClass = `
     transition-all duration-300 ease-in-out
-   
   `;
-function MobileDevice() {
-  console.log(window.matchMedia("only screen and (max-width: 930px)").matches)
-  return window.matchMedia("only screen and (max-width: 930px)").matches;
-}
-const [isMobileDevice, setIsMobileDevice] = useState(MobileDevice());
-useEffect(() => {
-  const handleResize = () => {
-    setIsMobileDevice(MobileDevice());
-  };
-  window.addEventListener("resize", handleResize);
-  return () => {
-    window.removeEventListener("resize", handleResize);
-  };
-}, []);
+  function MobileDevice() {
+    console.log(
+      window.matchMedia("only screen and (max-width: 930px)").matches,
+    );
+    return window.matchMedia("only screen and (max-width: 930px)").matches;
+  }
+  const [isMobileDevice, setIsMobileDevice] = useState(MobileDevice());
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileDevice(MobileDevice());
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   return (
     <header className="bg-white sticky top-0 z-30 shadow-sm border-b border-gray-200">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="w-full flex items-center justify-between h-20 gap-2 sm:gap-4">
-          {/* Left & Center Combined: Record and Search */}
-          <div className=" flex items-center gap-2 sm:gap-4 min-w-0">
-            <div
-              className={recordContainerClass}
-              onClick={() => handleExpand("record")}
-            >
-              <Record
-                isMobile={isMobileDevice}
-                isExpanded={expanded === "record"}
-                isCollapsed={expanded === "search"}
-                onToggle={handleCollapse}
-              />
-            </div>
-           
-          </div>
-          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-             <div
-              className={searchContainerClass}  
-              onClick={() => handleExpand("search")}
-            >
-              <Search
+          {/* Search Bar*/}
+          <div
+            className={searchContainerClass}
+            onClick={() => handleExpand("search")}
+          >
+            <Search
               isMobile={isMobileDevice}
-                isExpanded={expanded === "search"}
-                isCollapsed={expanded === "record"}
-                onToggle={handleCollapse}
-              />
-            </div>
+              isExpanded={expanded === "search"}
+              isCollapsed={expanded === "record"}
+              onToggle={handleCollapse}
+            />
           </div>
           {/* Right: Profile (Desktop) / Hamburger (Mobile) */}
           <div className="flex-shrink-0 flex items-center">

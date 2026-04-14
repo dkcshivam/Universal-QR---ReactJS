@@ -3,7 +3,6 @@ import Pagination from "../../Pagination";
 import ProductCard from "./ProductCard";
 import axios from "axios";
 import Lottie from "lottie-react";
-// import lottieSpinner from '../../../media/lottie-spinner.json'
 
 const ProductGrid = ({ activeTab }) => {
   const [products, setProducts] = useState([]);
@@ -17,7 +16,6 @@ const ProductGrid = ({ activeTab }) => {
   const [lottieData, setLottieData] = useState(null);
 
   // in Vite (CRA), the public folder is not part of the module system. Files in 'public' are served as static assets, not imported as modules
-
   useEffect(() => {
     fetch("/media/lottie-spinner.json")
       .then((res) => res.json())
@@ -25,11 +23,6 @@ const ProductGrid = ({ activeTab }) => {
 
     fetchProducts(1);
   }, [activeTab]);
-
-  // Number of products per page
-  const [nextURL, setNextURL] = useState(null);
-  const [previousURL, setPreviousURL] = useState(null);
-  // Fetch products from API for a given page
 
   const fetchProducts = async (page = 1) => {
     setLoading(true);
@@ -52,8 +45,6 @@ const ProductGrid = ({ activeTab }) => {
         const data = res.data.data;
         const productsArray = Array.isArray(data) ? data : data.results || [];
         setProducts(productsArray);
-        setNextURL(data.next);
-        setPreviousURL(data.previous);
         setPagination({
           count: Array.isArray(data) ? data.length : data.count,
           total_pages: Array.isArray(data) ? 1 : data.total_pages,
@@ -65,11 +56,6 @@ const ProductGrid = ({ activeTab }) => {
     }
     setLoading(false);
   };
-
-  // // Initial fetch on mount
-  // useEffect(() => {
-  //   fetchProducts(1);
-  // }, [activeTab]);
 
   // Handle page change from Pagination component
   const handlePageChange = (page) => {

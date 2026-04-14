@@ -15,7 +15,6 @@ const EditProductModal = ({
   const dragCounter = useRef(0);
 
   // fade-out effect when closing the modal
-
   const [isClosing, setIsClosing] = useState(false);
 
   // smooth close effect
@@ -42,7 +41,6 @@ const EditProductModal = ({
   };
 
   // Drag & drop handlers for cover image
-
   const handleDrop = (e) => {
     e.preventDefault();
     dragCounter.current = 0;
@@ -78,7 +76,6 @@ const EditProductModal = ({
         </h2>
 
         {/* product detail being updated */}
-
         {loading && (
           <div className="flex flex-col items-center mb-4">
             <span className="w-6 h-6 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mb-2"></span>
@@ -103,8 +100,6 @@ const EditProductModal = ({
           </div>
 
           {/* Cover image - with preview, drag & drop, and support text */}
-
-        
           <div>
             <label className="block text-xs font-semibold mb-1">
               Cover Image

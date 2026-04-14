@@ -2,7 +2,6 @@ import { FiPlus, FiCamera } from "react-icons/fi";
 import { IoIosCreate } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import { IoMdDownload } from "react-icons/io";
-import { toast } from "react-toastify";
 
 const SearchFilter = () => {
   const navigate = useNavigate();

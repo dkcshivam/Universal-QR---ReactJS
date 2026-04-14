@@ -1,5 +1,3 @@
-import React from "react";
-
 const DeleteImageModal = ({ open, onClose, onConfirm }) => {
   if (!open) return null;
   return (

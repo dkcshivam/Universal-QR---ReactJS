@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { toast } from "react-toastify";
 import CameraModal from "./CameraModal";
-import { FiAlertCircle } from "react-icons/fi";
 
 const AddProduct = () => {
   const [productName, setProductName] = useState("");

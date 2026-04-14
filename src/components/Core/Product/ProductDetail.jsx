@@ -71,7 +71,7 @@ function ProductDetail() {
 
   const handleImageUpload = async (files) => {
     setIsUploading(true);
-    
+
     const formData = new FormData();
     Array.from(files).forEach((file) => {
       formData.append("image", file);
@@ -86,7 +86,7 @@ function ProductDetail() {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       // fetching the updated product details to get new images
@@ -115,7 +115,7 @@ function ProductDetail() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       )
       .then((res) => {
         setimage(res.data.data || []);
@@ -143,7 +143,7 @@ function ProductDetail() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       )
       .then((res) => {
         setDepartments(res.data.data || []);
@@ -230,7 +230,7 @@ function ProductDetail() {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       await getProductDetail();
@@ -248,7 +248,7 @@ function ProductDetail() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       if (res.status === 200) {
         const productData = res?.data?.data;
@@ -271,12 +271,12 @@ function ProductDetail() {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       // After successful update, update local state or refetch remarks
       const updatedRemarks = remarks.map((r) =>
-        r.id === remarkId ? { ...r, remark: editedText } : r
+        r.id === remarkId ? { ...r, remark: editedText } : r,
       );
       setRemarks(updatedRemarks); // assuming remarks is in state
       setEditingId(null);
@@ -294,7 +294,7 @@ function ProductDetail() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       // Remove the deleted remark from local state
@@ -316,7 +316,7 @@ function ProductDetail() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       if (res.status === 200) {
         const remarksData = res?.data?.data || [];
@@ -355,7 +355,7 @@ function ProductDetail() {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (res.status === 200 || res.status === 201) {
@@ -387,7 +387,7 @@ function ProductDetail() {
       const formData = new FormData();
       formData.append(
         "audio_duration",
-        `${Math.floor(audioData.duration / 60)}:${audioData.duration % 60}`
+        `${Math.floor(audioData.duration / 60)}:${audioData.duration % 60}`,
       );
 
       // Convert blob to file and append
@@ -396,7 +396,7 @@ function ProductDetail() {
         `voice_remark_${Date.now()}.mp3`,
         {
           type: audioData.mimeType || "audio/mp3",
-        }
+        },
       );
       formData.append("audio_recording", audioFile);
 
@@ -408,7 +408,7 @@ function ProductDetail() {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (res.status === 200 || res.status === 201) {
@@ -524,7 +524,7 @@ function ProductDetail() {
         console.log("Opened QR code in new tab as fallback");
       } catch (fallbackError) {
         alert(
-          "Failed to download QR code. Please try again or check your internet connection."
+          "Failed to download QR code. Please try again or check your internet connection.",
         );
       }
     }
@@ -710,8 +710,7 @@ function ProductDetail() {
             )}
 
             {/* Product Info Grid */}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
               {/* Department */}
 
               <div className="flex flex-col gap-2">
@@ -722,7 +721,7 @@ function ProductDetail() {
                   {!data?.belongs_to_department
                     ? "N/A"
                     : departments.find(
-                        (dep) => dep.key === data.belongs_to_department
+                        (dep) => dep.key === data.belongs_to_department,
                       )?.label || data.belongs_to_department}
                 </span>
               </div>
@@ -749,7 +748,7 @@ function ProductDetail() {
 
               {/* location */}
 
-              <div className="flex flex-col gap-2 sm:col-span-2 lg:col-span-1">
+              <div className="flex flex-col gap-2 sm:col-span-1 lg:col-span-1">
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
                   LOCATION
                 </div>

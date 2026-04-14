@@ -27,7 +27,6 @@ function CreateMultipleProduct() {
   // Number of products per page
 
   // in Vite (CRA), the public folder is not part of the module system. Files in 'public' are served as static assets, not imported as modules
-
   useEffect(() => {
     fetch("/media/lottie-spinner.json")
       .then((res) => res.json())

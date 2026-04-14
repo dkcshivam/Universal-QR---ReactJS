@@ -1,5 +1,3 @@
-import React from "react";
-import { FaMapMarkerAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const ProductCard = ({ product, index, activeTab }) => {
@@ -17,9 +15,15 @@ const ProductCard = ({ product, index, activeTab }) => {
           {product?.name}
         </h3>
 
-        <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1">
-          Code: {product?.code || "N/A"}
-        </span>
+        <div className="flex justify-between">
+          <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1">
+            Code: {product?.code || "N/A"}
+          </span>
+
+          <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1">
+            Images: {product?.image_count}
+          </span>
+        </div>
       </div>
     </div>
   );
