@@ -59,7 +59,7 @@ const Header = () => {
         <div className="w-full flex items-center justify-between h-20 gap-2 sm:gap-4">
           {/* Search Bar*/}
           <div
-            className={searchContainerClass}
+            className={`${searchContainerClass} flex-1 flex justify-center`}
             onClick={() => handleExpand("search")}
           >
             <Search
