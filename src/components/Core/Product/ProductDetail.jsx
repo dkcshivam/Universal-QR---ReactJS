@@ -19,6 +19,7 @@ import { toast } from "react-toastify";
 import EditProductModal from "./EditProductModal";
 import ProductImageUpload from "./ProductImageUpload";
 import { useNavigate } from "react-router-dom";
+import CameraCaptureUpload from "./CameraCaptureUpload";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -68,7 +69,6 @@ function ProductDetail() {
   const closeModal = () => setEnlargedImage(null);
 
   // uploading image (product image)
-
   const handleImageUpload = async (files) => {
     setIsUploading(true);
 
@@ -547,6 +547,10 @@ function ProductDetail() {
     }
   };
 
+  const onUpload = () => {
+    console.log("Image uploaded successfully!");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="flex flex-col gap-4 lg:p-6">
@@ -1001,8 +1005,7 @@ function ProductDetail() {
             </div>
 
             {/* Image Upload Box - always below Product Images */}
-
-            <div className="mt-6">
+            <div className="flex gap-4 flex-wrap">
               <ProductImageUpload
                 has_update_power={data.isEditable}
                 onUpload={handleImageUpload}

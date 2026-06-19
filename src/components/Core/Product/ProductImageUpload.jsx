@@ -4,6 +4,7 @@ import { FaPlus, FaTimes, FaTrash } from "react-icons/fa";
 import { useParams } from "react-router-dom";
 import DeleteImageModal from "./DeleteConfirmation";
 import { toast } from "react-toastify";
+import CameraCaptureUpload from "./CameraCaptureUpload";
 
 const ProductImageUpload = ({
   has_update_power,
@@ -92,134 +93,138 @@ const ProductImageUpload = ({
   };
 
   return (
-    <div className="w-full flex flex-col items-center sm:flex-row sm:items-start">
-      {/* Upload Box at left */}
+    <div className="w-full">
+      <div className="flex flex-wrap gap-4 items-start">
+        {/* Upload Box */}
+        {has_update_power && (
+          <div
+            className={`relative border-2 border-dashed
+          flex flex-col items-center justify-center text-center
+          w-28 h-28 sm:w-48 sm:h-48
+          p-2 sm:p-4
+          cursor-pointer transition-all duration-300
+          bg-blue-50 hover:bg-blue-100 rounded-md
+          ${
+            isDragging
+              ? "border-blue-500 bg-blue-100 scale-105"
+              : "border-blue-300"
+          }`}
+            onClick={!isUploading ? handleClick : undefined}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+          >
+            {isUploading && (
+              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-50 rounded-md">
+                <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
 
-      {has_update_power && (
-        <div
-          className={`relative border-2 border-dashed 
-flex flex-col items-center justify-center text-center
-w-28 h-28 sm:w-48 sm:h-48   // 👈 small mobile, big desktop
-p-2 sm:p-4
-cursor-pointer transition-all duration-300 
-bg-blue-50 hover:bg-blue-100 rounded-md
-${isDragging ? "border-blue-500 bg-blue-100 scale-105" : "border-blue-300"}
-`}
-          onClick={!isUploading ? handleClick : undefined}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-        >
-          {isUploading && (
-            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-50 rounded-md">
-              <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-xs mt-2 text-gray-600 font-medium">
-                Uploading...
+                <span className="text-xs mt-2 text-gray-600 font-medium">
+                  Uploading...
+                </span>
+              </div>
+            )}
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              disabled={isUploading}
+              style={{ display: "none" }}
+              onChange={handleChange}
+              accept="image/*"
+            />
+
+            <div className="flex flex-col items-center justify-center h-full w-full gap-1 sm:gap-2">
+              <FaPlus
+                className={`${
+                  isDragging
+                    ? "text-blue-500 text-xl sm:text-3xl"
+                    : "text-blue-400 text-lg sm:text-2xl"
+                }`}
+              />
+
+              <span className="hidden sm:block text-sm text-gray-600 font-medium text-center">
+                Click or drag and drop to upload
+              </span>
+
+              <span className="block sm:hidden text-[10px] text-gray-500 text-center">
+                Upload
               </span>
             </div>
-          )}
-          <input
-            type="file"
-            ref={fileInputRef}
-            disabled={isUploading}
-            style={{ display: "none" }}
-            onChange={handleChange}
-            accept="image/*"
-          />
-          <div className="flex flex-col items-center justify-center h-full w-full gap-1 sm:gap-2">
-            <FaPlus
-              className={`${
-                isDragging
-                  ? "text-blue-500 text-xl sm:text-3xl"
-                  : "text-blue-400 text-lg sm:text-2xl"
-              }`}
-            />
 
-            <span className="hidden sm:block text-sm text-gray-600 font-medium text-center">
-              Click or drag and drop to upload
-            </span>
-
-            <span className="block sm:hidden text-[10px] text-gray-500 text-center">
-              Upload
+            <span className="font-medium text-gray-600 text-sm sm:hidden inline-block">
+              Click to Upload
             </span>
           </div>
-          <span className="font-medium text-gray-600 text-sm sm:hidden inline-block">
-            Click to Upload
-          </span>
-        </div>
-      )}
+        )}
 
-      {/* Images grid */}
+        {/* Camera Box */}
+        {has_update_power && (
+          <CameraCaptureUpload onUpload={onUpload} isUploading={isUploading} />
+        )}
 
-      {images && images.length > 0 && (
-        <div className="w-full mt-6 grid grid-cols-3 gap-4 sm:mt-0 sm:ml-4 sm:grid-cols-1 sm:flex sm:flex-wrap">
-          {images.map((img, idx) => (
-            <div
-              key={idx}
-              className="relative group flex flex-col items-center"
-            >
-              <img
-                src={
-                  img.image ||
-                  (typeof img === "string" ? img : URL.createObjectURL(img))
-                }
-                alt={`Product ${idx + 1}`}
-                className="h-28 w-28 sm:h-48 sm:w-48 object-cover border border-blue-100 cursor-pointer transition-colors duration-200 hover:border-blue-500"
-                onClick={() => handleImageClick(img)}
-              />
-              {/* Desktop: absolute button on hover */}
-              <button
-                className="hidden sm:flex absolute top-2 right-2 items-center gap-1 bg-white px-2 py-1 rounded shadow text-red-600 opacity-0 group-hover:opacity-100 transition-all duration-200 scale-100 group-hover:scale-105 cursor-pointer hover:bg-red-600 hover:text-white"
-                title="Delete Image"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteClick(img.id);
-                }}
-              >
-                <FaTrash />
-                <span className="text-xs font-semibold">Delete</span>
-              </button>
-              {/* Mobile: always visible button below image */}
-              <button
-                className="mt-2 flex sm:hidden items-center gap-1 bg-white px-2 py-1 rounded shadow text-red-600 transition-all duration-200 scale-100 cursor-pointer hover:bg-red-600 hover:text-white w-full justify-center"
-                title="Delete Image"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteClick(img.id);
-                }}
-              >
-                <FaTrash />
-                <span className="text-xs font-semibold">Delete</span>
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* enlarged image */}
-
-      {enlargedImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div
-            className="absolute inset-0"
-            onClick={() => setEnlargedImage(null)}
-          ></div>
-          <div className="relative">
+        {/* Images */}
+        {images?.map((img, idx) => (
+          <div key={idx} className="relative group flex flex-col items-center">
             <img
-              src={enlargedImage}
-              alt="Enlarged"
-              className="max-h-[80vh] max-w-[90vw] object-contain shadow-lg"
+              src={
+                img.image ||
+                (typeof img === "string" ? img : URL.createObjectURL(img))
+              }
+              alt={`Product ${idx + 1}`}
+              className="
+              h-28 w-28
+              sm:h-48 sm:w-48
+              object-cover
+              border border-blue-100
+              cursor-pointer
+              transition-colors duration-200
+              hover:border-blue-500
+            "
+              onClick={() => handleImageClick(img)}
             />
+
+            {/* Desktop Delete */}
             <button
-              className="absolute top-2 right-2 text-white bg-black/60 rounded-full p-2 hover:bg-black/80 transition-transform duration-200 hover:scale-110 z-10"
-              onClick={() => setEnlargedImage(null)}
-              aria-label="Close"
+              className="
+              hidden sm:flex
+              absolute top-2 right-2
+              items-center gap-1
+              bg-white px-2 py-1 rounded shadow
+              text-red-600
+              opacity-0 group-hover:opacity-100
+              transition-all duration-200
+              cursor-pointer
+              hover:bg-red-600 hover:text-white
+            "
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteClick(img.id);
+              }}
             >
-              <FaTimes className="text-2xl" />
+              <FaTrash />
+              <span className="text-xs font-semibold">Delete</span>
+            </button>
+
+            {/* Mobile Delete */}
+            <button
+              className="
+              mt-2 flex sm:hidden
+              items-center gap-1
+              bg-white px-2 py-1 rounded shadow
+              text-red-600
+              w-full justify-center
+            "
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteClick(img.id);
+              }}
+            >
+              <FaTrash />
+              <span className="text-xs font-semibold">Delete</span>
             </button>
           </div>
-        </div>
-      )}
+        ))}
+      </div>
 
       {/* Delete confirmation modal pop-up */}
 
