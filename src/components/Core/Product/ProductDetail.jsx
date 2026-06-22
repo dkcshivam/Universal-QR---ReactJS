@@ -72,14 +72,27 @@ function ProductDetail() {
   // uploading image (product image)
   const handleImageUpload = async (files) => {
     setIsUploading(true);
+    const fileArray = Array.from(files);
 
     const formData = new FormData();
-    Array.from(files).forEach((file) => {
-      formData.append("image", file);
-    });
 
     try {
-            await axios.post(
+      const compressionPromises = fileArray.map((file) =>
+        compressImageToWebP(file),
+      );
+      const compressedBlobs = await Promise.all(compressionPromises);
+
+      compressedBlobs.forEach((blob, index) => {
+        const originalFile = fileArray[index];
+        const webpFile = new File(
+          [blob],
+          originalFile.name.replace(/\.[^.]+$/, ".webp"), 
+          { type: "image/webp" },
+        );
+        formData.append("image", webpFile);
+      });
+
+      await axios.post(
         `${import.meta.env.VITE_API_URL}/qr/products/${code}/images/upload/`,
         formData,
         {
@@ -90,19 +103,19 @@ function ProductDetail() {
         },
       );
 
-      // fetching the updated product details to get new images
-
       Imagesupload();
       toast.success("Image uploaded successfully!");
     } catch (err) {
-      // trying to show backend error message if available
-
-      const errorMsg =
-        err?.response?.data?.errors_data?.image?.[0] ||
-        err?.response?.data?.message ||
-        "Image upload failed!";
-
-      toast.error(errorMsg);
+      // NEW: separate error messages for compression vs upload failure
+      if (err instanceof TypeError) {
+        toast.error(err.message); // compression validation errors
+      } else {
+        const errorMsg =
+          err?.response?.data?.errors_data?.image?.[0] ||
+          err?.response?.data?.message ||
+          "Image upload failed!";
+        toast.error(errorMsg);
+      }
     } finally {
       setIsUploading(false);
     }
