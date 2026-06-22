@@ -72,12 +72,23 @@ function ProductDetail() {
   const handleImageUpload = async (files) => {
     setIsUploading(true);
 
-    const formData = new FormData();
-    Array.from(files).forEach((file) => {
-      formData.append("image", file);
-    });
-
     try {
+      const formData = new FormData();
+
+      for (const file of Array.from(files)) {
+        const compressedBlob = await compressImageToWebP(file, 0.85);
+
+        const compressedFile = new File(
+          [compressedBlob],
+          `${file.name.split(".")[0]}.webp`,
+          {
+            type: "image/webp",
+          },
+        );
+
+        formData.append("image", compressedFile);
+      }
+
       await axios.post(
         `${import.meta.env.VITE_API_URL}/qr/products/${code}/images/upload/`,
         formData,

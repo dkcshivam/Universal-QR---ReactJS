@@ -24,7 +24,6 @@ function App() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("all");
   const handleQRResult = (result) => {
-    alert(`QR Code detected at App.jsx: ${result}`);
     navigate(`/product-detail/${result}`);
   };
 
