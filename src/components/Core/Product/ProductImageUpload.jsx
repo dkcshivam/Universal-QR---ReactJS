@@ -12,6 +12,7 @@ const ProductImageUpload = ({
   getImages,
   images,
   isUploading,
+  uploadProgress,
 }) => {
   const fileInputRef = useRef();
 
@@ -115,11 +116,12 @@ const ProductImageUpload = ({
             onDragLeave={handleDragLeave}
           >
             {isUploading && (
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-50 rounded-md">
-                <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-
-                <span className="text-xs mt-2 text-gray-600 font-medium">
-                  Uploading...
+              <div className="flex items-center gap-2 text-sm text-blue-600 mt-2">
+                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                <span>
+                  {uploadProgress.total > 1
+                    ? `Uploading ${uploadProgress.current} of ${uploadProgress.total}...`
+                    : "Uploading..."}
                 </span>
               </div>
             )}
