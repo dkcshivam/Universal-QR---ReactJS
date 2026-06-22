@@ -39,10 +39,6 @@ function ProductDetail() {
   const [remarks, setRemarks] = useState([]);
   const [isSubmittingRemark, setIsSubmittingRemark] = useState(false);
   const [remarkError, setRemarkError] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState({
-    current: 0,
-    total: 0,
-  });
 
   // setting a loading state before calling the API, and keeping the modal open until the update is done
 
@@ -76,51 +72,43 @@ function ProductDetail() {
   // uploading image (product image)
   const handleImageUpload = async (files) => {
     setIsUploading(true);
-
     const fileArray = Array.from(files);
 
-    // show total count immediately so UI reacts at once
-    setUploadProgress({ current: 0, total: fileArray.length });
+    const formData = new FormData();
 
     try {
-      // pipeline: each file compresses then uploads immediately
-      // file 2 starts uploading while file 3 is still compressing
-      await Promise.all(
-        fileArray.map(async (file) => {
-          const blob = await compressImageToWebP(file);
+      const compressionPromises = fileArray.map((file) =>
+        compressImageToWebP(file),
+      );
+      const compressedBlobs = await Promise.all(compressionPromises);
 
-          const webpFile = new File(
-            [blob],
-            (file.name || `image_${Date.now()}`).replace(/\.[^.]+$/, "") +
-              ".webp",
-            { type: "image/webp" },
-          );
+      compressedBlobs.forEach((blob, index) => {
+        const originalFile = fileArray[index];
+        const webpFile = new File(
+          [blob],
+          originalFile.name.replace(/\.[^.]+$/, ".webp"), 
+          { type: "image/webp" },
+        );
+        formData.append("image", webpFile);
+      });
 
-          const formData = new FormData();
-          formData.append("image", webpFile);
-
-          await axios.post(
-            `${import.meta.env.VITE_API_URL}/qr/products/${code}/images/upload/`,
-            formData,
-            {
-              headers: {
-                "Content-Type": "multipart/form-data",
-                Authorization: `Bearer ${token}`,
-              },
-            },
-          );
-
-          // increment after each individual file completes
-          setUploadProgress((prev) => ({ ...prev, current: prev.current + 1 }));
-        }),
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/qr/products/${code}/images/upload/`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
 
       Imagesupload();
       toast.success("Image uploaded successfully!");
     } catch (err) {
+      // NEW: separate error messages for compression vs upload failure
       if (err instanceof TypeError) {
-        // compression validation errors (no file, wrong type)
-        toast.error(err.message);
+        toast.error(err.message); // compression validation errors
       } else {
         const errorMsg =
           err?.response?.data?.errors_data?.image?.[0] ||
@@ -130,7 +118,6 @@ function ProductDetail() {
       }
     } finally {
       setIsUploading(false);
-      setUploadProgress({ current: 0, total: 0 }); // reset after done
     }
   };
 
@@ -1039,7 +1026,6 @@ function ProductDetail() {
                 getImages={Imagesupload}
                 images={image || []}
                 isUploading={isUploading}
-                uploadProgress={uploadProgress}
               />
             </div>
           </div>
