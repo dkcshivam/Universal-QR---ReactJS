@@ -12,6 +12,7 @@ const ProductImageUpload = ({
   getImages,
   images,
   isUploading,
+  uploadProgress,
 }) => {
   const fileInputRef = useRef();
 

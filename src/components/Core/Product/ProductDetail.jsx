@@ -39,7 +39,11 @@ function ProductDetail() {
   const [remarks, setRemarks] = useState([]);
   const [isSubmittingRemark, setIsSubmittingRemark] = useState(false);
   const [remarkError, setRemarkError] = useState(null);
-
+  const [uploadProgress, setUploadProgress] = useState({
+    current: 0,
+    total: 0,
+  });
+  
   // setting a loading state before calling the API, and keeping the modal open until the update is done
 
   const [isUpdating, setIsUpdating] = useState(false);
@@ -1031,6 +1035,7 @@ function ProductDetail() {
                 getImages={Imagesupload}
                 images={image || []}
                 isUploading={isUploading}
+                uploadProgress={uploadProgress}
               />
             </div>
           </div>
