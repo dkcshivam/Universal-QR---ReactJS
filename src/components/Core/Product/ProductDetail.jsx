@@ -74,33 +74,37 @@ function ProductDetail() {
     setIsUploading(true);
     const fileArray = Array.from(files);
 
-    const formData = new FormData();
+    setUploadProgress({ current: 0, total: fileArray.length });
 
     try {
-      const compressionPromises = fileArray.map((file) =>
-        compressImageToWebP(file),
-      );
-      const compressedBlobs = await Promise.all(compressionPromises);
+      await Promise.all(
+        fileArray.map(async (file) => {
+          const blob = await compressImageToWebP(file);
 
-      compressedBlobs.forEach((blob, index) => {
-        const originalFile = fileArray[index];
-        const webpFile = new File(
-          [blob],
-          originalFile.name.replace(/\.[^.]+$/, ".webp"), 
-          { type: "image/webp" },
-        );
-        formData.append("image", webpFile);
-      });
+          const extension = blob.type === "image/webp" ? ".webp" : ".jpg";
+          const compressedFile = new File(
+            [blob],
+            (file.name || `image_${Date.now()}`).replace(/\.[^.]+$/, "") +
+              extension,
+            { type: blob.type },
+          );
 
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/qr/products/${code}/images/upload/`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        },
+          const formData = new FormData();
+          formData.append("image", compressedFile);
+
+          await axios.post(
+            `${import.meta.env.VITE_API_URL}/qr/products/${code}/images/upload/`,
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+
+          setUploadProgress((prev) => ({ ...prev, current: prev.current + 1 }));
+        }),
       );
 
       Imagesupload();
@@ -108,7 +112,7 @@ function ProductDetail() {
     } catch (err) {
       // NEW: separate error messages for compression vs upload failure
       if (err instanceof TypeError) {
-        toast.error(err.message); // compression validation errors
+        toast.error(err.message);
       } else {
         const errorMsg =
           err?.response?.data?.errors_data?.image?.[0] ||
@@ -118,6 +122,7 @@ function ProductDetail() {
       }
     } finally {
       setIsUploading(false);
+      setUploadProgress({ current: 0, total: 0 });
     }
   };
 

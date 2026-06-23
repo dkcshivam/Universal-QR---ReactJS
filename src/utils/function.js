@@ -1,7 +1,9 @@
 /**
- * * @param {File|Blob} file - The raw image file to compress.
- * @param {number} [quality=0.85] - Compression quality between 0.0 and 1.0.
- * @returns {Promise<Blob>} A promise that resolves to the compressed WebP Blob.
+ * @param {File|Blob} file - The raw image file to compress.
+ * @param {number} [quality=0.75] - Compression quality between 0.0 and 1.0.
+ * @param {number} [maxWidth=1280] - Maximum width in pixels (preserves aspect ratio).
+ * @param {number} [maxHeight=1280] - Maximum height in pixels (preserves aspect ratio).
+ * @returns {Promise<Blob>} A promise that resolves to a compressed WebP or JPEG Blob.
  */
 export async function compressImageToWebP(file, quality = 0.85) {
     return new Promise((resolve, reject) => {
@@ -30,28 +32,39 @@ export async function compressImageToWebP(file, quality = 0.85) {
                 canvas.width = img.width;
                 canvas.height = img.height;
 
-                ctx.imageSmoothingEnabled = true;
-                ctx.imageSmoothingQuality = "high";
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(img, 0, 0, width, height);
 
-                canvas.toBlob(
-                    (blob) => {
-                        URL.revokeObjectURL(objectUrl);
+        canvas.toBlob(
+          (firstBlob) => {
 
-                        if (blob) {
-                            resolve(blob);
-                        } else {
-                            reject(new Error("Canvas WebP encoding failed (browser may not support WebP canvas output)."));
-                        }
-                    },
-                    "image/webp",
-                    quality
-                );
-            } catch (canvasError) {
-                URL.revokeObjectURL(objectUrl);
-                reject(canvasError);
+            if (firstBlob && firstBlob.type === "image/webp") {
+              URL.revokeObjectURL(objectUrl);
+              resolve(firstBlob);
+            } else {
+              canvas.toBlob(
+                (jpegBlob) => {
+                  URL.revokeObjectURL(objectUrl);
+                  if (jpegBlob) {
+                    resolve(jpegBlob);
+                  } else {
+                    reject(new Error("Both WebP and JPEG encoding failed."));
+                  }
+                },
+                "image/jpeg",
+                quality
+              );
             }
-        };
+          },
+          "image/webp",
+          quality
+        );
+      } catch (canvasError) {
+        URL.revokeObjectURL(objectUrl);
+        reject(canvasError);
+      }
+    };
 
         img.onerror = (error) => {
             URL.revokeObjectURL(objectUrl);
