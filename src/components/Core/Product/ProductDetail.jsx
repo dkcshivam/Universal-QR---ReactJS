@@ -79,25 +79,23 @@ function ProductDetail() {
 
     const fileArray = Array.from(files);
 
-    // show total count immediately so UI reacts at once
     setUploadProgress({ current: 0, total: fileArray.length });
 
     try {
-      // pipeline: each file compresses then uploads immediately
-      // file 2 starts uploading while file 3 is still compressing
       await Promise.all(
         fileArray.map(async (file) => {
           const blob = await compressImageToWebP(file);
 
-          const webpFile = new File(
+          const extension = blob.type === "image/webp" ? ".webp" : ".jpg";
+          const compressedFile = new File(
             [blob],
             (file.name || `image_${Date.now()}`).replace(/\.[^.]+$/, "") +
-              ".webp",
-            { type: "image/webp" },
+              extension,
+            { type: blob.type },
           );
 
           const formData = new FormData();
-          formData.append("image", webpFile);
+          formData.append("image", compressedFile);
 
           await axios.post(
             `${import.meta.env.VITE_API_URL}/qr/products/${code}/images/upload/`,
@@ -110,7 +108,6 @@ function ProductDetail() {
             },
           );
 
-          // increment after each individual file completes
           setUploadProgress((prev) => ({ ...prev, current: prev.current + 1 }));
         }),
       );
@@ -119,7 +116,6 @@ function ProductDetail() {
       toast.success("Image uploaded successfully!");
     } catch (err) {
       if (err instanceof TypeError) {
-        // compression validation errors (no file, wrong type)
         toast.error(err.message);
       } else {
         const errorMsg =
@@ -130,7 +126,7 @@ function ProductDetail() {
       }
     } finally {
       setIsUploading(false);
-      setUploadProgress({ current: 0, total: 0 }); // reset after done
+      setUploadProgress({ current: 0, total: 0 });
     }
   };
 

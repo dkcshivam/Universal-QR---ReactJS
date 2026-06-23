@@ -3,14 +3,14 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IoHome } from "react-icons/io5";
 import { FaSignInAlt, FaEye, FaEyeSlash } from "react-icons/fa";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const [hide, sethide] = useState(false)
-  const [showPassword, setShowPassword] = useState(false) ; 
+  const [hide, sethide] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,7 +18,7 @@ const Login = () => {
       alert("Please fill in all fields");
       return;
     }
-    sethide(true) ;
+    sethide(true);
     try {
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/login/`, {
         username: email,
@@ -32,24 +32,34 @@ const Login = () => {
         localStorage.setItem("access_token", tokens?.access);
         localStorage.setItem("refresh_token", tokens?.refresh);
 
-        toast.success("Login successful! Welcome to Universal QR") ; 
+        toast.success("Login successful! Welcome to Universal QR");
 
         navigate("/");
       } else {
         toast.error(res.data.message || "Login failed");
-        sethide(false) ;
+        sethide(false);
       }
     } catch (error) {
       console.error("Login error:", error);
+      alert(
+        JSON.stringify(
+          {
+            status: error?.response?.status,
+            data: error?.response?.data,
+            message: error?.message,
+          },
+          null,
+          2,
+        ),
+      );
       toast.error("Login failed. Please check your credentials.");
-      sethide(false) ;
+      sethide(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br font-sans">
       <div className="bg-white w-full max-w-md p-8 sm:p-10 rounded-xl shadow-[0_15px_35px_rgba(0,0,0,0.1)]">
-
         {/* Header */}
 
         <div className="text-center mb-8 flex flex-col items-center">
@@ -94,29 +104,27 @@ const Login = () => {
             </label>
             <div className="relative">
               <input
-              type={showPassword ? "text" : "password"}
-              id="password"
-              name="password"
-              placeholder="Enter your password"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-indigo-500 transition-colors"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value.toLowerCase())}
-            />
-            <span
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-500"
-            >
-              {
-                showPassword ? <FaEyeSlash/> : <FaEye/>
-              }
-            </span>
+                type={showPassword ? "text" : "password"}
+                id="password"
+                name="password"
+                placeholder="Enter your password"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-indigo-500 transition-colors"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value.toLowerCase())}
+              />
+              <span
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-500"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
             </div>
           </div>
 
           <div className="flex flex-row gap-6 justify-center mt-10">
             <button
-            disabled={hide}
+              disabled={hide}
               type="submit"
               className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-md text-base shadow flex items-center justify-center gap-2 transition-all cursor-pointer"
             >
