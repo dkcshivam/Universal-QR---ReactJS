@@ -8,12 +8,15 @@ const QRScanner = ({ onResult }) => {
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
   const fileInputRef = useRef(null);
+  const scanTimeoutRef = useRef(null); // ← NEW: tracks the 5s fallback timer
 
   const [engineReady, setEngineReady] = useState(false);
   const [error, setError] = useState(null);
   const [mode, setMode] = useState("live");
   const [decoding, setDecoding] = useState(false);
   const [flashMsg, setFlashMsg] = useState(null);
+  const [showManualInput, setShowManualInput] = useState(false); // ← NEW
+  const [manualCode, setManualCode] = useState("");              // ← NEW
 
   useEffect(() => {
     let isMounted = true;
@@ -38,12 +41,26 @@ const QRScanner = ({ onResult }) => {
     if (videoRef.current) videoRef.current.srcObject = null;
   }, []);
 
+  // ─── NEW: start the 5s fallback timer once engine is ready ───────────────
+  useEffect(() => {
+    if (!engineReady || mode !== "live") return;
+
+    scanTimeoutRef.current = setTimeout(() => {
+      setShowManualInput(true);
+    }, 5000);
+
+    return () => {
+      clearTimeout(scanTimeoutRef.current);
+    };
+  }, [engineReady, mode]);
+  // ─────────────────────────────────────────────────────────────────────────
+
   useEffect(() => {
     if (!engineReady || mode !== "live") return;
 
     let isActive = true;
     let timeoutId = null;
-    let ctx = null; // reuse context across ticks
+    let ctx = null;
 
     const tick = async () => {
       if (!isActive) return;
@@ -61,7 +78,6 @@ const QRScanner = ({ onResult }) => {
         return;
       }
 
-      // Sync canvas size only when dimensions change
       if (
         canvas.width !== video.videoWidth ||
         canvas.height !== video.videoHeight
@@ -78,6 +94,7 @@ const QRScanner = ({ onResult }) => {
         const match = await scan(canvas);
         if (match?.text && isActive) {
           isActive = false;
+          clearTimeout(scanTimeoutRef.current); // ← NEW: cancel fallback on success
           stopStream();
           if (onResult) onResult(match.text);
           return;
@@ -86,7 +103,6 @@ const QRScanner = ({ onResult }) => {
         // Frame had no detectable code — continue scanning
       }
 
-      // Schedule next tick AFTER current scan completes (prevents overlap)
       timeoutId = setTimeout(tick, 120);
     };
 
@@ -109,9 +125,8 @@ const QRScanner = ({ onResult }) => {
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          // Wait for video to actually have dimensions before scanning
           videoRef.current.onloadedmetadata = () => {
-            timeoutId = setTimeout(tick, 600); // 600ms head start for autofocus
+            timeoutId = setTimeout(tick, 600);
           };
         }
       } catch {
@@ -128,9 +143,29 @@ const QRScanner = ({ onResult }) => {
     };
   }, [engineReady, mode, stopStream, onResult]);
 
+  // ─── NEW: handle manual submit ────────────────────────────────────────────
+  const handleManualSubmit = useCallback(() => {
+    if (manualCode.length !== 9) return;
+    clearTimeout(scanTimeoutRef.current);
+    stopStream();
+    if (onResult) onResult(manualCode.toUpperCase());
+  }, [manualCode, stopStream, onResult]);
+
+  const handleManualChange = useCallback(
+    (e) => {
+      const val = e.target.value
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "")
+        .slice(0, 9)
+      setManualCode(val);
+    },
+    []
+  );
+  // ─────────────────────────────────────────────────────────────────────────
+
   return (
     <div className="fixed inset-0 bg-neutral-950 z-50 flex flex-col text-white select-none">
-      {/* Hidden processing canvas — never rendered, used by OpenCV only */}
+      {/* Hidden processing canvas */}
       <canvas ref={canvasRef} className="hidden" />
 
       {/* Top bar */}
@@ -199,7 +234,7 @@ const QRScanner = ({ onResult }) => {
         <p className="text-neutral-400 text-xs text-center leading-relaxed max-w-xs">
           {!engineReady
             ? "Downloading OpenCV neural model (~2.5MB)..."
-            : "Hold steady. "}
+            : "Hold steady."}
         </p>
 
         {(flashMsg || error) && (
@@ -215,6 +250,53 @@ const QRScanner = ({ onResult }) => {
             </p>
           </div>
         )}
+
+        {/* ── NEW: Manual input fallback ── */}
+        {showManualInput && (
+          <div className="mt-6 w-full max-w-xs animate-fade-in">
+            <p className="text-neutral-400 text-xs text-center mb-3">
+              Can't scan? Enter the code manually.
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={manualCode}
+                onChange={handleManualChange}
+                placeholder="9-character code"
+                maxLength={9}
+                autoFocus
+                className="
+                  flex-1 px-4 py-3 rounded-xl
+                  bg-white/10 border border-white/20
+                  text-white placeholder-neutral-500
+                  text-sm font-mono tracking-widest uppercase
+                  focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500
+                  transition-colors
+                "
+              />
+              {manualCode.length === 9 && (
+                <button
+                  onClick={handleManualSubmit}
+                  className="
+                    px-4 py-3 rounded-xl
+                    bg-emerald-500 hover:bg-emerald-400
+                    text-white text-sm font-semibold
+                    active:scale-95 transition-all
+                    whitespace-nowrap
+                  "
+                >
+                  Submit
+                </button>
+              )}
+            </div>
+            {manualCode.length > 0 && manualCode.length < 9 && (
+              <p className="text-neutral-500 text-xs text-center mt-2">
+                {9 - manualCode.length} character{9 - manualCode.length !== 1 ? "s" : ""} remaining
+              </p>
+            )}
+          </div>
+        )}
+        {/* ───────────────────────────────── */}
       </div>
     </div>
   );
