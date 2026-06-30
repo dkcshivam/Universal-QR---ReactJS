@@ -44,7 +44,7 @@ const CameraCaptureUpload = ({ onUpload, isUploading }) => {
       <input
         ref={cameraInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*, video/*"
         capture="environment"
         disabled={isUploading}
         className="hidden"

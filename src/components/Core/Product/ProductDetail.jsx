@@ -24,6 +24,16 @@ import { compressImageToWebP } from "../../../utils/function";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
+// type PresignedResponse = {
+//     data: {
+//       url: string;
+//       fields: {
+//         key: string;
+//         [key: string]: string;
+//       };
+//     };
+//   };
+
 function ProductDetail() {
   const navigate = useNavigate();
   const token = localStorage.getItem("access_token");
@@ -43,7 +53,7 @@ function ProductDetail() {
     current: 0,
     total: 0,
   });
-  
+
   // setting a loading state before calling the API, and keeping the modal open until the update is done
 
   const [isUpdating, setIsUpdating] = useState(false);
@@ -73,7 +83,45 @@ function ProductDetail() {
   const openModal = (imgSrc) => setEnlargedImage(imgSrc);
   const closeModal = () => setEnlargedImage(null);
 
-  // uploading image (product image)
+  const uploadImageToS3 = async (file) => {
+    try {
+      const presignedRes = await axios.post(
+        `${import.meta.env.VITE_API_URL}/get-pre-signed-post-url/`,
+        {
+          file_name: file.name,
+        },
+      );
+
+      const { url, fields } = presignedRes.data;
+
+      const formData = new FormData();
+
+      Object.entries(fields).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+
+      formData.append("file", file);
+
+      const uploadRes = await fetch(url, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error("S3 Upload Failed");
+      }
+
+      return {
+        key: fields.key,
+        status: uploadRes.status,
+      };
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  };
+
+  // uploading image (product image) / video
   const handleImageUpload = async (files) => {
     setIsUploading(true);
     const fileArray = Array.from(files);
@@ -83,18 +131,26 @@ function ProductDetail() {
     try {
       await Promise.all(
         fileArray.map(async (file) => {
-          const blob = await compressImageToWebP(file);
+          const isVideo = file.type.startsWith("video/");
 
-          const extension = blob.type === "image/webp" ? ".webp" : ".jpg";
-          const compressedFile = new File(
-            [blob],
-            (file.name || `image_${Date.now()}`).replace(/\.[^.]+$/, "") +
-              extension,
-            { type: blob.type },
-          );
+          let uploadFile;
+          let fieldName = "image";
+
+          if (isVideo) {
+            uploadFile = file;
+          } else {
+            const blob = await compressImageToWebP(file);
+            const extension = blob.type === "image/webp" ? ".webp" : ".jpg";
+            uploadFile = new File(
+              [blob],
+              (file.name || `image_${Date.now()}`).replace(/\.[^.]+$/, "") +
+                extension,
+              { type: blob.type },
+            );
+          }
 
           const formData = new FormData();
-          formData.append("image", compressedFile);
+          formData.append(fieldName, uploadFile);
 
           await axios.post(
             `${import.meta.env.VITE_API_URL}/qr/products/${code}/images/upload/`,
@@ -112,16 +168,15 @@ function ProductDetail() {
       );
 
       Imagesupload();
-      toast.success("Image uploaded successfully!");
+      toast.success("Upload successful!");
     } catch (err) {
-      // NEW: separate error messages for compression vs upload failure
       if (err instanceof TypeError) {
         toast.error(err.message);
       } else {
         const errorMsg =
           err?.response?.data?.errors_data?.image?.[0] ||
           err?.response?.data?.message ||
-          "Image upload failed!";
+          "Upload failed!";
         toast.error(errorMsg);
       }
     } finally {
@@ -754,7 +809,6 @@ function ProductDetail() {
               </div>
 
               {/* quantity */}
-
               <div className="flex flex-col gap-2">
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
                   QUANTITY
@@ -774,7 +828,6 @@ function ProductDetail() {
               </div>
 
               {/* location */}
-
               <div className="flex flex-col gap-2 sm:col-span-1 lg:col-span-1">
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
                   LOCATION

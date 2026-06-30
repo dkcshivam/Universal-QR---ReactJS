@@ -173,70 +173,56 @@ const ProductImageUpload = ({
           )}
 
           {/* Images */}
-          {images?.map((img, idx) => (
-            <div
-              key={idx}
-              className="relative group flex flex-col items-center"
-            >
-              <img
-                src={
-                  img.image ||
-                  (typeof img === "string" ? img : URL.createObjectURL(img))
-                }
-                alt={`Product ${idx + 1}`}
-                className="
-              h-28 w-28
-              sm:h-48 sm:w-48
-              object-cover
-              border border-blue-100
-              cursor-pointer
-              transition-colors duration-200
-              hover:border-blue-500
-            "
-                onClick={() => handleImageClick(img)}
-              />
-
-              {/* Desktop Delete */}
-              <button
-                className="
-              hidden sm:flex
-              absolute top-2 right-2
-              items-center gap-1
-              bg-white px-2 py-1 rounded shadow
-              text-red-600
-              opacity-0 group-hover:opacity-100
-              transition-all duration-200
-              cursor-pointer
-              hover:bg-red-600 hover:text-white
-            "
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteClick(img.id);
-                }}
+          {images?.map((img, idx) => {
+            const src =img.image || (typeof img === "string" ? img : URL.createObjectURL(img));
+            const isVideo =img.media_type === "video" || /\.(mp4|mov|webm)$/i.test(src);
+            return (
+              <div
+                key={idx}
+                className="relative group flex flex-col items-center"
               >
-                <FaTrash />
-                <span className="text-xs font-semibold">Delete</span>
-              </button>
+                {isVideo ? (
+                  <video
+                    src={src}
+                    className="h-28 w-28 sm:h-48 sm:w-48 object-cover border border-blue-100 cursor-pointer"
+                    onClick={() => handleImageClick(img)}
+                    muted
+                  />
+                ) : (
+                  <img
+                    src={src}
+                    alt={`Product ${idx + 1}`}
+                    className="h-28 w-28 sm:h-48 sm:w-48 object-cover border border-blue-100 cursor-pointer hover:border-blue-500 transition-colors duration-200"
+                    onClick={() => handleImageClick(img)}
+                  />
+                )}
 
-              {/* Mobile Delete */}
-              <button
-                className="
-              mt-2 flex sm:hidden
-              items-center gap-1
-              bg-white px-2 py-1 rounded shadow
-              text-red-600
-              w-full justify-center
-            "
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteClick(img.id);
-                }}
-              >
-                <FaTrash />
-                <span className="text-xs font-semibold">Delete</span>
-              </button>
-            </div>
-          ))}
+                {/* Desktop Delete */}
+                <button
+                  className="hidden sm:flex absolute top-2 right-2 items-center gap-1 bg-white px-2 py-1 rounded shadow text-red-600 opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer hover:bg-red-600 hover:text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteClick(img.id);
+                  }}
+                >
+                  <FaTrash />
+                  <span className="text-xs font-semibold">Delete</span>
+                </button>
+
+                {/* Mobile Delete */}
+                <button
+                  className="mt-2 flex sm:hidden items-center gap-1 bg-white px-2 py-1 rounded shadow text-red-600 w-full justify-center"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteClick(img.id);
+                  }}
+                >
+                  <FaTrash />
+                  <span className="text-xs font-semibold">Delete</span>
+                </button>
+              </div>
+            );
+          })}
         </div>
 
         {/* Delete confirmation modal pop-up */}

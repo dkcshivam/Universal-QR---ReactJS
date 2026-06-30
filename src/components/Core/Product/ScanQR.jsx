@@ -16,7 +16,7 @@ const QRScanner = ({ onResult }) => {
   const [decoding, setDecoding] = useState(false);
   const [flashMsg, setFlashMsg] = useState(null);
   const [showManualInput, setShowManualInput] = useState(false); // ← NEW
-  const [manualCode, setManualCode] = useState("");              // ← NEW
+  const [manualCode, setManualCode] = useState(""); // ← NEW
 
   useEffect(() => {
     let isMounted = true;
@@ -41,7 +41,6 @@ const QRScanner = ({ onResult }) => {
     if (videoRef.current) videoRef.current.srcObject = null;
   }, []);
 
-  // ─── NEW: start the 5s fallback timer once engine is ready ───────────────
   useEffect(() => {
     if (!engineReady || mode !== "live") return;
 
@@ -53,7 +52,6 @@ const QRScanner = ({ onResult }) => {
       clearTimeout(scanTimeoutRef.current);
     };
   }, [engineReady, mode]);
-  // ─────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!engineReady || mode !== "live") return;
@@ -151,16 +149,13 @@ const QRScanner = ({ onResult }) => {
     if (onResult) onResult(manualCode.toUpperCase());
   }, [manualCode, stopStream, onResult]);
 
-  const handleManualChange = useCallback(
-    (e) => {
-      const val = e.target.value
-        .toUpperCase()
-        .replace(/[^A-Z0-9]/g, "")
-        .slice(0, 9)
-      setManualCode(val);
-    },
-    []
-  );
+  const handleManualChange = useCallback((e) => {
+    const val = e.target.value
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "")
+      .slice(0, 9);
+    setManualCode(val);
+  }, []);
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
@@ -264,7 +259,6 @@ const QRScanner = ({ onResult }) => {
                 onChange={handleManualChange}
                 placeholder="9-character code"
                 maxLength={9}
-                autoFocus
                 className="
                   flex-1 px-4 py-3 rounded-xl
                   bg-white/10 border border-white/20
@@ -291,12 +285,12 @@ const QRScanner = ({ onResult }) => {
             </div>
             {manualCode.length > 0 && manualCode.length < 9 && (
               <p className="text-neutral-500 text-xs text-center mt-2">
-                {9 - manualCode.length} character{9 - manualCode.length !== 1 ? "s" : ""} remaining
+                {9 - manualCode.length} character
+                {9 - manualCode.length !== 1 ? "s" : ""} remaining
               </p>
             )}
           </div>
         )}
-        {/* ───────────────────────────────── */}
       </div>
     </div>
   );
