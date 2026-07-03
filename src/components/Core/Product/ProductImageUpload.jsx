@@ -1,10 +1,12 @@
 import axios from "axios";
 import React, { useRef, useState } from "react";
 import { FaPlus, FaTimes, FaTrash } from "react-icons/fa";
+import { FiEdit2 } from 'react-icons/fi';
 import { useParams } from "react-router-dom";
 import DeleteImageModal from "./DeleteConfirmation";
 import { toast } from "react-toastify";
 import CameraCaptureUpload from "./CameraCaptureUpload";
+import ImageEditorModal from "@/components/image-editor/ImageEditorModal";
 
 const ProductImageUpload = ({
   has_update_power,
@@ -15,11 +17,15 @@ const ProductImageUpload = ({
   uploadProgress,
 }) => {
   const fileInputRef = useRef();
+  const { code } = useParams();
 
   const [isDragging, setIsDragging] = useState(false);
   const [enlargedImage, setEnlargedImage] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteImageId, setDeleteImageId] = useState(null);
+
+  const [editingImage, setEditingImage] = useState(null); // { id, url, name }
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
 
   const handleClick = () => {
     fileInputRef.current.click();
@@ -66,8 +72,6 @@ const ProductImageUpload = ({
     setEnlargedImage(null);
   };
 
-  const { code } = useParams(); // product code from params
-
   const handleConfirmDelete = async () => {
     try {
       await axios.delete(
@@ -95,6 +99,33 @@ const ProductImageUpload = ({
       setDeleteModalOpen(false);
       setDeleteImageId(null);
     }
+  };
+
+  const handleEditClick = (img) => {
+    setEditingImage({
+      id: img.id,
+      url: img.image, // the Django-served image URL
+      name: img.image?.split("/").pop() || "image.png",
+    });
+    setIsEditorOpen(true);
+  };
+
+  const handleEditorSave = async (newImageDataUrl) => {
+    if (!editingImage) return;
+
+    // Convert base64 data URL → File object
+    const res = await fetch(newImageDataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], editingImage.name, { type: "image/png" });
+
+    // Use the existing onUpload prop to upload the edited file
+    // This keeps the same upload pipeline (presigned URL / multipart etc.)
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    onUpload(dataTransfer.files);
+
+    setIsEditorOpen(false);
+    setEditingImage(null);
   };
 
   return (
@@ -196,45 +227,58 @@ const ProductImageUpload = ({
                 onClick={() => handleImageClick(img)}
               />
 
-              {/* Desktop Delete */}
-              <button
-                className="
-              hidden sm:flex
-              absolute top-2 right-2
-              items-center gap-1
-              bg-white px-2 py-1 rounded shadow
-              text-red-600
-              opacity-0 group-hover:opacity-100
-              transition-all duration-200
-              cursor-pointer
-              hover:bg-red-600 hover:text-white
-            "
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteClick(img.id);
-                }}
-              >
-                <FaTrash />
-                <span className="text-xs font-semibold">Delete</span>
-              </button>
+              {/* Desktop: Edit + Delete buttons on hover */}
+              {has_update_power && (
+                <div className="hidden sm:flex absolute top-2 right-2 flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                  {/* Edit button */}
+                  <button
+                    className="flex items-center gap-1 bg-white px-2 py-1 rounded shadow text-blue-600 cursor-pointer hover:bg-blue-600 hover:text-white"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditClick(img);
+                    }}
+                  >
+                    <FiEdit2 />
+                    <span className="text-xs font-semibold">Edit</span>
+                  </button>
+                  {/* Delete button */}
+                  <button
+                    className="flex items-center gap-1 bg-white px-2 py-1 rounded shadow text-red-600 cursor-pointer hover:bg-red-600 hover:text-white"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteClick(img.id);
+                    }}
+                  >
+                    <FaTrash />
+                    <span className="text-xs font-semibold">Delete</span>
+                  </button>
+                </div>
+              )}
 
-              {/* Mobile Delete */}
-              <button
-                className="
-              mt-2 flex sm:hidden
-              items-center gap-1
-              bg-white px-2 py-1 rounded shadow
-              text-red-600
-              w-full justify-center
-            "
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteClick(img.id);
-                }}
-              >
-                <FaTrash />
-                <span className="text-xs font-semibold">Delete</span>
-              </button>
+              {has_update_power && (
+                <div className="mt-2 flex sm:hidden gap-2">
+                  <button
+                    className="flex items-center gap-1 bg-white px-2 py-1 rounded shadow text-blue-600"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditClick(img);
+                    }}
+                  >
+                    <FiEdit2 />
+                    <span className="text-xs font-semibold">Edit</span>
+                  </button>
+                  <button
+                    className="flex items-center gap-1 bg-white px-2 py-1 rounded shadow text-red-600"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteClick(img.id);
+                    }}
+                  >
+                    <FaTrash />
+                    <span className="text-xs font-semibold">Delete</span>
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -267,6 +311,19 @@ const ProductImageUpload = ({
             />
           </div>
         </div>
+      )}
+
+      {/* ── NEW: Image Editor Modal ── */}
+      {isEditorOpen && editingImage && (
+        <ImageEditorModal
+          isOpen={isEditorOpen}
+          onClose={() => {
+            setIsEditorOpen(false);
+            setEditingImage(null);
+          }}
+          image={editingImage}
+          onSave={handleEditorSave}
+        />
       )}
     </>
   );

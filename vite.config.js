@@ -1,6 +1,12 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { fileURLToPath } from "url"; // Required to calculate the directory path safely
+import path from "path";
+
+// Manually compute __dirname for modern ES Module compliance
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default defineConfig(({ mode }) => {
   // Load environment variables from `.env`, `.env.local`, etc.
@@ -16,6 +22,12 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), tailwindcss()],
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"), // Now works perfectly!
+      },
+    },
+
     server: {
       port: 3001,
       allowedHosts,
