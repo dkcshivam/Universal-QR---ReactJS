@@ -11,6 +11,8 @@ const ProductImageUpload = ({
   onUpload,
   getImages,
   images,
+  videos,
+  fetchVideos,
   isUploading,
   uploadProgress,
 }) => {
@@ -51,14 +53,12 @@ const ProductImageUpload = ({
     }
   };
 
-  const handleImageClick = (img) => {
-    setEnlargedImage(
-      img.image || (typeof img === "string" ? img : URL.createObjectURL(img)),
-    );
+  const handleImageClick = (media) => {
+    setEnlargedImage(media);
   };
 
-  const handleDeleteClick = (imageId) => {
-    setDeleteImageId(imageId);
+  const handleDeleteClick = (media) => {
+    setDeleteImageId(media);
     setDeleteModalOpen(true);
   };
 
@@ -70,32 +70,57 @@ const ProductImageUpload = ({
 
   const handleConfirmDelete = async () => {
     try {
-      await axios.delete(
-        `${
-          import.meta.env.VITE_API_URL
-        }/qr/products/${code}/images/${deleteImageId}/delete/`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+      const token = localStorage.getItem("access_token");
+
+      if (deleteImageId.media_type === "video") {
+        await axios.post(
+          `${import.meta.env.VITE_API_URL}/qr/delete-video/`,
+          {
+            video_id: deleteImageId.video_id,
           },
-        },
-      );
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
 
-      toast.success("Image deleted successfully", {
-        autoClose: 4000, // 4 seconds
-      });
+        toast.success("Video deleted successfully");
+      } else {
+        await axios.delete(
+          `${import.meta.env.VITE_API_URL}/qr/products/${code}/images/${deleteImageId.id}/delete/`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
 
-      getImages();
+        toast.success("Image deleted successfully");
+      }
+
+      await Promise.all([getImages(), fetchVideos()]);
+
       setDeleteImageId(null);
       setDeleteModalOpen(false);
-
-      // No state update, no reload
-    } catch (error) {
-      toast.error("Failed to delete image.");
-      setDeleteModalOpen(false);
+    } catch (err) {
+      toast.error("Delete failed.");
       setDeleteImageId(null);
+      setDeleteModalOpen(false);
     }
   };
+
+  const mediaItems = [
+    ...(images || []).map((img) => ({
+      ...img,
+      media_type: "image",
+    })),
+
+    ...(videos || []).map((video) => ({
+      ...video,
+      media_type: "video",
+    })),
+  ];
 
   return (
     <>
@@ -104,17 +129,12 @@ const ProductImageUpload = ({
           {/* Upload Box */}
           {has_update_power && (
             <div
-              className={`relative border-2 border-dashed
-          flex flex-col items-center justify-center text-center
-          w-28 h-28 sm:w-48 sm:h-48
-          p-2 sm:p-4
-          cursor-pointer transition-all duration-300
-          bg-blue-50 hover:bg-blue-100 rounded-md
-          ${
-            isDragging
-              ? "border-blue-500 bg-blue-100 scale-105"
-              : "border-blue-300"
-          }`}
+              className={`relative border-2 border-dashed flex flex-col items-center justify-center text-center w-28 h-28 sm:w-48 sm:h-48 p-2 sm:p-4 cursor-pointer transition-all duration-300 bg-blue-50 hover:bg-blue-100 rounded-md
+              ${
+                isDragging
+                  ? "border-blue-500 bg-blue-100 scale-105"
+                  : "border-blue-300"
+              }`}
               onClick={!isUploading ? handleClick : undefined}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
@@ -137,7 +157,7 @@ const ProductImageUpload = ({
                 disabled={isUploading}
                 style={{ display: "none" }}
                 onChange={handleChange}
-                accept="image/*"
+                accept="image/*,video/*"
               />
 
               <div className="flex flex-col items-center justify-center h-full w-full gap-1 sm:gap-2">
@@ -173,48 +193,54 @@ const ProductImageUpload = ({
           )}
 
           {/* Images */}
-          {images?.map((img, idx) => {
-            const src =img.image || (typeof img === "string" ? img : URL.createObjectURL(img));
-            const isVideo =img.media_type === "video" || /\.(mp4|mov|webm)$/i.test(src);
+          {mediaItems.map((media, idx) => {
+            const src =
+              media.media_type === "video" ? media.video_url : media.image;
+
             return (
               <div
-                key={idx}
+                key={media.id || media.video_id || idx}
                 className="relative group flex flex-col items-center"
               >
-                {isVideo ? (
+                {media.media_type === "video" ? (
                   <video
                     src={src}
                     className="h-28 w-28 sm:h-48 sm:w-48 object-cover border border-blue-100 cursor-pointer"
-                    onClick={() => handleImageClick(img)}
                     muted
+                    playsInline
+                    preload="metadata"
+                    controls={false}
+                    webkit-playsinline="true"
+                    onClick={() => handleImageClick(media)}
+                    onLoadedMetadata={(e) => {
+                      e.currentTarget.currentTime = 0.1;
+                    }}
                   />
                 ) : (
                   <img
                     src={src}
-                    alt={`Product ${idx + 1}`}
+                    alt=""
                     className="h-28 w-28 sm:h-48 sm:w-48 object-cover border border-blue-100 cursor-pointer hover:border-blue-500 transition-colors duration-200"
-                    onClick={() => handleImageClick(img)}
+                    onClick={() => handleImageClick(media)}
                   />
                 )}
 
-                {/* Desktop Delete */}
                 <button
                   className="hidden sm:flex absolute top-2 right-2 items-center gap-1 bg-white px-2 py-1 rounded shadow text-red-600 opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer hover:bg-red-600 hover:text-white"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDeleteClick(img.id);
+                    handleDeleteClick(media);
                   }}
                 >
                   <FaTrash />
                   <span className="text-xs font-semibold">Delete</span>
                 </button>
 
-                {/* Mobile Delete */}
                 <button
                   className="mt-2 flex sm:hidden items-center gap-1 bg-white px-2 py-1 rounded shadow text-red-600 w-full justify-center"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDeleteClick(img.id);
+                    handleDeleteClick(media);
                   }}
                 >
                   <FaTrash />
@@ -246,11 +272,23 @@ const ProductImageUpload = ({
               <FaTimes />
             </button>
 
-            <img
-              src={enlargedImage}
-              alt="Preview"
-              className="max-h-[90vh] max-w-[90vw] object-contain rounded"
-            />
+            {enlargedImage.media_type === "video" ? (
+              <video
+                src={enlargedImage.video_url}
+                controls
+                autoPlay
+                playsInline
+                preload="auto"
+                webkit-playsinline="true"
+                className="max-h-[90vh] max-w-[90vw] rounded"
+              />
+            ) : (
+              <img
+                src={enlargedImage.image}
+                alt="Preview"
+                className="max-h-[90vh] max-w-[90vw] object-contain rounded"
+              />
+            )}
           </div>
         </div>
       )}

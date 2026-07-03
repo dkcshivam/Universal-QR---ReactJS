@@ -24,16 +24,6 @@ import { compressImageToWebP } from "../../../utils/function";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-// type PresignedResponse = {
-//     data: {
-//       url: string;
-//       fields: {
-//         key: string;
-//         [key: string]: string;
-//       };
-//     };
-//   };
-
 function ProductDetail() {
   const navigate = useNavigate();
   const token = localStorage.getItem("access_token");
@@ -78,79 +68,121 @@ function ProductDetail() {
 
   const [departments, setDepartments] = useState([]);
   const [image, setimage] = useState([]);
+  const [videos, setVideos] = useState([]);
   const [enlargedImage, setEnlargedImage] = useState(null);
 
   const openModal = (imgSrc) => setEnlargedImage(imgSrc);
   const closeModal = () => setEnlargedImage(null);
 
-  const uploadImageToS3 = async (file) => {
+  const uploadVideoToS3 = async (file) => {
+    const presignedRes = await axios.post(
+      `${import.meta.env.VITE_API_URL}/qr/get-presigned-url/`,
+      {
+        file_name: file.name,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    const { url, fields } = presignedRes.data.data;
+
+    const formData = new FormData();
+
+    Object.entries(fields).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+
+    formData.append("file", file);
+
+    const uploadRes = await fetch(url, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!uploadRes.ok) {
+      throw new Error("S3 upload failed");
+    }
+
+    return fields.key;
+  };
+
+  const saveVideo = async (productId, videoKey) => {
+    return axios.post(
+      `${import.meta.env.VITE_API_URL}/qr/save-video/`,
+      {
+        product_id: productId,
+        video_key: videoKey,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+  };
+
+  const fetchVideos = async () => {
     try {
-      const presignedRes = await axios.post(
-        `${import.meta.env.VITE_API_URL}/get-pre-signed-post-url/`,
+      const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/qr/products/${code}/videos/`,
         {
-          file_name: file.name,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
       );
 
-      const { url, fields } = presignedRes.data;
-
-      const formData = new FormData();
-
-      Object.entries(fields).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
-
-      formData.append("file", file);
-
-      const uploadRes = await fetch(url, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!uploadRes.ok) {
-        throw new Error("S3 Upload Failed");
-      }
-
-      return {
-        key: fields.key,
-        status: uploadRes.status,
-      };
+      setVideos(data.data || []);
     } catch (err) {
-      console.error(err);
-      throw err;
+      setVideos([]);
     }
   };
 
-  // uploading image (product image) / video
   const handleImageUpload = async (files) => {
     setIsUploading(true);
+
     const fileArray = Array.from(files);
 
-    setUploadProgress({ current: 0, total: fileArray.length });
+    setUploadProgress({
+      current: 0,
+      total: fileArray.length,
+    });
 
     try {
       await Promise.all(
         fileArray.map(async (file) => {
-          const isVideo = file.type.startsWith("video/");
+          if (file.type.startsWith("video/")) {
+            const videoKey = await uploadVideoToS3(file);
 
-          let uploadFile;
-          let fieldName = "image";
+            await saveVideo(data.id, videoKey);
 
-          if (isVideo) {
-            uploadFile = file;
-          } else {
-            const blob = await compressImageToWebP(file);
-            const extension = blob.type === "image/webp" ? ".webp" : ".jpg";
-            uploadFile = new File(
-              [blob],
-              (file.name || `image_${Date.now()}`).replace(/\.[^.]+$/, "") +
-                extension,
-              { type: blob.type },
-            );
+            setUploadProgress((prev) => ({
+              ...prev,
+              current: prev.current + 1,
+            }));
+
+            return;
           }
 
+          const blob = await compressImageToWebP(file);
+
+          const extension = blob.type === "image/webp" ? ".webp" : ".jpg";
+
+          const uploadFile = new File(
+            [blob],
+            (file.name || `image_${Date.now()}`).replace(/\.[^.]+$/, "") +
+              extension,
+            {
+              type: blob.type,
+            },
+          );
+
           const formData = new FormData();
-          formData.append(fieldName, uploadFile);
+
+          formData.append("image", uploadFile);
 
           await axios.post(
             `${import.meta.env.VITE_API_URL}/qr/products/${code}/images/upload/`,
@@ -163,25 +195,35 @@ function ProductDetail() {
             },
           );
 
-          setUploadProgress((prev) => ({ ...prev, current: prev.current + 1 }));
+          setUploadProgress((prev) => ({
+            ...prev,
+            current: prev.current + 1,
+          }));
         }),
       );
 
-      Imagesupload();
+      await Promise.all([Imagesupload(), fetchVideos()]);
+
       toast.success("Upload successful!");
     } catch (err) {
+      console.error(err);
+
       if (err instanceof TypeError) {
         toast.error(err.message);
       } else {
-        const errorMsg =
-          err?.response?.data?.errors_data?.image?.[0] ||
+        toast.error(
           err?.response?.data?.message ||
-          "Upload failed!";
-        toast.error(errorMsg);
+            err?.response?.data?.errors_data?.image?.[0] ||
+            "Upload failed!",
+        );
       }
     } finally {
       setIsUploading(false);
-      setUploadProgress({ current: 0, total: 0 });
+
+      setUploadProgress({
+        current: 0,
+        total: 0,
+      });
     }
   };
 
@@ -203,8 +245,13 @@ function ProductDetail() {
       });
   };
 
+  const refreshMedia = async () => {
+    await Promise.all([Imagesupload(), fetchVideos()]);
+  };
+
   useEffect(() => {
     if (code) {
+      fetchVideos();
       Imagesupload();
       window.scrollTo({
         top: 0,
@@ -745,7 +792,6 @@ function ProductDetail() {
             )}
 
             {/* Cover Image */}
-
             {isEditMode && (
               <div className="flex flex-col gap-2 mb-2">
                 <div className="text-xs lg:text-sm font-semibold text-gray-500 uppercase">
@@ -1087,6 +1133,8 @@ function ProductDetail() {
                 onUpload={handleImageUpload}
                 getImages={Imagesupload}
                 images={image || []}
+                videos={videos}
+                fetchVideos={fetchVideos}
                 isUploading={isUploading}
                 uploadProgress={uploadProgress}
               />
