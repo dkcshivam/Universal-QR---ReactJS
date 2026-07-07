@@ -51,7 +51,6 @@ import CurveArrowTool from "./CurveArrowTool";
 import MobileView from "./MobileView";
 import { useHistoryManager } from "@/hooks/useHistoryManager";
 import { ActionCreators } from "@/utils/actionCreators";
-import { usePencilSketch } from "./PencilSketch";
 
 const minBrushSize = 1;
 const maxBrushSize = 20;
@@ -94,8 +93,6 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [eraserCursor, setEraserCursor] = useState(null);
 
-  const { isOpenCVLoaded, applyPencilSketch, loadOpenCV } = usePencilSketch();
-
   const {
     historyState,
     canUndo,
@@ -128,18 +125,6 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    if (isOpen && !isOpenCVLoaded) {
-      loadOpenCV().catch(() =>
-        toast({
-          title: "Error",
-          description: "Failed to load image processing library",
-          variant: "destructive",
-        }),
-      );
-    }
-  }, [isOpen, isOpenCVLoaded, loadOpenCV, toast]);
 
   useEffect(() => {
     if (activeTool === "eraser") setBrushSize(20);
@@ -849,72 +834,6 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     });
   }, [addAction, toast, imageDrawParams]);
 
-  const handlePencilSketch = useCallback(async () => {
-    const baseCanvas = baseCanvasRef.current;
-    const ctx = baseCanvas?.getContext("2d");
-    if (!baseCanvas || !ctx || !imageDrawParams) return;
-    try {
-      const prev = ctx.getImageData(0, 0, baseCanvas.width, baseCanvas.height);
-      const { offsetX, offsetY, drawWidth, drawHeight } = imageDrawParams;
-      const tmp = document.createElement("canvas");
-      tmp.width = drawWidth;
-      tmp.height = drawHeight;
-      const tmpCtx = tmp.getContext("2d");
-      if (!tmpCtx) return;
-      tmpCtx.drawImage(
-        baseCanvas,
-        offsetX,
-        offsetY,
-        drawWidth,
-        drawHeight,
-        0,
-        0,
-        drawWidth,
-        drawHeight,
-      );
-      const ok = await applyPencilSketch(tmp, {
-        kernelSize: 21,
-        intensity: 256,
-        contrast: 0.8,
-        brightness: 10,
-      });
-      if (!ok) {
-        toast({
-          title: "Processing Error",
-          description: "Failed to apply pencil sketch filter",
-          variant: "destructive",
-        });
-        return;
-      }
-      ctx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, baseCanvas.width, baseCanvas.height);
-      ctx.drawImage(
-        tmp,
-        0,
-        0,
-        drawWidth,
-        drawHeight,
-        offsetX,
-        offsetY,
-        drawWidth,
-        drawHeight,
-      );
-      const next = ctx.getImageData(0, 0, baseCanvas.width, baseCanvas.height);
-      addAction(ActionCreators.applyFilter("pencilSketch", prev, next));
-      toast({
-        title: "Filter Applied",
-        description: "Pencil sketch filter applied successfully",
-      });
-    } catch {
-      toast({
-        title: "Processing Error",
-        description: "Failed to apply pencil sketch filter",
-        variant: "destructive",
-      });
-    }
-  }, [applyPencilSketch, addAction, toast, imageDrawParams]);
-
   const downloadImage = () => {
     const baseCanvas = baseCanvasRef.current;
     const drawingCanvas = drawingCanvasRef.current;
@@ -1207,6 +1126,19 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     updateTrashZoneState,
   };
 
+//   useEffect(() => {
+//   if (isOpen) {
+//     // Lock background scrolling on mobile & desktop
+//     const originalStyle = window.getComputedStyle(document.body).overflow;
+//     document.body.style.overflow = "hidden";
+    
+//     return () => {
+//       // Restore background scrolling on unmount/close
+//       document.body.style.overflow = originalStyle;
+//     };
+//   }
+// }, [isOpen]);
+
   if (!isOpen) return null;
 
   // ── render ─────────────────────────────────────────────────────────────────
@@ -1217,7 +1149,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
       id="image-editor-modal"
       tabIndex={-1}
     >
-      <div className="flex flex-col bg-white rounded-lg w-[98vw] max-w-5xl h-[95vh] overflow-hidden">
+      <div className="flex flex-col bg-white rounded-lg w-[98vw] max-w-5xl h-[80vh] overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b hidden sm:flex items-center justify-between">
           <h2 className="text-lg font-semibold">Edit Image: {image?.name}</h2>
@@ -1751,25 +1683,6 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
           >
             <Filter className="h-4 w-4" />
             <span className="hidden sm:block ml-1">Apply Filter</span>
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() =>
-              isOpenCVLoaded
-                ? handlePencilSketch()
-                : toast({
-                    title: "Loading",
-                    description: "Image processing library is still loading...",
-                  })
-            }
-            disabled={!isOpenCVLoaded}
-            className={`text-[12px] w-max ${!isOpenCVLoaded ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
-            {!isOpenCVLoaded ? (
-              <span className="text-xs text-gray-400">(Loading...)</span>
-            ) : (
-              "Pencil Sketch"
-            )}
           </Button>
           <Button
             variant="secondary"
