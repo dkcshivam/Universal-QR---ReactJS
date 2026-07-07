@@ -20,281 +20,296 @@ export const CurveTool = ({
   const [dragging, setDragging] = useState(null);
   const [mousePos, setMousePos] = useState(null);
   const [drawing, setDrawing] = useState(false);
-  const [curveId, setCurveId] = useState("");
 
+  // Group all dynamic states inside a ref to ensure stable event bindings
+  const stateRef = useRef({
+    drawing: false,
+    currentCurve,
+    currentColor,
+    brushSize,
+    strokeStyle,
+    curves,
+    dragging,
+    selectedCurveIndex,
+    historyState,
+    replayManager,
+  });
+
+  // Keep ref up-to-date with current states
   useEffect(() => {
-    if (active && !curveId) {
-      setCurveId(
-        `curve_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      );
-    }
-  }, [active, curveId]);
+    stateRef.current = {
+      drawing,
+      currentCurve,
+      currentColor,
+      brushSize,
+      strokeStyle,
+      curves,
+      dragging,
+      selectedCurveIndex,
+      historyState,
+      replayManager,
+    };
+  }, [
+    drawing,
+    currentCurve,
+    currentColor,
+    brushSize,
+    strokeStyle,
+    curves,
+    dragging,
+    selectedCurveIndex,
+    historyState,
+    replayManager,
+  ]);
 
-  useEffect(() => {
-    if (!active) {
-      setDrawing(false);
-      setCurrentCurve([]);
-      setMousePos(null);
-      setSelectedCurveIndex(null);
-    }
-  }, [active]);
-
-  const draw = () => {
+  // Helper to get coordinates for both Mouse and Touch
+  const getPointerPos = (e) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
 
-    const needsFullRedraw =
-      (drawing && currentCurve.length > 1) ||
-      selectedCurveIndex !== null ||
-      mousePos !== null;
+    // Handle touch vs mouse
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-    if (needsFullRedraw) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    return {
+      x: (clientX - rect.left) * (canvas.width / rect.width),
+      y: (clientY - rect.top) * (canvas.height / rect.height),
+    };
+  };
 
-      if (replayManager?.current) {
-        const drawingActions = historyState?.actions?.filter(
-          (a) => a.target === "drawing"
-        );
+  const drawBezier = (ctx, points, color, size, style) => {
+    if (points.length < 2) return;
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
 
-        drawingActions?.forEach((drawingAction) => {
-          replayManager.current.applyDrawingAction(drawingAction);
-        });
-      }
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[i - 1] || points[i];
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const p3 = points[i + 2] || p2;
+
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
     }
 
-    curves.forEach((curve, idx) => {
-      if (curve.length < 2) return;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
 
-      ctx.beginPath();
-      ctx.moveTo(curve[0].x, curve[0].y);
+    if (style === "dashed") ctx.setLineDash([size * 3, size * 2]);
+    else if (style === "dotted") ctx.setLineDash([size, size]);
+    else ctx.setLineDash([]);
 
-      for (let i = 0; i < curve.length - 1; i++) {
-        const p0 = curve[i - 1] || curve[i];
-        const p1 = curve[i];
-        const p2 = curve[i + 1];
-        const p3 = curve[i + 2] || p2;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  };
 
-        const cp1x = p1.x + (p2.x - p0.x) / 6;
-        const cp1y = p1.y + (p2.y - p0.y) / 6;
-        const cp2x = p2.x - (p3.x - p1.x) / 6;
-        const cp2y = p2.y - (p3.y - p1.y) / 6;
+  const draw = useCallback(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
 
-        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
-      }
+    const {
+      curves: localCurves,
+      currentCurve: currCurve,
+      drawing: isDrawing,
+      selectedCurveIndex: selIdx,
+      currentColor: color,
+      brushSize: size,
+      strokeStyle: style,
+      historyState: hist,
+      replayManager: replay,
+    } = stateRef.current;
 
-      ctx.strokeStyle = currentColor;
-      ctx.lineWidth = brushSize;
+    // Clear and redraw background history
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (replay?.current) {
+      const drawingActions = hist?.actions?.filter(
+        (a) => a.target === "drawing",
+      );
+      drawingActions?.forEach((a) => replay.current.applyDrawingAction(a));
+    }
 
-      switch (strokeStyle) {
-        case "dashed":
-          ctx.setLineDash([brushSize * 3, brushSize * 2]);
-          break;
-        case "dotted":
-          ctx.setLineDash([brushSize, brushSize]);
-          break;
-        default:
-          ctx.setLineDash([]);
-      }
-
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      if (selectedCurveIndex === idx) {
+    // Draw finished curves (local state)
+    localCurves.forEach((curve, idx) => {
+      drawBezier(ctx, curve, color, size, style);
+      if (selIdx === idx) {
         curve.forEach((pt) => {
           ctx.beginPath();
           ctx.arc(pt.x, pt.y, 5, 0, 2 * Math.PI);
-          ctx.fillStyle = currentColor;
+          ctx.fillStyle = color;
           ctx.fill();
         });
       }
     });
 
-    if (drawing && currentCurve.length > 0) {
-      const previewCurve = [...currentCurve];
-      if (mousePos && currentCurve.length >= 1) {
-        previewCurve.push(mousePos);
-      }
+    // Draw curve currently being created
+    if (isDrawing && currCurve.length > 0) {
+      const previewPoints = [...currCurve];
+      if (mousePos) previewPoints.push(mousePos);
+      drawBezier(ctx, previewPoints, color, size, style);
 
-      ctx.save();
-
-      if (previewCurve.length >= 2) {
+      // Dash line to current mouse position
+      const lastPoint = currCurve[currCurve.length - 1];
+      if (mousePos) {
         ctx.beginPath();
-        ctx.moveTo(previewCurve[0].x, previewCurve[0].y);
-
-        for (let i = 0; i < previewCurve.length - 1; i++) {
-          const p0 = previewCurve[i - 1] || previewCurve[i];
-          const p1 = previewCurve[i];
-          const p2 = previewCurve[i + 1];
-          const p3 = previewCurve[i + 2] || p2;
-
-          const cp1x = p1.x + (p2.x - p0.x) / 6;
-          const cp1y = p1.y + (p2.y - p0.y) / 6;
-          const cp2x = p2.x - (p3.x - p1.x) / 6;
-          const cp2y = p2.y - (p3.y - p1.y) / 6;
-
-          ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
-        }
-
-        ctx.strokeStyle = currentColor;
-        ctx.lineWidth = brushSize;
-
-        switch (strokeStyle) {
-          case "dashed":
-            ctx.setLineDash([brushSize * 3, brushSize * 2]);
-            break;
-          case "dotted":
-            ctx.setLineDash([brushSize, brushSize]);
-            break;
-          default:
-            ctx.setLineDash([]);
-        }
-
+        ctx.moveTo(lastPoint.x, lastPoint.y);
+        ctx.lineTo(mousePos.x, mousePos.y);
+        ctx.strokeStyle = color;
+        ctx.setLineDash([5, 5]);
         ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.restore();
       }
     }
+  }, [canvasRef, mousePos]);
 
-    if (drawing && currentCurve.length > 0 && mousePos) {
-      const lastPoint = currentCurve[currentCurve.length - 1];
-      ctx.beginPath();
-      ctx.moveTo(lastPoint.x, lastPoint.y);
-      ctx.lineTo(mousePos.x, mousePos.y);
-      ctx.strokeStyle = currentColor || "#070707";
-      ctx.setLineDash([brushSize, brushSize]);
-      ctx.lineWidth = brushSize;
-      ctx.stroke();
-      ctx.setLineDash([]);
+  useEffect(() => {
+    draw();
+  }, [draw]);
+
+  const handleFinish = useCallback(() => {
+    const {
+      currentCurve: currCurve,
+      currentColor: color,
+      brushSize: size,
+      strokeStyle: style,
+    } = stateRef.current;
+
+    if (currCurve.length > 1) {
+      const action = createAction("drawing", "DRAW_CURVE", {
+        points: currCurve,
+        color,
+        strokeWidth: size,
+        strokeStyle: style,
+      });
+      addAction(action);
+
+      // Local cleanups
+      setCurrentCurve([]);
+      setDrawing(false);
+      setActiveTool(null); // This safely unmounts the tool
     }
-  };
+  }, [addAction, createAction, setActiveTool]);
 
-  const getMousePos = (e) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
+  const handleStart = (e) => {
+    if (e.type === "touchstart") e.preventDefault();
 
-    const rect = canvas.getBoundingClientRect();
-    return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    };
-  };
+    const pos = getPointerPos(e);
+    const {
+      drawing: isDrawing,
+      currentCurve: currCurve,
+      curves: localCurves,
+    } = stateRef.current;
 
-  const isNear = (pt1, pt2, distance = 10) => {
-    const dx = pt1.x - pt2.x;
-    const dy = pt1.y - pt2.y;
-    return dx * dx + dy * dy <= distance * distance;
-  };
-
-  const handleMouseDown = (e) => {
-    const pos = getMousePos(e);
-
-    if (drawing) {
-      const newCurve = [...currentCurve, pos];
-      setCurrentCurve(newCurve);
+    if (isDrawing) {
+      // Tap-to-Finalize: Tap very close to the last point to save curve immediately
+      const lastPt = currCurve[currCurve.length - 1];
+      if (lastPt && Math.hypot(lastPt.x - pos.x, lastPt.y - pos.y) < 22) {
+        handleFinish();
+        return;
+      }
+      setCurrentCurve((prev) => [...prev, pos]);
       return;
     }
 
-    if (selectedCurveIndex !== null) {
-      const curve = curves[selectedCurveIndex];
-      for (let i = 0; i < curve.length; i++) {
-        if (isNear(pos, curve[i])) {
-          setDragging(i);
-          return;
-        }
-      }
-    }
-
-    const hitIndex = curves.findIndex((curve) =>
-      curve.some((pt) => isNear(pt, pos, 8))
+    // Hit testing for existing points
+    const hitIdx = localCurves.findIndex((c) =>
+      c.some((pt) => Math.hypot(pt.x - pos.x, pt.y - pos.y) < 15),
     );
-
-    if (hitIndex !== -1) {
-      setSelectedCurveIndex(hitIndex);
+    if (hitIdx !== -1) {
+      setSelectedCurveIndex(hitIdx);
+      const ptIdx = localCurves[hitIdx].findIndex(
+        (pt) => Math.hypot(pt.x - pos.x, pt.y - pos.y) < 15,
+      );
+      setDragging(ptIdx);
       return;
     }
 
-    const newCurve = [pos];
-    setCurrentCurve([pos]);
     setDrawing(true);
+    setCurrentCurve([pos]);
   };
 
-  const handleMouseMove = (e) => {
-    const pos = getMousePos(e);
+  const handleMove = (e) => {
+    const pos = getPointerPos(e);
     setMousePos(pos);
 
-    if (dragging !== null && selectedCurveIndex !== null) {
-      setCurves((prev) => {
-        const newCurves = [...prev];
-        const updatedCurve = [...newCurves[selectedCurveIndex]];
-        updatedCurve[dragging] = pos;
-        newCurves[selectedCurveIndex] = updatedCurve;
-        return newCurves;
-      });
+    const {
+      dragging: dragIdx,
+      selectedCurveIndex: selIdx,
+      curves: localCurves,
+    } = stateRef.current;
+    if (dragIdx !== null && selIdx !== null) {
+      const newCurves = [...localCurves];
+      newCurves[selIdx][dragIdx] = pos;
+      setCurves(newCurves);
     }
   };
 
-  const handleMouseUp = () => {
+  const handleEnd = () => {
     setDragging(null);
-    setMousePos(null);
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && drawing && currentCurve.length > 1) {
-      if (addAction) {
-        const action = ActionCreators.drawCurve(
-          currentCurve,
-          currentColor,
-          brushSize,
-          strokeStyle
-        );
-        addAction(action);
+  // Safe Unmount Auto-Commit Effect: Saves progress instantly when user changes active tools
+  useEffect(() => {
+    return () => {
+      const {
+        currentCurve: currCurve,
+        currentColor: color,
+        brushSize: size,
+        strokeStyle: style,
+      } = stateRef.current;
+
+      if (currCurve && currCurve.length > 1) {
+        const action = createAction("drawing", "DRAW_CURVE", {
+          points: currCurve,
+          color,
+          strokeWidth: size,
+          strokeStyle: style,
+        });
+        // Defer dispatch briefly to prevent React commit conflicts
+        setTimeout(() => {
+          addAction(action);
+        }, 0);
       }
-
-      setCurrentCurve([]);
-      setMousePos(null);
-      setDrawing(false);
-      setSelectedCurveIndex(null);
-      setCurveId("");
-
-      setTimeout(() => {
-        setActiveTool(null);
-      }, 50);
-
-      if (onFinishCurve) {
-        onFinishCurve(currentCurve);
-      }
-    }
-  };
-
-  useEffect(draw, [
-    curves,
-    currentCurve,
-    selectedCurveIndex,
-    dragging,
-    drawing,
-    mousePos,
-  ]);
+    };
+  }, [addAction, createAction]);
 
   useEffect(() => {
     if (!active) return;
-
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    canvas.addEventListener("mousedown", handleMouseDown);
-    canvas.addEventListener("mousemove", handleMouseMove);
-    canvas.addEventListener("mouseup", handleMouseUp);
-    window.addEventListener("keydown", handleKeyDown);
+    canvas.addEventListener("mousedown", handleStart);
+    canvas.addEventListener("mousemove", handleMove);
+    canvas.addEventListener("mouseup", handleEnd);
+    canvas.addEventListener("touchstart", handleStart, { passive: false });
+    canvas.addEventListener("touchmove", handleMove, { passive: false });
+    canvas.addEventListener("touchend", handleEnd);
+
+    const handleKey = (e) => {
+      if (e.key === "Enter") handleFinish();
+      if (e.key === "Escape") {
+        setDrawing(false);
+        setCurrentCurve([]);
+      }
+    };
+    window.addEventListener("keydown", handleKey);
 
     return () => {
-      canvas.removeEventListener("mousedown", handleMouseDown);
-      canvas.removeEventListener("mousemove", handleMouseMove);
-      canvas.removeEventListener("mouseup", handleMouseUp);
-      window.removeEventListener("keydown", handleKeyDown);
+      canvas.removeEventListener("mousedown", handleStart);
+      canvas.removeEventListener("mousemove", handleMove);
+      canvas.removeEventListener("mouseup", handleEnd);
+      canvas.removeEventListener("touchstart", handleStart);
+      canvas.removeEventListener("touchmove", handleMove);
+      canvas.removeEventListener("touchend", handleEnd);
+      window.removeEventListener("keydown", handleKey);
     };
-  }, [active, currentCurve, curves, dragging, selectedCurveIndex]);
+  }, [active, canvasRef]); // Runs once on mounting/activation
 
   return null;
 };

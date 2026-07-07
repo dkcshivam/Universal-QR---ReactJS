@@ -6,7 +6,7 @@ import React, {
   useImperativeHandle,
 } from "react";
 import { Stage, Layer, Arrow, Transformer } from "react-konva";
-import { getDashPattern }   from "@/utils/getStrokePattern";
+import { getDashPattern } from "@/utils/getStrokePattern";
 import { KONVA_THRESHOLDS } from "@/utils/konvaThreshold";
 
 const ArrowKonva = forwardRef(
@@ -31,15 +31,15 @@ const ArrowKonva = forwardRef(
       checkTrashZoneCollision,
       updateTrashZoneState,
     },
-    ref
+    ref,
   ) => {
-    const [newArrow,      setNewArrow]      = useState(null);
-    const [selectedId,    setSelectedId]    = useState(null);
-    const [lastDist,      setLastDist]      = useState(0);
-    const [lastRotation,  setLastRotation]  = useState(0);
+    const [newArrow, setNewArrow] = useState(null);
+    const [selectedId, setSelectedId] = useState(null);
+    const [lastDist, setLastDist] = useState(0);
+    const [lastRotation, setLastRotation] = useState(0);
 
     const stageRef = useRef(null);
-    const trRef    = useRef(null);
+    const trRef = useRef(null);
 
     // ── imperative handle ──────────────────────────────────────────────────
     useImperativeHandle(ref, () => ({
@@ -91,9 +91,15 @@ const ArrowKonva = forwardRef(
         setArrows((arrs) =>
           arrs.map((a) =>
             a.id === selectedId
-              ? { ...a, stroke: color, strokeWidth: brushSize, strokeStyle, dash: getDashPattern(strokeStyle, brushSize) }
-              : a
-          )
+              ? {
+                  ...a,
+                  stroke: color,
+                  strokeWidth: brushSize,
+                  strokeStyle,
+                  dash: getDashPattern(strokeStyle, brushSize),
+                }
+              : a,
+          ),
         );
       }
     }, [color, selectedId, brushSize, strokeStyle]);
@@ -102,9 +108,9 @@ const ArrowKonva = forwardRef(
     const constrainToBounds = (points, canvasWidth, canvasHeight) => {
       const [x1, y1, x2, y2] = points;
       return [
-        Math.max(0, Math.min(canvasWidth,  x1)),
+        Math.max(0, Math.min(canvasWidth, x1)),
         Math.max(0, Math.min(canvasHeight, y1)),
-        Math.max(0, Math.min(canvasWidth,  x2)),
+        Math.max(0, Math.min(canvasWidth, x2)),
         Math.max(0, Math.min(canvasHeight, y2)),
       ];
     };
@@ -112,8 +118,7 @@ const ArrowKonva = forwardRef(
     const getDistance = (p1, p2) =>
       Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
 
-    const getAngle = (p1, p2) =>
-      Math.atan2(p2.y - p1.y, p2.x - p1.x);
+    const getAngle = (p1, p2) => Math.atan2(p2.y - p1.y, p2.x - p1.x);
 
     const getCenter = (p1, p2) => ({
       x: (p1.x + p2.x) / 2,
@@ -162,7 +167,7 @@ const ArrowKonva = forwardRef(
         points: [
           newArrow.points[0],
           newArrow.points[1],
-          Math.max(0, Math.min(width,  pos.x)),
+          Math.max(0, Math.min(width, pos.x)),
           Math.max(0, Math.min(height, pos.y)),
         ],
       });
@@ -173,7 +178,9 @@ const ArrowKonva = forwardRef(
       if (e.evt) e.evt.preventDefault();
 
       const [x1, y1, x2, y2] = newArrow.points;
-      const arrowLength = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+      const arrowLength = Math.sqrt(
+        Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2),
+      );
 
       if (arrowLength >= KONVA_THRESHOLDS.MIN_ARROW_LENGTH) {
         setArrows((arrs) => [...arrs, newArrow]);
@@ -187,36 +194,50 @@ const ArrowKonva = forwardRef(
       const touch1 = e.evt.touches[0];
       const touch2 = e.evt.touches[1];
 
-      if (newArrow && !touch2) { handleMouseMove(e); return; }
+      if (newArrow && !touch2) {
+        handleMouseMove(e);
+        return;
+      }
 
       if (touch1 && touch2 && selectedId) {
         e.evt.preventDefault();
 
-        const dist  = getDistance({ x: touch1.clientX, y: touch1.clientY }, { x: touch2.clientX, y: touch2.clientY });
-        const angle = getAngle   ({ x: touch1.clientX, y: touch1.clientY }, { x: touch2.clientX, y: touch2.clientY });
+        const dist = getDistance(
+          { x: touch1.clientX, y: touch1.clientY },
+          { x: touch2.clientX, y: touch2.clientY },
+        );
+        const angle = getAngle(
+          { x: touch1.clientX, y: touch1.clientY },
+          { x: touch2.clientX, y: touch2.clientY },
+        );
 
         if (lastDist > 0) {
-          const scale         = dist / lastDist;
+          const scale = dist / lastDist;
           const rotationDelta = angle - lastRotation;
 
           setArrows((arrs) =>
             arrs.map((a) => {
               if (a.id !== selectedId) return a;
               const [x1, y1, x2, y2] = a.points;
-              const cx  = (x1 + x2) / 2, cy = (y1 + y2) / 2;
-              const len = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+              const cx = (x1 + x2) / 2,
+                cy = (y1 + y2) / 2;
+              const len = Math.sqrt(
+                Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2),
+              );
               const ang = Math.atan2(y2 - y1, x2 - x1);
-              const nl  = len * scale;
-              const na  = ang + rotationDelta;
-              const hl  = nl / 2;
+              const nl = len * scale;
+              const na = ang + rotationDelta;
+              const hl = nl / 2;
               return {
                 ...a,
                 points: [
-                  cx - hl * Math.cos(na), cy - hl * Math.sin(na),
-                  cx + hl * Math.cos(na), cy + hl * Math.sin(na),
+                  cx - hl * Math.cos(na),
+                  cy - hl * Math.sin(na),
+                  cx + hl * Math.cos(na),
+                  cy + hl * Math.sin(na),
                 ],
               };
-            })
+            }),
           );
         }
         setLastDist(dist);
@@ -241,67 +262,89 @@ const ArrowKonva = forwardRef(
     };
 
     const handleTransformEnd = (e, id) => {
-      const node         = e.target;
+      const node = e.target;
       const previousArrow = arrows.find((a) => a.id === id);
 
-      const scaleX   = node.scaleX();
-      const scaleY   = node.scaleY();
+      const scaleX = node.scaleX();
+      const scaleY = node.scaleY();
       const rotation = node.rotation();
       const oldPoints = node.points();
 
-      const cx  = (oldPoints[0] + oldPoints[2]) / 2;
-      const cy  = (oldPoints[1] + oldPoints[3]) / 2;
-      const len = Math.sqrt(Math.pow(oldPoints[2] - oldPoints[0], 2) + Math.pow(oldPoints[3] - oldPoints[1], 2));
-      const ang = Math.atan2(oldPoints[3] - oldPoints[1], oldPoints[2] - oldPoints[0]);
-      const nl  = len * Math.max(scaleX, scaleY);
-      const na  = ang + (rotation * Math.PI) / 180;
-      const hl  = nl / 2;
+      const cx = (oldPoints[0] + oldPoints[2]) / 2;
+      const cy = (oldPoints[1] + oldPoints[3]) / 2;
+      const len = Math.sqrt(
+        Math.pow(oldPoints[2] - oldPoints[0], 2) +
+          Math.pow(oldPoints[3] - oldPoints[1], 2),
+      );
+      const ang = Math.atan2(
+        oldPoints[3] - oldPoints[1],
+        oldPoints[2] - oldPoints[0],
+      );
+      const nl = len * Math.max(scaleX, scaleY);
+      const na = ang + (rotation * Math.PI) / 180;
+      const hl = nl / 2;
 
       const constrainedPoints = constrainToBounds(
-        [cx - hl * Math.cos(na), cy - hl * Math.sin(na), cx + hl * Math.cos(na), cy + hl * Math.sin(na)],
-        width, height
+        [
+          cx - hl * Math.cos(na),
+          cy - hl * Math.sin(na),
+          cx + hl * Math.cos(na),
+          cy + hl * Math.sin(na),
+        ],
+        width,
+        height,
       );
 
-      node.scaleX(1); node.scaleY(1); node.rotation(0); node.x(0); node.y(0);
+      node.scaleX(1);
+      node.scaleY(1);
+      node.rotation(0);
+      node.x(0);
+      node.y(0);
 
       const updated = {
         ...previousArrow,
         points: constrainedPoints,
-        stroke: color, strokeWidth: brushSize, strokeStyle,
+        stroke: color,
+        strokeWidth: brushSize,
+        strokeStyle,
         dash: getDashPattern(strokeStyle, brushSize),
       };
 
       setArrows((arrs) => arrs.map((a) => (a.id === id ? updated : a)));
 
       if (onMove && previousArrow) {
-        const changed = !previousArrow.points.every((p, i) => p === constrainedPoints[i]);
+        const changed = !previousArrow.points.every(
+          (p, i) => p === constrainedPoints[i],
+        );
         if (changed) onMove(id, updated, previousArrow);
       }
     };
 
     const handleDragMove = (e, id) => {
       if (!checkTrashZoneCollision || !updateTrashZoneState) return;
-      const node      = e.target;
-      const stage     = node.getStage();
-      const { x, y }  = node.position();
-      const pts        = node.points();
+      const node = e.target;
+      const stage = node.getStage();
+      const { x, y } = node.position();
+      const pts = node.points();
       const cx = (pts[0] + pts[2]) / 2;
       const cy = (pts[1] + pts[3]) / 2;
       const rect = stage.container().getBoundingClientRect();
-      updateTrashZoneState(checkTrashZoneCollision(rect.left + cx + x, rect.top + cy + y));
+      updateTrashZoneState(
+        checkTrashZoneCollision(rect.left + cx + x, rect.top + cy + y),
+      );
     };
 
     const handleDragEnd = (e, id) => {
-      const node       = e.target;
-      const stage      = node.getStage();
-      const x          = node.x();
-      const y          = node.y();
+      const node = e.target;
+      const stage = node.getStage();
+      const x = node.x();
+      const y = node.y();
       const previousArrow = arrows.find((a) => a.id === id);
 
       updateTrashZoneState?.(false);
 
       const rect = stage.container().getBoundingClientRect();
-      const pts  = node.points();
+      const pts = node.points();
       const cx = (pts[0] + pts[2]) / 2 + x;
       const cy = (pts[1] + pts[3]) / 2 + y;
 
@@ -314,21 +357,27 @@ const ArrowKonva = forwardRef(
 
       const newPoints = constrainToBounds(
         [pts[0] + x, pts[1] + y, pts[2] + x, pts[3] + y],
-        width, height
+        width,
+        height,
       );
-      node.x(0); node.y(0);
+      node.x(0);
+      node.y(0);
 
       const updated = {
         ...previousArrow,
         points: newPoints,
-        stroke: color, strokeWidth: brushSize, strokeStyle,
+        stroke: color,
+        strokeWidth: brushSize,
+        strokeStyle,
         dash: getDashPattern(strokeStyle, brushSize),
       };
 
       setArrows((arrs) => arrs.map((a) => (a.id === id ? updated : a)));
 
       if (onMove && previousArrow) {
-        const changed = !previousArrow.points.every((p, i) => p === newPoints[i]);
+        const changed = !previousArrow.points.every(
+          (p, i) => p === newPoints[i],
+        );
         if (changed) onMove(id, updated, previousArrow);
       }
     };
@@ -339,7 +388,14 @@ const ArrowKonva = forwardRef(
         width={width}
         height={height}
         ref={stageRef}
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 30, pointerEvents: active ? "auto" : "none" }}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          zIndex: 30,
+          pointerEvents: active ? "auto" : "none",
+        }}
         onMouseDown={handleStageClick}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -374,10 +430,16 @@ const ArrowKonva = forwardRef(
               pointerWidth={15}
               fill={arrow.stroke}
               draggable={arrow.draggable}
-              onClick={(e) => { e.cancelBubble = true; handleArrowClick(arrow.id); }}
-              onTap={(e)   => { e.cancelBubble = true; handleArrowClick(arrow.id); }}
+              onClick={(e) => {
+                e.cancelBubble = true;
+                handleArrowClick(arrow.id);
+              }}
+              onTap={(e) => {
+                e.cancelBubble = true;
+                handleArrowClick(arrow.id);
+              }}
               onDragMove={(e) => handleDragMove(e, arrow.id)}
-              onDragEnd={(e)  => handleDragEnd(e, arrow.id)}
+              onDragEnd={(e) => handleDragEnd(e, arrow.id)}
               onTransformEnd={(e) => handleTransformEnd(e, arrow.id)}
             />
           ))}
@@ -399,14 +461,21 @@ const ArrowKonva = forwardRef(
           <Transformer
             ref={trRef}
             rotateEnabled={true}
-            enabledAnchors={["top-left","top-right","bottom-left","bottom-right","middle-left","middle-right"]}
+            enabledAnchors={[
+              "top-left",
+              "top-right",
+              "bottom-left",
+              "bottom-right",
+              "middle-left",
+              "middle-right",
+            ]}
             anchorSize={8}
             borderDash={[4, 4]}
           />
         </Layer>
       </Stage>
     );
-  }
+  },
 );
 
 ArrowKonva.displayName = "ArrowKonva";

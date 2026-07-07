@@ -33,7 +33,7 @@ const KonvaRectangle = forwardRef(
       updateTrashZoneState,
       onMove,
     },
-    ref
+    ref,
   ) => {
     const [newRect, setNewRect] = useState(null);
     const [selectedId, setSelectedId] = useState(null);
@@ -120,12 +120,21 @@ const KonvaRectangle = forwardRef(
                     dash: getDashPattern(strokeStyle, brushSize),
                     fill: backgroundColor || "transparent",
                   }
-                : r
-            )
+                : r,
+            ),
           );
         }
       }
-    }, [color, backgroundColor, selectedId, strokeStyle, brushSize, active, rectangles, setRectangles]);
+    }, [
+      color,
+      backgroundColor,
+      selectedId,
+      strokeStyle,
+      brushSize,
+      active,
+      rectangles,
+      setRectangles,
+    ]);
 
     const handleMouseDown = (e) => {
       if (!active) return;
@@ -184,7 +193,7 @@ const KonvaRectangle = forwardRef(
         if (setRectangles) {
           setRectangles((rects) => [...rects, newRect]);
         }
-        
+
         if (onAdd) {
           onAdd(newRect); // Commit to parent history layout array
         }
@@ -198,7 +207,8 @@ const KonvaRectangle = forwardRef(
 
       setSelectedId(id);
       if (setColor) setColor(clickedRect.stroke || "#000000");
-      if (setBackgroundColor) setBackgroundColor(clickedRect.fill || "transparent");
+      if (setBackgroundColor)
+        setBackgroundColor(clickedRect.fill || "transparent");
       if (setBrushSize) setBrushSize(clickedRect.strokeWidth || 3);
       if (setStrokeStyle) setStrokeStyle(clickedRect.strokeStyle || "solid");
 
@@ -236,7 +246,10 @@ const KonvaRectangle = forwardRef(
       const screenX = stageRect.left + x;
       const screenY = stageRect.top + y;
 
-      if (checkTrashZoneCollision && checkTrashZoneCollision(screenX, screenY)) {
+      if (
+        checkTrashZoneCollision &&
+        checkTrashZoneCollision(screenX, screenY)
+      ) {
         if (onMove && previousRect) {
           onMove(id, null, previousRect, "DELETE");
         } else if (setRectangles) {
@@ -250,7 +263,11 @@ const KonvaRectangle = forwardRef(
 
       const updated = { ...previousRect, x, y };
 
-      if (onMove && previousRect && (previousRect.x !== x || previousRect.y !== y)) {
+      if (
+        onMove &&
+        previousRect &&
+        (previousRect.x !== x || previousRect.y !== y)
+      ) {
         onMove(id, updated, previousRect);
       } else if (setRectangles) {
         setRectangles((rects) => rects.map((r) => (r.id === id ? updated : r)));
@@ -267,8 +284,14 @@ const KonvaRectangle = forwardRef(
       const scaleY = node.scaleY();
       const rotation = node.rotation();
 
-      const newWidth = Math.max(KONVA_THRESHOLDS?.MIN_RECT_WIDTH ?? 2, node.width() * scaleX);
-      const newHeight = Math.max(KONVA_THRESHOLDS?.MIN_RECT_HEIGHT ?? 2, node.height() * scaleY);
+      const newWidth = Math.max(
+        KONVA_THRESHOLDS?.MIN_RECT_WIDTH ?? 2,
+        node.width() * scaleX,
+      );
+      const newHeight = Math.max(
+        KONVA_THRESHOLDS?.MIN_RECT_HEIGHT ?? 2,
+        node.height() * scaleY,
+      );
 
       node.scaleX(1);
       node.scaleY(1);
@@ -360,8 +383,14 @@ const KonvaRectangle = forwardRef(
               ref={trRef}
               rotateEnabled={false}
               enabledAnchors={[
-                "top-left", "top-right", "bottom-left", "bottom-right",
-                "middle-left", "middle-right", "top-center", "bottom-center",
+                "top-left",
+                "top-right",
+                "bottom-left",
+                "bottom-right",
+                "middle-left",
+                "middle-right",
+                "top-center",
+                "bottom-center",
               ]}
               anchorSize={8}
               borderDash={[4, 4]}
@@ -370,7 +399,7 @@ const KonvaRectangle = forwardRef(
         </Layer>
       </Stage>
     );
-  }
+  },
 );
 
 export default KonvaRectangle;

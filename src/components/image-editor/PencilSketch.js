@@ -8,12 +8,14 @@ import { useState, useCallback } from "react";
 export function usePencilSketch() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [intensity, setIntensity] = useState(50);
-  
+
   // --- Added OpenCV Initialization Stubs for MVP Testing ---
   const [isOpenCVLoaded, setIsOpenCVLoaded] = useState(true); // Default to true so it skips waiting for an external library script
 
   const loadOpenCV = useCallback(async () => {
-    console.log("loadOpenCV triggered (Stub Mode) - Simulating library connection.");
+    console.log(
+      "loadOpenCV triggered (Stub Mode) - Simulating library connection.",
+    );
     return Promise.resolve(true);
   }, []);
 
@@ -21,7 +23,7 @@ export function usePencilSketch() {
   const applyPencilSketch = useCallback(async (canvasElement) => {
     console.log("Pencil Sketch filter triggered (Stub Mode)", canvasElement);
     setIsProcessing(true);
-    
+
     return new Promise((resolve) => {
       setTimeout(() => {
         setIsProcessing(false);

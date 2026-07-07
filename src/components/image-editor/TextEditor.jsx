@@ -29,7 +29,7 @@ const TextEditor = forwardRef(
       checkTrashZoneCollision,
       updateTrashZoneState,
     },
-    ref
+    ref,
   ) => {
     const [selectedId, setSelectedId] = useState(null);
     const [editingText, setEditingText] = useState(null);
@@ -68,7 +68,7 @@ const TextEditor = forwardRef(
       if (stageRef.current && active) {
         const stage = stageRef.current;
         const drawingCanvas = document.querySelector(
-          'canvas[class*="absolute w-full h-full"]:last-of-type'
+          'canvas[class*="absolute w-full h-full"]:last-of-type',
         );
 
         if (drawingCanvas) {
@@ -116,8 +116,8 @@ const TextEditor = forwardRef(
                   fill: color,
                   backgroundColor: backgroundColor,
                 }
-              : t
-          )
+              : t,
+          ),
         );
       }
     }, [color, backgroundColor, selectedId, active, setTexts]);
@@ -239,7 +239,7 @@ const TextEditor = forwardRef(
         e.evt.preventDefault();
         const dist = getDistance(
           { x: touch1.clientX, y: touch1.clientY },
-          { x: touch2.clientX, y: touch2.clientY }
+          { x: touch2.clientX, y: touch2.clientY },
         );
 
         if (lastDist > 0) {
@@ -252,8 +252,8 @@ const TextEditor = forwardRef(
                     scaleX: (t.scaleX || 1) * scale,
                     scaleY: (t.scaleY || 1) * scale,
                   }
-                : t
-            )
+                : t,
+            ),
           );
         }
         setLastDist(dist);
@@ -268,7 +268,7 @@ const TextEditor = forwardRef(
       setSelectedId(id);
       setColor(texts.find((t) => t.id === id)?.fill || "#000000");
       setBackgroundColor(
-        texts.find((t) => t.id === id)?.backgroundColor || "transparent"
+        texts.find((t) => t.id === id)?.backgroundColor || "transparent",
       );
       if (onElementSelect) {
         onElementSelect(id, "text");
@@ -337,8 +337,8 @@ const TextEditor = forwardRef(
                           fill: color,
                           backgroundColor: backgroundColor,
                         }
-                      : t
-                  )
+                      : t,
+                  ),
                 );
               } else {
                 const newId = `text-${Date.now()}`;
@@ -514,7 +514,7 @@ const TextEditor = forwardRef(
         {renderTextarea()}
       </div>
     );
-  }
+  },
 );
 
 export default TextEditor;

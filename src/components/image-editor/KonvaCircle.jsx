@@ -33,7 +33,7 @@ const KonvaCircle = forwardRef(
       checkTrashZoneCollision,
       updateTrashZoneState,
     },
-    ref
+    ref,
   ) => {
     const [newCircle, setNewCircle] = useState(null);
     const [selectedId, setSelectedId] = useState(null);
@@ -162,7 +162,7 @@ const KonvaCircle = forwardRef(
       const uniformScale = Math.max(Math.abs(scaleX), Math.abs(scaleY));
       const newRadius = Math.max(
         previousCircle.radius * uniformScale,
-        KONVA_THRESHOLDS.MIN_CIRCLE_RADIUS
+        KONVA_THRESHOLDS.MIN_CIRCLE_RADIUS,
       );
 
       const newCenterX = previousCircle.x;
@@ -237,7 +237,7 @@ const KonvaCircle = forwardRef(
       }
 
       setCircles((circles) =>
-        circles.map((c) => (c.id === id ? { ...c, x, y } : c))
+        circles.map((c) => (c.id === id ? { ...c, x, y } : c)),
       );
 
       if (
@@ -279,11 +279,18 @@ const KonvaCircle = forwardRef(
                       fill: backgroundColor,
                     }),
                 }
-              : c
-          )
+              : c,
+          ),
         );
       }
-    }, [color, backgroundColor, selectedId, strokeStyle, brushSize, setCircles]);
+    }, [
+      color,
+      backgroundColor,
+      selectedId,
+      strokeStyle,
+      brushSize,
+      setCircles,
+    ]);
 
     return (
       <Stage
@@ -371,7 +378,7 @@ const KonvaCircle = forwardRef(
         </Layer>
       </Stage>
     );
-  }
+  },
 );
 
 export default KonvaCircle;

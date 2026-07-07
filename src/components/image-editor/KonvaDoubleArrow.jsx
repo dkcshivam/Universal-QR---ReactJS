@@ -31,30 +31,15 @@ const KonvaDoubleArrow = forwardRef(
       checkTrashZoneCollision,
       updateTrashZoneState,
     },
-    ref
+    ref,
   ) => {
     const [newArrow, setNewArrow] = useState(null);
     const [selectedId, setSelectedId] = useState(null);
     const stageRef = useRef(null);
     const trRef = useRef(null);
 
-    const [lastDist, setLastDist] = useState(0);
-    const [lastRotation, setLastRotation] = useState(0);
-
-    const getDistance = (p1, p2) => {
-      return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
-    };
-
-    const getAngle = (p1, p2) => {
-      return Math.atan2(p2.y - p1.y, p2.x - p1.x);
-    };
-
-    const getCenter = (p1, p2) => {
-      return {
-        x: (p1.x + p2.x) / 2,
-        y: (p1.y + p2.y) / 2,
-      };
-    };
+    // Responsive sizing check for touch interactions
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
 
     useImperativeHandle(ref, () => ({
       flatten: () => {
@@ -75,7 +60,7 @@ const KonvaDoubleArrow = forwardRef(
 
     useEffect(() => {
       const handleKeyDown = (e) => {
-        if (e.key === "Delete" && selectedId) {
+        if ((e.key === "Delete" || e.key === "Backspace") && selectedId) {
           setArrows((arrs) => arrs.filter((a) => a.id !== selectedId));
           setSelectedId(null);
         }
@@ -98,26 +83,6 @@ const KonvaDoubleArrow = forwardRef(
     }, [selectedId, arrows]);
 
     useEffect(() => {
-      const handleKeyDown = (e) => {
-        if ((e.key === "Delete" || e.key === "Backspace") && selectedId) {
-          setArrows((arrows) => arrows.filter((a) => a.id !== selectedId));
-          setSelectedId(null);
-        }
-      };
-      window.addEventListener("keydown", handleKeyDown);
-      return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [selectedId, setArrows]);
-
-    const handleTouchEnd = (e) => {
-      setLastDist(0);
-      setLastRotation(0);
-
-      if (newArrow && !e.evt.touches.length) {
-        handleMouseUp(e);
-      }
-    };
-
-    useEffect(() => {
       if (selectedId) {
         setArrows((arrs) =>
           arrs.map((a) =>
@@ -129,15 +94,15 @@ const KonvaDoubleArrow = forwardRef(
                   strokeStyle: strokeStyle,
                   dash: getDashPattern(strokeStyle, brushSize),
                 }
-              : a
-          )
+              : a,
+          ),
         );
       }
     }, [color, selectedId, brushSize, strokeStyle, setArrows]);
 
     const handleStageClick = (e) => {
       if (!active) return;
-      if (e.evt) {
+      if (e.evt && e.evt.cancelable) {
         e.evt.preventDefault();
       }
 
@@ -169,7 +134,7 @@ const KonvaDoubleArrow = forwardRef(
 
     const handleMouseMove = (e) => {
       if (!active || !newArrow) return;
-      if (e.evt) {
+      if (e.evt && e.evt.cancelable) {
         e.evt.preventDefault();
       }
 
@@ -184,13 +149,13 @@ const KonvaDoubleArrow = forwardRef(
 
     const handleMouseUp = (e) => {
       if (!active || !newArrow) return;
-      if (e.evt) {
+      if (e.evt && e.evt.cancelable) {
         e.evt.preventDefault();
       }
 
       const [x1, y1, x2, y2] = newArrow.points;
       const arrowLength = Math.sqrt(
-        Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)
+        Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2),
       );
 
       if (arrowLength >= KONVA_THRESHOLDS.MIN_DOUBLE_ARROW_LENGTH) {
@@ -200,6 +165,12 @@ const KonvaDoubleArrow = forwardRef(
         }
       }
       setNewArrow(null);
+    };
+
+    const handleTouchEnd = (e) => {
+      if (newArrow) {
+        handleMouseUp(e);
+      }
     };
 
     const constrainToBounds = (points, canvasWidth, canvasHeight) => {
@@ -233,8 +204,6 @@ const KonvaDoubleArrow = forwardRef(
       const scaleX = node.scaleX();
       const scaleY = node.scaleY();
       const rotation = node.rotation();
-      const x = node.x();
-      const y = node.y();
       const oldPoints = node.points();
 
       const centerX = (oldPoints[0] + oldPoints[2]) / 2;
@@ -242,11 +211,11 @@ const KonvaDoubleArrow = forwardRef(
 
       const originalLength = Math.sqrt(
         Math.pow(oldPoints[2] - oldPoints[0], 2) +
-          Math.pow(oldPoints[3] - oldPoints[1], 2)
+          Math.pow(oldPoints[3] - oldPoints[1], 2),
       );
       const originalAngle = Math.atan2(
         oldPoints[3] - oldPoints[1],
-        oldPoints[2] - oldPoints[0]
+        oldPoints[2] - oldPoints[0],
       );
 
       const newLength = originalLength * Math.max(scaleX, scaleY);
@@ -281,7 +250,7 @@ const KonvaDoubleArrow = forwardRef(
 
       if (onMove && previousArrow) {
         const hasChanged = !previousArrow.points.every(
-          (point, index) => point === constrainedPoints[index]
+          (point, index) => point === constrainedPoints[index],
         );
         if (hasChanged) {
           onMove(id, newArrow, previousArrow);
@@ -370,7 +339,7 @@ const KonvaDoubleArrow = forwardRef(
 
       if (onMove && previousArrow) {
         const hasChanged = !previousArrow.points.every(
-          (point, index) => point === newPoints[index]
+          (point, index) => point === newPoints[index],
         );
         if (hasChanged) {
           onMove(id, newArrow, previousArrow);
@@ -395,6 +364,7 @@ const KonvaDoubleArrow = forwardRef(
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onTouchStart={handleStageClick}
+        onTouchMove={handleMouseMove}
         onTouchEnd={handleTouchEnd}
         onClick={(e) => {
           const clickedOnEmpty = e.target === e.target.getStage();
@@ -469,13 +439,13 @@ const KonvaDoubleArrow = forwardRef(
               "bottom-left",
               "bottom-right",
             ]}
-            anchorSize={8}
+            anchorSize={isMobile ? 18 : 8}
             borderDash={[4, 4]}
           />
         </Layer>
       </Stage>
     );
-  }
+  },
 );
 
 export default KonvaDoubleArrow;

@@ -1,11 +1,9 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { ActionCreators } from "@/utils/actionCreators";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 
 const CurveArrowTool = ({
   active,
   canvasRef,
   onFinishCurve,
-  setActiveTool,
   currentColor,
   strokeStyle,
   brushSize,
@@ -13,121 +11,130 @@ const CurveArrowTool = ({
   replayManager,
   historyState,
 }) => {
-  const [currentCurve, setCurrentCurve] = useState([]);
   const [drawing, setDrawing] = useState(false);
+  const curveRef = useRef([]);
+  const requestRef = useRef();
 
-  const drawArrow = (ctx, from, to, size) => {
+  // Unified ref keeps config fresh without thrashing canvas listeners
+  const stateRef = useRef({
+    drawing: false,
+    currentColor,
+    strokeStyle,
+    brushSize,
+    historyState,
+    replayManager,
+  });
+
+  // Keep stateRef in sync whenever drawing configs or history update
+  useEffect(() => {
+    stateRef.current = {
+      drawing,
+      currentColor,
+      strokeStyle,
+      brushSize,
+      historyState,
+      replayManager,
+    };
+  }, [
+    drawing,
+    currentColor,
+    strokeStyle,
+    brushSize,
+    historyState,
+    replayManager,
+  ]);
+
+  // Helper to draw the arrowhead
+  const drawArrowHead = (ctx, from, to, size, color) => {
     const headLength = Math.max(10, size * 2.5);
     const angle = Math.atan2(to.y - from.y, to.x - from.x);
-
-    const endX = to.x;
-    const endY = to.y;
-
     ctx.save();
-    ctx.strokeStyle = currentColor;
-    ctx.fillStyle = currentColor;
-    ctx.lineWidth = size;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = Math.max(1.5, size * 0.9);
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-
     ctx.beginPath();
     ctx.moveTo(
-      endX - headLength * Math.cos(angle - Math.PI / 6),
-      endY - headLength * Math.sin(angle - Math.PI / 6)
+      to.x - headLength * Math.cos(angle - Math.PI / 6),
+      to.y - headLength * Math.sin(angle - Math.PI / 6),
     );
-    ctx.lineTo(endX, endY);
+    ctx.lineTo(to.x, to.y);
     ctx.lineTo(
-      endX - headLength * Math.cos(angle + Math.PI / 6),
-      endY - headLength * Math.sin(angle + Math.PI / 6)
+      to.x - headLength * Math.cos(angle + Math.PI / 6),
+      to.y - headLength * Math.sin(angle + Math.PI / 6),
     );
-
-    ctx.lineWidth = Math.max(1.5, size * 0.9);
     ctx.stroke();
     ctx.restore();
   };
 
-  // Dedicated helper to trigger history-state context redrawing
-  const forceHistoryReplay = useCallback((ctx, canvas) => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (replayManager?.current && historyState?.actions) {
-      const drawingActions = historyState.actions.filter(
-        (a) => a.target === "drawing"
-      );
-      drawingActions.forEach((drawingAction) => {
-        replayManager.current.applyDrawingAction(drawingAction);
-      });
-    }
-  }, [historyState, replayManager]);
-
-  const draw = useCallback(() => {
+  const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
 
-    // 1. Clear layout workspace and replay background histories
-    forceHistoryReplay(ctx, canvas);
+    const {
+      currentColor: color,
+      brushSize: size,
+      strokeStyle: style,
+      historyState: hist,
+      replayManager: replay,
+    } = stateRef.current;
 
-    // 2. Render real-time feedback while dragging
-    if (drawing && currentCurve.length >= 2) {
+    // 1. Clear context for fresh rendering
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 2. Replay persistent history state
+    if (replay?.current && hist?.actions) {
+      const drawingActions = hist.actions.filter((a) => a.target === "drawing");
+      drawingActions.forEach((a) => replay.current.applyDrawingAction(a));
+    }
+
+    // 3. Render current active curve stroke
+    const pts = curveRef.current;
+    if (pts.length >= 2) {
       ctx.save();
       ctx.beginPath();
-      ctx.moveTo(currentCurve[0].x, currentCurve[0].y);
+      ctx.moveTo(pts[0].x, pts[0].y);
 
-      // Generate a smooth quadratic Bezier curve
-      for (let i = 0; i < currentCurve.length - 1; i++) {
-        const p0 = currentCurve[i - 1] || currentCurve[i];
-        const p1 = currentCurve[i];
-        const p2 = currentCurve[i + 1];
-        const p3 = currentCurve[i + 2] || p2;
+      const start = pts[0];
+      const end = pts[pts.length - 1];
+      const mid =
+        pts.length === 3
+          ? pts[1]
+          : { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
 
-        const cp1x = p1.x + (p2.x - p0.x) / 6;
-        const cp1y = p1.y + (p2.y - p0.y) / 6;
-        const cp2x = p2.x - (p3.x - p1.x) / 6;
-        const cp2y = p2.y - (p3.y - p1.y) / 6;
+      ctx.quadraticCurveTo(mid.x, mid.y, end.x, end.y);
 
-        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
-      }
-
-      ctx.strokeStyle = currentColor;
-      ctx.lineWidth = brushSize;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = size;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
 
-      switch (strokeStyle) {
-        case "dashed":
-          ctx.setLineDash([brushSize * 3, brushSize * 2]);
-          break;
-        case "dotted":
-          ctx.setLineDash([brushSize, brushSize]);
-          break;
-        default:
-          ctx.setLineDash([]);
-      }
+      if (style === "dashed") ctx.setLineDash([size * 3, size * 2]);
+      else if (style === "dotted") ctx.setLineDash([size, size]);
+      else ctx.setLineDash([]);
 
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Draw vector arrows dynamically at both endpoints
-      drawArrow(
-        ctx,
-        currentCurve[Math.max(0, currentCurve.length - 2)],
-        currentCurve[currentCurve.length - 1],
-        brushSize
-      );
-      drawArrow(ctx, currentCurve[1], currentCurve[0], brushSize);
+      // Render arrowheads on both ends
+      drawArrowHead(ctx, mid, end, size, color);
+      drawArrowHead(ctx, mid, start, size, color);
       ctx.restore();
     }
-  }, [currentCurve, drawing, currentColor, strokeStyle, brushSize, canvasRef, forceHistoryReplay]);
+  }, [canvasRef]);
+
+  // Handle external redraws during history mutations (e.g. undo/redo)
+  useEffect(() => {
+    if (active) renderCanvas();
+  }, [historyState, active, renderCanvas]);
 
   const getEventPos = (e) => {
     const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-
     const rect = canvas.getBoundingClientRect();
-    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
-
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     return {
       x: (clientX - rect.left) * (canvas.width / rect.width),
       y: (clientY - rect.top) * (canvas.height / rect.height),
@@ -135,110 +142,89 @@ const CurveArrowTool = ({
   };
 
   const handleStart = (e) => {
-    if ("touches" in e && e.touches.length > 1) return; // Ignore pinch-zooms
+    if (!active) return;
+    if (e.touches && e.touches.length > 1) return;
+
     const pos = getEventPos(e);
+    curveRef.current = [pos, pos];
     setDrawing(true);
-    setCurrentCurve([pos, pos]); // Seed matching coordinates to build vectors immediately
   };
 
   const handleMove = (e) => {
-    if (!drawing) return;
+    if (!stateRef.current.drawing) return;
     if (e.cancelable) e.preventDefault();
-    const pos = getEventPos(e);
 
-    setCurrentCurve((prev) => {
-      if (prev.length < 2) return [prev[0] || pos, pos];
-      const start = prev[0];
-      
-      // Calculate a midpoint control arc to guarantee a distinct aesthetic curvature on release
-      const midPoint = {
-        x: (start.x + pos.x) / 2 + (pos.y - start.y) * 0.2,
-        y: (start.y + pos.y) / 2 - (pos.x - start.x) * 0.2,
-      };
-      return [start, midPoint, pos];
-    });
+    const pos = getEventPos(e);
+    const start = curveRef.current[0];
+    if (!start) return;
+
+    // Generate midpoint arc offset
+    const midPoint = {
+      x: (start.x + pos.x) / 2 + (pos.y - start.y) * 0.15,
+      y: (start.y + pos.y) / 2 - (pos.x - start.x) * 0.15,
+    };
+
+    curveRef.current = [start, midPoint, pos];
+
+    if (requestRef.current) cancelAnimationFrame(requestRef.current);
+    requestRef.current = requestAnimationFrame(renderCanvas);
   };
 
   const handleEnd = () => {
-    if (!drawing) return;
+    if (!stateRef.current.drawing) return;
     setDrawing(false);
+    cancelAnimationFrame(requestRef.current);
 
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
+    if (curveRef.current.length >= 2) {
+      const {
+        currentColor: color,
+        brushSize: size,
+        strokeStyle: style,
+      } = stateRef.current;
 
-    // Commit shape data using exact functional keys inside actionCreators.js
-    if (currentCurve.length >= 2 && addAction) {
-      const action = ActionCreators.drawCurveArrow(
-        currentCurve,
-        currentColor,
-        brushSize,
-        strokeStyle
-      );
+      const action = {
+        target: "drawing",
+        type: "DRAW_CURVE_ARROW",
+        payload: {
+          points: [...curveRef.current],
+          color,
+          strokeWidth: size,
+          strokeStyle: style,
+        },
+      };
       addAction(action);
-
-      if (onFinishCurve) {
-        onFinishCurve(currentCurve);
-      }
-
-      // CRITICAL FIX: Direct history-force injection re-triggers layout manager execution
-      // right before cleaning memory arrays to avoid empty frame clears on frame release
-      if (ctx && canvas) {
-        const structuralUpdateWithNewAction = {
-          ...historyState,
-          actions: [...(historyState?.actions || []), action]
-        };
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        if (replayManager?.current) {
-          structuralUpdateWithNewAction.actions
-            .filter((a) => a.target === "drawing")
-            .forEach((drawingAction) => {
-              replayManager.current.applyDrawingAction(drawingAction);
-            });
-        }
-      }
+      if (onFinishCurve) onFinishCurve(curveRef.current);
     }
-
-    setCurrentCurve([]);
+    curveRef.current = [];
   };
 
   useEffect(() => {
-    draw();
-  }, [draw]);
-
-  // Clean layout context on internal unmount state updates
-  useEffect(() => {
-    if (!active) {
-      setDrawing(false);
-      setCurrentCurve([]);
-    }
-  }, [active]);
-
-  useEffect(() => {
     if (!active) return;
-
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Desktop Mouse Binding Hooks
+    // Tap/touch triggers inside the viewport canvas bounds
     canvas.addEventListener("mousedown", handleStart);
-    canvas.addEventListener("mousemove", handleMove);
-    window.addEventListener("mouseup", handleEnd);
-
-    // Mobile / Tablet Touch Binding Hooks
     canvas.addEventListener("touchstart", handleStart, { passive: false });
-    canvas.addEventListener("touchmove", handleMove, { passive: false });
-    canvas.addEventListener("touchend", handleEnd);
+
+    // Track move, finish, or gesture drop on the global context to avoid getting stuck
+    window.addEventListener("mousemove", handleMove, { passive: false });
+    window.addEventListener("mouseup", handleEnd);
+    window.addEventListener("touchmove", handleMove, { passive: false });
+    window.addEventListener("touchend", handleEnd);
+    window.addEventListener("touchcancel", handleEnd);
 
     return () => {
       canvas.removeEventListener("mousedown", handleStart);
-      canvas.removeEventListener("mousemove", handleMove);
-      window.removeEventListener("mouseup", handleEnd);
-
       canvas.removeEventListener("touchstart", handleStart);
-      canvas.removeEventListener("touchmove", handleMove);
+
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleEnd);
+      window.removeEventListener("touchmove", handleMove);
       window.removeEventListener("touchend", handleEnd);
+      window.removeEventListener("touchcancel", handleEnd);
     };
-  }, [active, currentCurve, drawing, currentColor, strokeStyle, brushSize]);
+  }, [active, canvasRef]);
 
   return null;
 };
