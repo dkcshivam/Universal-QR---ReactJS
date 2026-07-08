@@ -4,7 +4,7 @@ import {
   replayAllDrawingActions,
 } from "@/utils/canvasReplay";
 
-export function useHistoryManager({ drawingCanvasRef, baseCanvasRef }) {
+export function useHistoryManager({ drawingCanvasRef, baseCanvasRef, setCanvasDimensions }) {
   // ── History stack ────────────────────────────────────────────────────────
   // Stored in refs so addAction / undo / redo never have stale-closure issues.
   const allActionsRef = useRef([]); // full stack including redo-able future
@@ -147,10 +147,13 @@ export function useHistoryManager({ drawingCanvasRef, baseCanvasRef }) {
           canvas.width = id.width;
           canvas.height = id.height;
           ctx.putImageData(id, 0, 0);
+          if (setCanvasDimensions) {
+            setCanvasDimensions({ width: id.width, height: id.height });
+          }
         }
       }
     },
-    [baseCanvasRef],
+    [baseCanvasRef, setCanvasDimensions],
   );
 
   const redoBaseAction = useCallback(
@@ -163,10 +166,19 @@ export function useHistoryManager({ drawingCanvasRef, baseCanvasRef }) {
         const id = action.payload?.newImageData;
         if (id) ctx.putImageData(id, 0, 0);
       }
-      // CROP_IMAGE redo: the crop was already applied; nothing to replay here
-      // (re-applying would require re-running applyCrop logic)
+      if (action.type === "CROP_IMAGE") {
+        const id = action.payload?.croppedImageData;
+        if (id) {
+          canvas.width = id.width;
+          canvas.height = id.height;
+          ctx.putImageData(id, 0, 0);
+          if (setCanvasDimensions) {
+            setCanvasDimensions({ width: id.width, height: id.height });
+          }
+        }
+      }
     },
-    [baseCanvasRef],
+    [baseCanvasRef, setCanvasDimensions],
   );
 
   // ── Public API ────────────────────────────────────────────────────────────

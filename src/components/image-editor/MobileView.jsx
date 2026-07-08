@@ -54,6 +54,7 @@ const MobileView = ({
   setCropArea,
   strokeStyle,
   setStrokeStyle,
+  hasChanges,
 }) => {
   // helper — does the drawing canvas have any pixel content?
   const hasCanvasContent = () => {
@@ -176,7 +177,7 @@ const MobileView = ({
                 key={tool}
                 variant={activeTool === tool ? "secondary" : "ghost"}
                 onClick={() => {
-                  if (hasCanvasContent() && activeTool !== tool) {
+                  if ((hasChanges || hasCanvasContent()) && activeTool !== tool) {
                     confirm(true);
                   } else {
                     handleToolChange("crop");

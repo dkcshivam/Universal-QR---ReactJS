@@ -118,7 +118,11 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     konvaArrowRef,
     konvaDoubleArrowRef,
     textEditorRef,
-  } = useHistoryManager({ drawingCanvasRef, baseCanvasRef });
+  } = useHistoryManager({
+    drawingCanvasRef,
+    baseCanvasRef,
+    setCanvasDimensions,
+  });
 
   // ── lifecycle ──────────────────────────────────────────────────────────────
 
@@ -190,7 +194,6 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
   }, [isOpen, undo, redo]);
 
   // ── canvas drawing ─────────────────────────────────────────────────────────
-
   const drawImageOnCanvas = useCallback(() => {
     const baseCanvas = baseCanvasRef.current;
     const drawingCanvas = drawingCanvasRef.current;
@@ -199,8 +202,10 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     if (!baseCanvas || !baseCtx || !drawingCanvas || !drawingCtx) return;
 
     const img = new Image();
-    // img.crossOrigin = "anonymous";
-    img.src = image.url;
+    img.crossOrigin = "anonymous";
+    const cacheBustedUrl =
+      image.url + (image.url.includes("?") ? "&" : "?") + "cb=" + Date.now();
+    img.src = cacheBustedUrl;
     img.onload = () => {
       const container = baseCanvas.parentElement;
       if (!container) return;
@@ -270,7 +275,6 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
   }, [isOpen, drawImageOnCanvas]);
 
   // ── konva callbacks ────────────────────────────────────────────────────────
-
   const handleKonvaRectAdd = useCallback(
     (rectangle) => {
       addAction(
@@ -686,6 +690,14 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     textInputPosition !== null ||
     cropArea !== null;
 
+  const hasAnyChanges =
+    hasDrawingCanvasContent() ||
+    rectangles.length > 0 ||
+    texts.length > 0 ||
+    arrows.length > 0 ||
+    circles.length > 0 ||
+    doubleArrows.length > 0;
+
   // ── crop ──────────────────────────────────────────────────────────────────
 
   const drawCropOverlay = useCallback(() => {
@@ -730,6 +742,20 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     });
   }, [cropArea]);
 
+  useEffect(() => {
+    if (activeTool === "crop") {
+      if (cropArea) {
+        drawCropOverlay();
+      } else {
+        const canvas = drawingCanvasRef.current;
+        const ctx = canvas?.getContext("2d");
+        if (ctx) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+    }
+  }, [cropArea, activeTool, drawCropOverlay]);
+
   const applyCrop = useCallback(() => {
     if (!cropArea || !baseCanvasRef.current) return;
     const baseCanvas = baseCanvasRef.current;
@@ -750,16 +776,12 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
       width: Math.min(cropArea.width, baseCanvas.width - cropArea.x),
       height: Math.min(cropArea.height, baseCanvas.height - cropArea.y),
     };
-    if (imageData)
-      addAction(createAction("base", "CROP_IMAGE", { cropArea: v, imageData }));
 
     const tmpBase = document.createElement("canvas");
-    const tmpDrawing = document.createElement("canvas");
-    tmpBase.width = tmpDrawing.width = v.width;
-    tmpBase.height = tmpDrawing.height = v.height;
+    tmpBase.width = v.width;
+    tmpBase.height = v.height;
     const tmpBaseCtx = tmpBase.getContext("2d");
-    const tmpDrawingCtx = tmpDrawing.getContext("2d");
-    if (!tmpBaseCtx || !tmpDrawingCtx) return;
+    if (!tmpBaseCtx) return;
 
     tmpBaseCtx.drawImage(
       baseCanvas,
@@ -773,28 +795,6 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
       v.height,
     );
 
-    const dId = drawingCtx.getImageData(
-      0,
-      0,
-      drawingCanvas.width,
-      drawingCanvas.height,
-    );
-    const hasActualDrawing = dId.data.some(
-      (val, i) => i % 4 === 3 && val === 255,
-    );
-    if (!hasActualDrawing)
-      tmpDrawingCtx.drawImage(
-        baseCanvas,
-        v.x,
-        v.y,
-        v.width,
-        v.height,
-        0,
-        0,
-        v.width,
-        v.height,
-      );
-
     baseCanvas.width = drawingCanvas.width = v.width;
     baseCanvas.height = drawingCanvas.height = v.height;
     baseCtx.clearRect(0, 0, v.width, v.height);
@@ -802,7 +802,16 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     baseCtx.globalCompositeOperation = "source-over";
     drawingCtx.globalCompositeOperation = "source-over";
     baseCtx.drawImage(tmpBase, 0, 0);
-    if (hasActualDrawing) drawingCtx.drawImage(tmpDrawing, 0, 0);
+
+    const croppedImageData = baseCtx.getImageData(0, 0, v.width, v.height);
+    if (imageData && croppedImageData)
+      addAction(
+        createAction("base", "CROP_IMAGE", {
+          cropArea: v,
+          imageData,
+          croppedImageData,
+        }),
+      );
 
     setCanvasDimensions({ width: v.width, height: v.height });
     setCropArea(null);
@@ -870,6 +879,15 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
   }, []);
 
+  const flattenAll = useCallback(() => {
+    konvaRectRef.current?.flatten();
+    konvaCircleRef.current?.flatten();
+    konvaArrowRef.current?.flatten();
+    konvaDoubleArrowRef.current?.flatten();
+    textEditorRef.current?.flatten();
+    flattenLayers();
+  }, [flattenLayers]);
+
   // ── mouse / touch drawing ──────────────────────────────────────────────────
 
   const getMousePos = (e) => {
@@ -903,7 +921,6 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
       setIsCropping(true);
       setDragStart(pos);
       setCropArea({ x: pos.x, y: pos.y, width: 0, height: 0 });
-      drawCropOverlay();
       return;
     }
     const ctx = drawingCanvasRef.current?.getContext("2d");
@@ -940,7 +957,6 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
         width: Math.abs(w),
         height: Math.abs(h),
       });
-      requestAnimationFrame(() => drawCropOverlay());
       return;
     }
     if (["pencil", "eraser"].includes(activeTool)) {
@@ -990,7 +1006,6 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
       if (cropArea && cropArea.width > 10 && cropArea.height > 10) {
         setIsCropping(false);
         setDragStart(null);
-        requestAnimationFrame(() => drawCropOverlay());
       } else {
         setCropArea(null);
         setIsCropping(false);
@@ -1079,7 +1094,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
   const handleToolChange = (tool) => {
     if (activeTool === "eraser") setBrushSize(10);
     else if (activeTool === "pencil") setBrushSize(3);
-    if (tool === "crop") {
+    if (tool === "crop" || activeTool === "crop") {
       setCropArea(null);
       setIsCropping(false);
       setDragStart(null);
@@ -1126,18 +1141,18 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     updateTrashZoneState,
   };
 
-//   useEffect(() => {
-//   if (isOpen) {
-//     // Lock background scrolling on mobile & desktop
-//     const originalStyle = window.getComputedStyle(document.body).overflow;
-//     document.body.style.overflow = "hidden";
-    
-//     return () => {
-//       // Restore background scrolling on unmount/close
-//       document.body.style.overflow = originalStyle;
-//     };
-//   }
-// }, [isOpen]);
+  //   useEffect(() => {
+  //   if (isOpen) {
+  //     // Lock background scrolling on mobile & desktop
+  //     const originalStyle = window.getComputedStyle(document.body).overflow;
+  //     document.body.style.overflow = "hidden";
+
+  //     return () => {
+  //       // Restore background scrolling on unmount/close
+  //       document.body.style.overflow = originalStyle;
+  //     };
+  //   }
+  // }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -1211,13 +1226,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
               <Button
                 variant={activeTool === "crop" ? "secondary" : "ghost"}
                 onClick={() => {
-                  const c = drawingCanvasRef.current;
-                  const ctx = c?.getContext("2d");
-                  if (!c || !ctx) return;
-                  const hasChanges = ctx
-                    .getImageData(0, 0, c.width, c.height)
-                    .data.some((p, i) => i % 4 === 3 && p !== 0);
-                  if (hasChanges && activeTool !== "crop") {
+                  if (hasAnyChanges && activeTool !== "crop") {
                     setShowCropConfirm(true);
                     setShowCurveArrowConfirm(false);
                     setShowCurveConfirm(false);
@@ -1412,6 +1421,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
                 }}
                 className="absolute w-full h-full"
                 style={{
+                  touchAction: "none",
                   cursor:
                     activeTool === "text"
                       ? "text"
@@ -1664,12 +1674,13 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
               setShowCurveConfirm={setShowCurveConfirm}
               showCurveArrowConfirm={showCurveArrowConfirm}
               setShowCurveArrowConfirm={setShowCurveArrowConfirm}
-              flattenLayers={flattenLayers}
+              flattenLayers={flattenAll}
               applyCrop={applyCrop}
               cropArea={cropArea}
               setCropArea={setCropArea}
               strokeStyle={strokeStyle}
               setStrokeStyle={setStrokeStyle}
+              hasChanges={hasAnyChanges}
             />
           </div>
         </div>
@@ -1704,6 +1715,45 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
           </Button>
         </div>
       </div>
+
+      {/* ── Crop confirm overlay ── */}
+      {showCropConfirm && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-white rounded-lg p-6 w-[90%] max-w-md shadow-xl">
+            <h3 className="text-lg font-semibold mb-2">
+              Merge drawings and shapes?
+            </h3>
+            <p className="text-gray-600 mb-4">
+              To crop, your current drawings and shapes must be permanently
+              merged into the image. You cannot modify them individually after
+              this action.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowCropConfirm(false)}
+                className="mt-0"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  flattenAll();
+                  handleToolChange("crop");
+                  setShowCropConfirm(false);
+                  toast({
+                    title: "Changes Saved",
+                    description:
+                      "Previous changes have been merged. You can crop now.",
+                  });
+                }}
+              >
+                Proceed
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Cancel confirm overlay ── */}
       {showCancelConfirm && (
