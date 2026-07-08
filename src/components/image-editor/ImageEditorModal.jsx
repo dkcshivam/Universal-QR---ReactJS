@@ -199,8 +199,11 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     if (!baseCanvas || !baseCtx || !drawingCanvas || !drawingCtx) return;
 
     const img = new Image();
-    // img.crossOrigin = "anonymous";
-    img.src = image.url;
+    img.crossOrigin = "anonymous";
+    const cacheBustedUrl =
+      image.url + (image.url.includes("?") ? "&" : "?") + "cb=" + Date.now();
+    img.src = cacheBustedUrl;
+    img.src = cacheBustedUrl;
     img.onload = () => {
       const container = baseCanvas.parentElement;
       if (!container) return;
@@ -1126,18 +1129,18 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     updateTrashZoneState,
   };
 
-//   useEffect(() => {
-//   if (isOpen) {
-//     // Lock background scrolling on mobile & desktop
-//     const originalStyle = window.getComputedStyle(document.body).overflow;
-//     document.body.style.overflow = "hidden";
-    
-//     return () => {
-//       // Restore background scrolling on unmount/close
-//       document.body.style.overflow = originalStyle;
-//     };
-//   }
-// }, [isOpen]);
+  //   useEffect(() => {
+  //   if (isOpen) {
+  //     // Lock background scrolling on mobile & desktop
+  //     const originalStyle = window.getComputedStyle(document.body).overflow;
+  //     document.body.style.overflow = "hidden";
+
+  //     return () => {
+  //       // Restore background scrolling on unmount/close
+  //       document.body.style.overflow = originalStyle;
+  //     };
+  //   }
+  // }, [isOpen]);
 
   if (!isOpen) return null;
 
