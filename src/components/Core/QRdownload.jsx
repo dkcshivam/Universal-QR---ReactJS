@@ -24,6 +24,9 @@ function QRdownload() {
     current_page: 1,
   });
 
+  const [allProducts, setAllProducts] = useState([]);
+  const [loadingAllProducts, setLoadingAllProducts] = useState(false);
+
   // --- 1. Modified: Added time fields to filter state ---
   const [filters, setFilters] = useState({
     code: "",
@@ -45,11 +48,12 @@ function QRdownload() {
   // --- 2. Modified: Added temp states for time inputs ---
   const [tempTimeFrom, setTempTimeFrom] = useState("");
   const [tempTimeTo, setTempTimeTo] = useState("");
+  const [jumpPage, setJumpPage] = useState("");
 
   const fetchProducts = async (page = 1) => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/qr/products/?page=${page}`
+        `${import.meta.env.VITE_API_URL}/qr/products/?page=${page}`,
       );
       if (response.status === 200) {
         const productsData = Array.isArray(response.data.data.results)
@@ -136,13 +140,36 @@ function QRdownload() {
   }, [products, filters]);
 
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(1);
+    fetchAllProducts();
   }, []);
 
   const handlePageChange = (page) => {
     setSelectedProducts(new Set());
     setSelectedProductsData(new Map());
     fetchProducts(page);
+  };
+
+  const handleJumpToPage = () => {
+    const page = Number(jumpPage);
+
+    if (!Number.isInteger(page)) {
+      toast.error("Please enter a valid page number.");
+      return;
+    }
+
+    if (page < 1 || page > pagination.total_pages) {
+      toast.error(
+        `Please enter a page between 1 and ${pagination.total_pages}.`,
+      );
+      return;
+    }
+
+    setSelectedProducts(new Set());
+    setSelectedProductsData(new Map());
+
+    fetchProducts(page);
+    setJumpPage("");
   };
 
   const handleSelectOne = (productId) => {
@@ -207,7 +234,7 @@ function QRdownload() {
         quantity: product.quantity,
         qr_code: product.code,
         created_at: product.created_at, // Optional: useful to see date in excel
-      })
+      }),
     );
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -239,6 +266,38 @@ function QRdownload() {
         totalSelected: selectedProducts.size,
       },
     });
+  };
+
+  const fetchAllProducts = async () => {
+    try {
+      setLoadingAllProducts(true);
+
+      // First page
+      const firstResponse = await axios.get(
+        `${import.meta.env.VITE_API_URL}/qr/products/?page=1`,
+      );
+
+      const totalPages = firstResponse.data.data.total_pages;
+
+      let all = [...firstResponse.data.data.results];
+
+      // Remaining pages
+      for (let page = 2; page <= totalPages; page++) {
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL}/qr/products/?page=${page}`,
+        );
+
+        all.push(...res.data.data.results);
+      }
+
+      setAllProducts(all);
+
+      console.log("Downloaded", all.length, "products");
+    } catch (err) {
+      toast.error("Failed to download all products");
+    } finally {
+      setLoadingAllProducts(false);
+    }
   };
 
   // Helper to open modal and sync state
@@ -462,7 +521,7 @@ function QRdownload() {
                               day: "2-digit",
                               month: "short",
                               year: "numeric",
-                            }
+                            },
                           )}
                         </span>
                         <span className="text-gray-500">
@@ -472,7 +531,7 @@ function QRdownload() {
                               hour: "2-digit",
                               minute: "2-digit",
                               hour12: false,
-                            }
+                            },
                           )}
                         </span>
                       </div>
@@ -492,13 +551,45 @@ function QRdownload() {
         </table>
 
         {!isFilterActive && pagination?.total_pages > 1 ? (
-          <Pagination
-            totalItems={pagination.count}
-            itemsPerPage={1000}
-            currentPage={pagination.current_page}
-            totalPages={pagination.total_pages}
-            onPageChange={handlePageChange}
-          />
+          <div className="flex flex-col items-center gap-4 py-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Jump to page:</span>
+
+              <input
+                type="number"
+                min={1}
+                max={pagination.total_pages}
+                value={jumpPage}
+                onChange={(e) => setJumpPage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleJumpToPage();
+                  }
+                }}
+                placeholder="Page"
+                className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+
+              <button
+                onClick={handleJumpToPage}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition cursor-pointer"
+              >
+                Go
+              </button>
+
+              <span className="text-sm text-gray-500">
+                of {pagination.total_pages}
+              </span>
+            </div>
+
+            <Pagination
+              totalItems={pagination.count}
+              itemsPerPage={1000}
+              currentPage={pagination.current_page}
+              totalPages={pagination.total_pages}
+              onPageChange={handlePageChange}
+            />
+          </div>
         ) : isFilterActive ? (
           // Logic specifically for when filters are ON
           filteredProducts.length === 0 ? (
