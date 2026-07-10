@@ -1,334 +1,288 @@
-import React from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
+  X,
+  Download,
+  Crop,
+  Sticker,
+  Type,
+  Pencil,
+  Undo2,
+  Check,
+  Square,
+  Circle,
   ArrowRight,
   ArrowRightLeft,
-  Circle,
-  Crop,
-  DotIcon,
-  Eraser,
-  Grip,
-  Minus,
-  MinusIcon,
-  Pencil,
-  PenTool,
-  Plus,
-  Redo2,
-  Square,
-  Type,
-  Undo2,
 } from "lucide-react";
-import { TbArrowCurveRight } from "react-icons/tb";
-import { toast } from "react-toastify";
 
-import { Button } from "./ui/Button";
-import { Label } from "./ui/Label";
-import { Slider } from "./ui/Slider";
-import { Select, SelectItem } from "./ui/Select";
+const TOOLBAR_HEIGHT = "56px"; // fixed on every level — canvas never resizes
 
 const MobileView = ({
+  historyState,
+  flattenLayers,
   undo,
   canUndo,
-  redo,
-  canRedo,
-  setActiveTool,
   activeTool,
-  drawingCanvasRef,
+  setActiveTool,
   handleToolChange,
+  drawingCanvasRef,
   currentColor,
   setCurrentColor,
-  backgroundColor,
-  setBackgroundColor,
   brushSize,
   setBrushSize,
   minBrushSize,
   maxBrushSize,
-  showCropConfirm,
-  setShowCropConfirm,
-  showCurveConfirm,
-  setShowCurveConfirm,
-  showCurveArrowConfirm,
-  setShowCurveArrowConfirm,
-  flattenLayers,
-  applyCrop,
   cropArea,
   setCropArea,
-  strokeStyle,
-  setStrokeStyle,
+  applyCrop,
+  konvaRectRef,
+  konvaCircleRef,
+  konvaArrowRef,
+  konvaDoubleArrowRef,
+  textEditorRef,
+  downloadImage,
+  handleSave,
+  handleCancel,
+  isTextDragging,
 }) => {
-  // helper — does the drawing canvas have any pixel content?
-  const hasCanvasContent = () => {
-    const c = drawingCanvasRef.current;
-    const ctx = c?.getContext("2d");
-    if (!c || !ctx) return false;
-    return ctx
-      .getImageData(0, 0, c.width, c.height)
-      .data.some((p, i) => i % 4 === 3 && p !== 0);
+  const [level, setLevel] = useState(null); // null | "pencil" | "text" | "crop" | "sticker"
+
+  const sessionFloorRef = useRef(-1);
+  const scopedCanUndo =
+    canUndo && historyState.currentStep > sessionFloorRef.current;
+
+  const cropHistoryRef = useRef([]);
+  const prevCropAreaRef = useRef(null);
+  React.useEffect(() => {
+    if (level === "crop") {
+      cropHistoryRef.current.push(prevCropAreaRef.current);
+    }
+    prevCropAreaRef.current = cropArea;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cropArea]);
+
+  const enterLevel = (nextLevel, tool) => {
+    sessionFloorRef.current = historyState.currentStep;
+    cropHistoryRef.current = [];
+    prevCropAreaRef.current = null;
+    if (tool) handleToolChange(tool);
+    setLevel(nextLevel);
   };
 
-  const toolButtons = [
-    { tool: "pencil", icon: <Pencil className="h-4 w-4" />, label: "Pencil" },
-    { tool: "eraser", icon: <Eraser className="h-4 w-4" />, label: "Eraser" },
-    { tool: "line", icon: <MinusIcon className="h-4 w-4" />, label: "Line" },
-    {
-      tool: "rectangle",
-      icon: <Square className="h-4 w-4" />,
-      label: "Rectangle",
-    },
-    { tool: "circle", icon: <Circle className="h-4 w-4" />, label: "Circle" },
-    { tool: "text", icon: <Type className="h-4 w-4" />, label: "Text" },
-    { tool: "arrow", icon: <ArrowRight className="h-4 w-4" />, label: "Arrow" },
-    {
-      tool: "double-arrow",
-      icon: <ArrowRightLeft className="h-4 w-4" />,
-      label: "Double Arrow",
-    },
-    { tool: "curve", icon: <PenTool className="h-4 w-4" />, label: "Curve" },
-    {
-      tool: "curve-arrow",
-      icon: <TbArrowCurveRight className="h-4 w-4" />,
-      label: "Curve Arrow",
-    },
-  ];
-
-  // Tools that still require a "flatten + confirm" guard before switching
-  const guardedTools = {
-    crop: {
-      icon: <Crop className="h-4 w-4" />,
-      label: "Crop",
-      confirm: setShowCropConfirm,
-    },
+  const backToLevel1 = () => {
+    setActiveTool(null);
+    setLevel(null);
   };
 
-  // ── Confirm overlay (shared structure) ────────────────────────────────────
-  const ConfirmOverlay = ({ visible, message, onProceed, onCancel }) => {
-    if (!visible) return null;
-    return (
-      <div className="flex flex-col gap-2 z-10 absolute top-0 left-0 right-0 bg-white px-4 py-3 border-b shadow-md overflow-y-auto">
-        <p className="text-[12px] text-gray-500">{message}</p>
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            onClick={onProceed}
-            className="!flex !px-3 !py-1 !h-max text-sm"
-          >
-            Proceed
-          </Button>
-          <Button
-            variant="outline"
-            onClick={onCancel}
-            className="!flex !px-3 !py-1 !h-max text-sm"
-          >
-            Cancel
-          </Button>
-        </div>
-      </div>
-    );
+  const confirmPencil = () => {
+    flattenLayers();
+    backToLevel1();
   };
 
-  const confirmMsg =
-    "These changes will be saved and cannot be undone after this action. You can make new changes afterwards.";
+  const confirmText = () => backToLevel1();
+
+  const confirmSticker = () => {
+    konvaRectRef.current?.flatten();
+    konvaCircleRef.current?.flatten();
+    konvaArrowRef.current?.flatten();
+    konvaDoubleArrowRef.current?.flatten();
+    flattenLayers();
+    backToLevel1();
+  };
+
+  const confirmCrop = () => {
+    applyCrop();
+    setLevel(null);
+  };
+
+  const discardCrop = () => {
+    setCropArea(null);
+    const ctx = drawingCanvasRef.current?.getContext("2d");
+    if (ctx) ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    backToLevel1();
+  };
+
+  const undoCrop = useCallback(() => {
+    const prev = cropHistoryRef.current.pop();
+    setCropArea(prev ?? null);
+  }, [setCropArea]);
+
+  const barClass =
+    "flex items-center justify-between px-3 w-full flex-shrink-0";
+  const barStyle = { height: TOOLBAR_HEIGHT };
 
   return (
-    <div className="lg:hidden flex flex-col w-full items-center py-2 px-2 sm:p-4 gap-2 border-t relative z-50">
-      {/* ── Tool strip ──────────────────────────────────────────────────── */}
-      <div className="w-full flex flex-row gap-2 p-2 border rounded-md items-center">
-        {/* Undo / Redo */}
-        <div className="flex justify-center border-r pr-2 gap-1 flex-shrink-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={undo}
-            disabled={!canUndo}
-            title="Undo"
-          >
-            <Undo2 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={redo}
-            disabled={!canRedo}
-            title="Redo"
-          >
-            <Redo2 className="h-4 w-4" />
-          </Button>
-        </div>
+    <div className="lg:hidden flex flex-col w-full bg-black text-white">
+      {/* ── Level 1 ──────────────────────────────────────────────────────── */}
+      {level === null && (
+        <div
+          className={barClass}
+          style={{
+            ...barStyle,
+            opacity: isTextDragging ? 0 : 1,
+            pointerEvents: isTextDragging ? "none" : "auto",
+          }}
+        >
+          <button onClick={handleCancel} title="Discard">
+            <X className="h-5 w-5" />
+          </button>
 
-        {/* Scrollable tool buttons */}
-        <div className="flex flex-row flex-1 gap-1 overflow-x-auto whitespace-nowrap items-center">
-          {/* Simple tools — no guard needed (including Curve and Curve Arrow) */}
-          {toolButtons.map(({ tool, icon, label }) => (
-            <Button
-              key={tool}
-              variant={activeTool === tool ? "secondary" : "ghost"}
-              onClick={() => handleToolChange(tool)}
-              className="flex flex-col px-2 py-1 gap-1 min-w-[40px] h-max flex-shrink-0"
-              title={label}
+          <div className="flex items-center gap-5">
+            <button onClick={downloadImage} title="Download">
+              <Download className="h-5 w-5" />
+            </button>
+            <button onClick={() => enterLevel("crop", "crop")} title="Crop">
+              <Crop className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => enterLevel("sticker", "rectangle")}
+              title="Sticker"
             >
-              {icon}
-              <span className="sr-only">{label}</span>
-            </Button>
-          ))}
-
-          {/* Guarded tools — crop */}
-          {Object.entries(guardedTools).map(
-            ([tool, { icon, label, confirm }]) => (
-              <Button
-                key={tool}
-                variant={activeTool === tool ? "secondary" : "ghost"}
-                onClick={() => {
-                  if (hasCanvasContent() && activeTool !== tool) {
-                    confirm(true);
-                  } else {
-                    handleToolChange("crop");
-                  }
-                }}
-                className="flex flex-col px-2 py-1 gap-1 min-w-[40px] h-max flex-shrink-0"
-                title={label}
-              >
-                {icon}
-                <span className="sr-only">{label}</span>
-              </Button>
-            ),
-          )}
-        </div>
-      </div>
-
-      {/* ── Color + brush size row ───────────────────────────────────────── */}
-      <div className="flex flex-row gap-3 mt-1 w-full justify-between items-center flex-wrap">
-        {/* Stroke colour */}
-        <div className="flex items-center gap-2">
-          <Label htmlFor="color-picker-sm" className="text-sm">
-            Color
-          </Label>
-          <input
-            id="color-picker-sm"
-            type="color"
-            value={currentColor}
-            onChange={(e) => setCurrentColor(e.target.value)}
-            className="rounded-full w-6 h-6 cursor-pointer border-0"
-          />
-        </div>
-
-        {/* Background colour */}
-        <div className="flex items-center gap-2">
-          <Label htmlFor="bg-color-picker-sm" className="text-sm">
-            Bg
-          </Label>
-          <input
-            id="bg-color-picker-sm"
-            type="color"
-            value={
-              backgroundColor === "transparent" ? "#ffffff" : backgroundColor
-            }
-            onChange={(e) => setBackgroundColor(e.target.value)}
-            className="rounded-full w-6 h-6 cursor-pointer border-0"
-          />
-        </div>
-
-        {/* Brush size */}
-        <div className="flex items-center gap-2 flex-1 min-w-[180px]">
-          <Label htmlFor="brush-size-sm" className="text-sm whitespace-nowrap">
-            Size: {brushSize}px
-          </Label>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setBrushSize(Math.max(minBrushSize, brushSize - 1))}
-            className="h-6 w-6 flex-shrink-0"
-          >
-            <Minus className="h-3 w-3" />
-          </Button>
-          <Slider
-            id="brush-size-sm"
-            min={minBrushSize}
-            max={maxBrushSize}
-            step={1}
-            value={[brushSize]}
-            onValueChange={(v) => setBrushSize(v[0])}
-            className="flex-grow"
-          />
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setBrushSize(Math.min(maxBrushSize, brushSize + 1))}
-            className="h-6 w-6 flex-shrink-0"
-          >
-            <Plus className="h-3 w-3" />
-          </Button>
-        </div>
-      </div>
-
-      {/* ── Stroke style (shown for relevant tools) ──────────────────────── */}
-      {activeTool &&
-        [
-          "line",
-          "rectangle",
-          "circle",
-          "arrow",
-          "double-arrow",
-          "curve",
-          "curve-arrow",
-        ].includes(activeTool) && (
-          <div className="flex items-center gap-2 w-full">
-            <Label
-              htmlFor="stroke-style-sm"
-              className="flex items-center gap-1 text-sm whitespace-nowrap"
+              <Sticker className="h-5 w-5" />
+            </button>
+            <button onClick={() => enterLevel("text", "text")} title="Text">
+              <Type className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => enterLevel("pencil", "pencil")}
+              title="Pencil"
             >
-              <Grip className="h-3 w-3" /> Style
-            </Label>
-            <Select value={strokeStyle} onValueChange={setStrokeStyle}>
-              <SelectItem value="solid">Solid</SelectItem>
-              <SelectItem value="dashed">Dashed</SelectItem>
-              <SelectItem value="dotted">Dotted</SelectItem>
-            </Select>
-          </div>
-        )}
-
-      {/* ── Crop controls (when crop tool active) ───────────────────────── */}
-      {activeTool === "crop" && (
-        <div className="flex flex-col gap-2 z-10 absolute top-0 left-0 right-0 bg-white px-4 py-3 border-b shadow-md">
-          <p className="text-sm text-gray-500">
-            Draw a rectangle to crop. Tap Apply to confirm.
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setCropArea(null);
-                setActiveTool(null);
-                const ctx = drawingCanvasRef.current?.getContext("2d");
-                if (ctx)
-                  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-              }}
-              className="!flex !px-3 !py-1 !h-max text-sm"
+              <Pencil className="h-5 w-5" />
+            </button>
+            <button
+              onClick={handleSave}
+              title="Send"
+              className="bg-green-700 p-1 rounded-full"
             >
-              Cancel
-            </Button>
-            <Button
-              onClick={applyCrop}
-              disabled={!cropArea}
-              className="!flex !px-3 !py-1 !h-max text-sm"
-            >
-              Apply
-            </Button>
+              <Check className="h-5 w-5 text-white-400 font-bold" />
+            </button>
           </div>
         </div>
       )}
 
-      {/* ── Confirm overlays ─────────────────────────────────────────────── */}
-      <ConfirmOverlay
-        visible={showCropConfirm}
-        message={confirmMsg}
-        onProceed={() => {
-          flattenLayers();
-          handleToolChange("crop");
-          setShowCropConfirm(false);
-          toast.success("Previous changes saved. You can crop now.", {
-            autoClose: 3000,
-          });
-        }}
-        onCancel={() => setShowCropConfirm(false)}
-      />
+      {/* ── Level 2: Pencil ──────────────────────────────────────────────── */}
+      {level === "pencil" && (
+        <div className={barClass} style={barStyle}>
+          <div className="flex items-center gap-3">
+            <button onClick={confirmPencil} title="Confirm">
+              <Check className="h-5 w-5 text-green-400" />
+            </button>
+            <button
+              onClick={undo}
+              disabled={!scopedCanUndo}
+              className="disabled:opacity-30"
+              title="Undo"
+            >
+              <Undo2 className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs opacity-70 whitespace-nowrap">
+              {brushSize}px
+            </span>
+            <input
+              type="range"
+              min={minBrushSize}
+              max={maxBrushSize}
+              step={1}
+              value={brushSize}
+              onChange={(e) => setBrushSize(Number(e.target.value))}
+              className="w-20 accent-white"
+            />
+            <input
+              type="color"
+              value={currentColor}
+              onChange={(e) => setCurrentColor(e.target.value)}
+              className="w-7 h-7 rounded-full border-0 cursor-pointer"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Level 2: Text ────────────────────────────────────────────────── */}
+      {level === "text" && (
+        <div
+          className={barClass}
+          style={{
+            ...barStyle,
+            opacity: isTextDragging ? 0 : 1,
+            pointerEvents: isTextDragging ? "none" : "auto",
+          }}
+        >
+          <button onClick={confirmText} title="Confirm">
+            <Check className="h-5 w-5 text-green-400" />
+          </button>
+          <input
+            type="color"
+            value={currentColor}
+            onChange={(e) => setCurrentColor(e.target.value)}
+            className="w-7 h-7 rounded-full border-0 cursor-pointer"
+          />
+        </div>
+      )}
+
+      {/* ── Level 2: Crop ────────────────────────────────────────────────── */}
+      {level === "crop" && (
+        <div className={barClass} style={barStyle}>
+          <div className="flex items-center gap-3">
+            <button onClick={confirmCrop} disabled={!cropArea} title="Confirm">
+              <Check
+                className={`h-5 w-5 ${cropArea ? "text-green-400" : "text-gray-500"}`}
+              />
+            </button>
+            <button
+              onClick={undoCrop}
+              disabled={cropHistoryRef.current.length === 0}
+              className="disabled:opacity-30"
+              title="Undo crop"
+            >
+              <Undo2 className="h-5 w-5" />
+            </button>
+          </div>
+          <button
+            onClick={discardCrop}
+            className="text-sm opacity-80"
+            title="Discard"
+          >
+            Discard
+          </button>
+        </div>
+      )}
+
+      {/* ── Level 2: Sticker ─────────────────────────────────────────────── */}
+      {level === "sticker" && (
+        <div className={barClass} style={barStyle}>
+          <div className="flex items-center gap-3">
+            <button onClick={confirmSticker} title="Confirm">
+              <Check className="h-5 w-5 text-green-400" />
+            </button>
+            <button
+              onClick={undo}
+              disabled={!scopedCanUndo}
+              className="disabled:opacity-30"
+              title="Undo"
+            >
+              <Undo2 className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="flex items-center gap-4">
+            {[
+              ["rectangle", <Square className="h-5 w-5" />],
+              ["circle", <Circle className="h-5 w-5" />],
+              ["arrow", <ArrowRight className="h-5 w-5" />],
+              ["double-arrow", <ArrowRightLeft className="h-5 w-5" />],
+            ].map(([tool, icon]) => (
+              <button
+                key={tool}
+                onClick={() => handleToolChange(tool)}
+                className={`p-1 rounded ${activeTool === tool ? "bg-white/20" : ""}`}
+                title={tool}
+              >
+                {icon}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

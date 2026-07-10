@@ -92,6 +92,8 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
   const [mounted, setMounted] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [eraserCursor, setEraserCursor] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTextDragging, setIsTextDragging] = useState(false);
 
   const {
     historyState,
@@ -121,6 +123,13 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
   } = useHistoryManager({ drawingCanvasRef, baseCanvasRef });
 
   // ── lifecycle ──────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -814,6 +823,10 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     setActiveTool(null);
   }, [cropArea, addAction, createAction]);
 
+  useEffect(() => {
+    if (activeTool === "crop") drawCropOverlay();
+  }, [cropArea, activeTool, drawCropOverlay]);
+
   // ── filters ────────────────────────────────────────────────────────────────
 
   const applyBlackAndWhite = useCallback(() => {
@@ -1074,6 +1087,36 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     else onClose();
   };
 
+  const confirmToolOptions = useCallback(() => {
+    switch (activeTool) {
+      case "rectangle":
+        konvaRectRef.current?.flatten();
+        break;
+      case "circle":
+        konvaCircleRef.current?.flatten();
+        break;
+      case "arrow":
+        konvaArrowRef.current?.flatten();
+        break;
+      case "double-arrow":
+        konvaDoubleArrowRef.current?.flatten();
+        break;
+      case "text":
+        textEditorRef.current?.flatten();
+        break;
+      default:
+        break; // pencil / eraser / line / curve / curve-arrow: nothing pending
+    }
+    setActiveTool(null);
+  }, [
+    activeTool,
+    konvaRectRef,
+    konvaCircleRef,
+    konvaArrowRef,
+    konvaDoubleArrowRef,
+    textEditorRef,
+  ]);
+
   const handleConfirmCancel = () => {
     setShowCancelConfirm(false);
     onClose();
@@ -1129,18 +1172,17 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     updateTrashZoneState,
   };
 
-  //   useEffect(() => {
-  //   if (isOpen) {
-  //     // Lock background scrolling on mobile & desktop
-  //     const originalStyle = window.getComputedStyle(document.body).overflow;
-  //     document.body.style.overflow = "hidden";
-
-  //     return () => {
-  //       // Restore background scrolling on unmount/close
-  //       document.body.style.overflow = originalStyle;
-  //     };
-  //   }
-  // }, [isOpen]);
+  const handleKonvaTextDelete = useCallback(
+    (id) => {
+      addAction(
+        createAction("konva", "DELETE_ELEMENT", {
+          elementType: "text",
+          elementId: id,
+        }),
+      );
+    },
+    [createAction, addAction],
+  );
 
   if (!isOpen) return null;
 
@@ -1152,14 +1194,53 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
       id="image-editor-modal"
       tabIndex={-1}
     >
-      <div className="flex flex-col bg-white rounded-lg w-[98vw] max-w-5xl h-[80vh] overflow-hidden">
+      <div className="flex flex-col bg-white w-screen h-screen lg:rounded-lg lg:w-[98vw] lg:max-w-5xl lg:h-[80vh] overflow-hidden">
         {/* Header */}
-        <div className="p-4 border-b hidden sm:flex items-center justify-between">
+        <div className="p-4 border-b hidden lg:flex items-center justify-between">
           <h2 className="text-lg font-semibold">Edit Image: {image?.name}</h2>
         </div>
 
         {/* Body */}
         <div className="flex flex-col lg:flex-row flex-grow overflow-hidden">
+          {/* ── Mobile toolbar ── */}
+          <div className="lg:hidden">
+            <MobileView
+              historyState={historyState}
+              undo={undo}
+              canUndo={canUndo}
+              redo={redo}
+              canRedo={canRedo}
+              setActiveTool={setActiveTool}
+              activeTool={activeTool}
+              drawingCanvasRef={drawingCanvasRef}
+              handleToolChange={handleToolChange}
+              currentColor={currentColor}
+              setCurrentColor={setCurrentColor}
+              backgroundColor={backgroundColor}
+              setBackgroundColor={setBackgroundColor}
+              brushSize={brushSize}
+              setBrushSize={setBrushSize}
+              minBrushSize={minBrushSize}
+              maxBrushSize={maxBrushSize}
+              cropArea={cropArea}
+              setCropArea={setCropArea}
+              flattenLayers={flattenLayers}
+              konvaRectRef={konvaRectRef}
+              konvaCircleRef={konvaCircleRef}
+              konvaArrowRef={konvaArrowRef}
+              konvaDoubleArrowRef={konvaDoubleArrowRef}
+              textEditorRef={textEditorRef}
+              downloadImage={downloadImage}
+              showCropConfirm={showCropConfirm}
+              handleSave={handleSave}
+              handleCancel={handleCancel}
+              isTextDragging={isTextDragging}
+              // setShowCropConfirm={setShowCropConfirm}
+              applyCrop={applyCrop}
+              confirmToolOptions={confirmToolOptions}
+            />
+          </div>
+
           {/* ── Left panel (desktop) ── */}
           <div className="hidden lg:flex flex-col lg:w-52 lg:flex-shrink-0 lg:border-r p-2 gap-2 overflow-y-auto">
             {/* Undo / Redo */}
@@ -1383,14 +1464,14 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
           </div>
 
           {/* ── Canvas area ── */}
-          <div className="flex-1 flex items-center justify-center bg-gray-100 min-h-0 relative overflow-hidden">
+          <div className="flex-1 flex items-center justify-center bg-black lg:bg-gray-100 min-h-0 relative overflow-hidden">
             <div
-              className="relative border-2 border-gray-300 w-full h-full lg:w-[420px] lg:h-[750px]"
+              className="relative lg:border-2 lg:border-gray-300 w-full h-full lg:w-[420px] lg:h-[750px]"
               id="drawing-canvas"
             >
               <canvas
                 ref={baseCanvasRef}
-                className="absolute bg-white object-contain w-full h-full"
+                className="absolute bg-black lg:bg-white object-contain w-full h-full"
               />
               <canvas
                 ref={drawingCanvasRef}
@@ -1482,6 +1563,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
                       ref={textEditorRef}
                       {...sharedKonvaProps}
                       active={true}
+                      allowCreate={true}
                       fontSize={fontSize}
                       fontFamily={fontFamily}
                       onAdd={handleKonvaTextAdd}
@@ -1489,6 +1571,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
                       texts={texts}
                       setTexts={setTexts}
                       onFlatten={handleTextFlatten}
+                      onDelete={handleKonvaTextDelete}
                     />
                   )}
 
@@ -1545,7 +1628,8 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
                     <TextEditor
                       ref={textEditorRef}
                       {...sharedKonvaProps}
-                      active={false}
+                      active={isMobile && activeTool === null}
+                      allowCreate={false}
                       fontSize={fontSize}
                       fontFamily={fontFamily}
                       onAdd={handleKonvaTextAdd}
@@ -1553,6 +1637,8 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
                       texts={texts}
                       setTexts={setTexts}
                       onFlatten={handleTextFlatten}
+                      onDragStateChange={setIsTextDragging}
+                      onDelete={handleKonvaTextDelete}
                     />
                   )}
                 </Suspense>
@@ -1611,7 +1697,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
               {showTrashIcon && (
                 <div
                   id="trash-zone"
-                  className={`fixed bottom-56 right-6 p-3 rounded-full shadow-lg border-2 transition-all duration-200 text-white ${
+                  className={`fixed top-0 left-0 p-3 rounded-full shadow-lg border-2 transition-all duration-200 text-white ${
                     isDraggedOverTrash
                       ? "bg-red-600 border-red-700 scale-125"
                       : "bg-red-500 border-red-600"
@@ -1640,45 +1726,15 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
             </div>
           </div>
 
-          {/* ── Mobile toolbar ── */}
-          <div className="lg:hidden">
-            <MobileView
-              undo={undo}
-              canUndo={canUndo}
-              historyStep={historyState.currentStep}
-              history={historyState.actions}
-              redo={redo}
-              canRedo={canRedo}
-              setActiveTool={setActiveTool}
-              activeTool={activeTool}
-              drawingCanvasRef={drawingCanvasRef}
-              handleToolChange={handleToolChange}
-              currentColor={currentColor}
-              setCurrentColor={setCurrentColor}
-              backgroundColor={backgroundColor}
-              setBackgroundColor={setBackgroundColor}
-              brushSize={brushSize}
-              setBrushSize={setBrushSize}
-              minBrushSize={minBrushSize}
-              maxBrushSize={maxBrushSize}
-              showCropConfirm={showCropConfirm}
-              setShowCropConfirm={setShowCropConfirm}
-              showCurveConfirm={showCurveConfirm}
-              setShowCurveConfirm={setShowCurveConfirm}
-              showCurveArrowConfirm={showCurveArrowConfirm}
-              setShowCurveArrowConfirm={setShowCurveArrowConfirm}
-              flattenLayers={flattenLayers}
-              applyCrop={applyCrop}
-              cropArea={cropArea}
-              setCropArea={setCropArea}
-              strokeStyle={strokeStyle}
-              setStrokeStyle={setStrokeStyle}
-            />
-          </div>
+          {/* ── Bottom black spacer (mobile only) ── */}
+          <div
+            className="lg:hidden bg-black flex-shrink-0"
+            style={{ minHeight: "15vh" }}
+          />
         </div>
 
         {/* ── Footer ── */}
-        <div className="p-2 sm:p-4 border-t flex justify-end flex-row gap-2 flex-wrap">
+        <div className="p-2 sm:p-4 border-t hidden lg:flex justify-end flex-row gap-2 flex-wrap">
           <Button
             variant="outline"
             onClick={applyBlackAndWhite}

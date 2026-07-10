@@ -13,6 +13,7 @@ const TextEditor = forwardRef(
       width,
       height,
       active,
+      allowCreate,
       color,
       setColor,
       backgroundColor,
@@ -28,6 +29,8 @@ const TextEditor = forwardRef(
       onElementDeselect,
       checkTrashZoneCollision,
       updateTrashZoneState,
+      onDragStateChange,
+      onDelete,
     },
     ref,
   ) => {
@@ -36,6 +39,7 @@ const TextEditor = forwardRef(
 
     const stageRef = useRef(null);
     const trRef = useRef(null);
+    const justDraggedRef = useRef(false);
 
     const [lastDist, setLastDist] = useState(0);
     const [lastTap, setLastTap] = useState(0);
@@ -85,7 +89,7 @@ const TextEditor = forwardRef(
     useEffect(() => {
       const handleKeyDown = (e) => {
         if ((e.key === "Delete" || e.key === "Backspace") && selectedId) {
-          setTexts((arr) => arr.filter((t) => t.id !== selectedId));
+          onDelete?.(selectedId);
           setSelectedId(null);
           if (onElementDeselect) {
             onElementDeselect();
@@ -94,7 +98,7 @@ const TextEditor = forwardRef(
       };
       window.addEventListener("keydown", handleKeyDown);
       return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [selectedId, setTexts, onElementDeselect]);
+    }, [selectedId, onDelete, onElementDeselect]);
 
     useEffect(() => {
       if (trRef.current && selectedId) {
@@ -123,6 +127,7 @@ const TextEditor = forwardRef(
     }, [color, backgroundColor, selectedId, active, setTexts]);
 
     const handleDoubleTap = (e, id) => {
+      if (justDraggedRef.current) return;
       const now = Date.now();
       const DOUBLE_TAP_DELAY = 300;
 
@@ -177,6 +182,11 @@ const TextEditor = forwardRef(
       const { x, y } = group.position();
       const previousText = texts.find((t) => t.id === id);
 
+      justDraggedRef.current = true;
+      setTimeout(() => {
+        justDraggedRef.current = false;
+      }, 0);
+
       if (updateTrashZoneState) {
         updateTrashZoneState(false);
       }
@@ -190,13 +200,14 @@ const TextEditor = forwardRef(
         checkTrashZoneCollision &&
         checkTrashZoneCollision(screenX, screenY)
       ) {
-        setTexts((arr) => arr.filter((t) => t.id !== id));
+        onDelete?.(id); // records DELETE_ELEMENT in history — syncKonvaState will remove it
         setSelectedId(null);
         if (trRef.current) {
           trRef.current.nodes([]);
           trRef.current.getLayer().batchDraw();
         }
         if (onElementDeselect) onElementDeselect();
+        onDragStateChange?.(false);
         return;
       }
 
@@ -214,9 +225,11 @@ const TextEditor = forwardRef(
           onMove(id, newText, previousText);
         }
       }
+      onDragStateChange?.(false);
     };
 
     const handleDblClick = (e, id) => {
+      if (!allowCreate) return;
       const group = e.target.getParent();
       const textNode = group.findOne("Text");
       setEditingText({
@@ -265,6 +278,7 @@ const TextEditor = forwardRef(
     };
 
     const handleTextClick = (id) => {
+      if (justDraggedRef.current) return;
       setSelectedId(id);
       setColor(texts.find((t) => t.id === id)?.fill || "#000000");
       setBackgroundColor(
@@ -276,7 +290,7 @@ const TextEditor = forwardRef(
     };
 
     const handleStageDblClick = (e) => {
-      if (!active) return;
+      if (!allowCreate) return;
       if (e.target !== e.target.getStage()) return;
       const pos = e.target.getStage().getPointerPosition();
       setEditingText({
@@ -409,7 +423,7 @@ const TextEditor = forwardRef(
     };
 
     return (
-      <div style={{ width, height, position: "absolute", inset: 0 }}>
+      <div style={{ width, height, position: "absolute", inset: 0, pointerEvents: active ? "auto" : "none", }}>
         <Stage
           width={width}
           height={height}
@@ -476,6 +490,11 @@ const TextEditor = forwardRef(
                     handleDoubleTap(e, t.id);
                   }}
                   onDblClick={(e) => handleDblClick(e, t.id)}
+                  onDragStart={() => {
+                    setSelectedId(t.id);
+                    onElementSelect?.(t.id, "text");
+                    onDragStateChange?.(true);
+                  }}
                   onDragMove={(e) => handleDragMove(e, t.id)}
                   onDragEnd={(e) => handleDragEnd(e, t.id)}
                   onTransformEnd={(e) => handleTransformEnd(e, t.id)}
