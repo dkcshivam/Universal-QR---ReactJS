@@ -465,10 +465,11 @@ const TextEditor = forwardRef(
               textNode.innerText = t.text;
               textNode.style.fontSize = `${t.fontSize}px`;
               textNode.style.fontFamily = t.fontFamily;
+              textNode.style.lineHeight = "1";
               textNode.style.position = "absolute";
               textNode.style.visibility = "hidden";
               document.body.appendChild(textNode);
-              const padding = 10;
+              const padding = 6;
               const width = textNode.offsetWidth + padding * 2;
               const height = textNode.offsetHeight + padding * 2;
               document.body.removeChild(textNode);
@@ -512,6 +513,7 @@ const TextEditor = forwardRef(
                     fill={t.fill}
                     x={padding}
                     y={padding}
+                    lineHeight={1}
                   />
                 </Group>
               );

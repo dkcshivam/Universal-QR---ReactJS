@@ -77,7 +77,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
   const [isCropping, setIsCropping] = useState(false);
   const [dragStart, setDragStart] = useState(null);
   const [backgroundColor, setBackgroundColor] = useState("transparent");
-  const [currentColor, setCurrentColor] = useState("#000000");
+  const [currentColor, setCurrentColor] = useState("#ff0000");
   const [brushSize, setBrushSize] = useState(3);
   const [strokeStyle, setStrokeStyle] = useState("solid");
   const [selectedElementId, setSelectedElementId] = useState(null);
@@ -94,6 +94,25 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
   const [eraserCursor, setEraserCursor] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isTextDragging, setIsTextDragging] = useState(false);
+  const [textColor, setTextColor] = useState("#000000");
+  const TEXT_BG_CYCLE = [
+    "#ffffff",
+    "#000000",
+    "rgba(0,0,0,0.5)",
+    "transparent",
+  ];
+  const TEXT_BG_CONTRAST = ["#000000", "#ffffff", "#ffffff", null];
+
+  const [textBgColor, setTextBgColor] = useState(TEXT_BG_CYCLE[0]);
+
+  const cycleTextBg = useCallback(() => {
+    const idx = TEXT_BG_CYCLE.indexOf(textBgColor);
+    const nextIdx = (idx + 1) % TEXT_BG_CYCLE.length;
+    setTextBgColor(TEXT_BG_CYCLE[nextIdx]);
+
+    const forcedColor = TEXT_BG_CONTRAST[nextIdx];
+    if (forcedColor) setTextColor(forcedColor);
+  }, [textBgColor]);
 
   const {
     historyState,
@@ -130,6 +149,28 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Hardens background scroll locking on real WebKit & Blink mobile viewports
+    const originalOverflow = document.body.style.overflow;
+    const originalPosition = document.body.style.position;
+    const originalWidth = document.body.style.width;
+    const originalHeight = document.body.style.height;
+
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.width = "100%";
+    document.body.style.height = "100dvh";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.position = originalPosition;
+      document.body.style.width = originalWidth;
+      document.body.style.height = originalHeight;
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     setMounted(true);
@@ -612,7 +653,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
         const scaleX = t.scaleX || 1;
         const scaleY = t.scaleY || 1;
         const scaledFontSize = t.fontSize * scaleY;
-        const padding = 10 * Math.min(scaleX, scaleY);
+        const padding = 6 * Math.min(scaleX, scaleY);
         const span = document.createElement("span");
         span.innerText = t.text;
         span.style.cssText = `font-size:${scaledFontSize}px;font-family:${t.fontFamily};position:absolute;visibility:hidden`;
@@ -1194,7 +1235,10 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
       id="image-editor-modal"
       tabIndex={-1}
     >
-      <div className="flex flex-col bg-white w-screen h-screen lg:rounded-lg lg:w-[98vw] lg:max-w-5xl lg:h-[80vh] overflow-hidden">
+      <div
+        className="flex flex-col bg-white w-screen h-screen lg:rounded-lg lg:w-[98vw] lg:max-w-5xl lg:h-[80vh] overflow-hidden"
+        style={isMobile ? { height: "100dvh" } : undefined}
+      >
         {/* Header */}
         <div className="p-4 border-b hidden lg:flex items-center justify-between">
           <h2 className="text-lg font-semibold">Edit Image: {image?.name}</h2>
@@ -1235,6 +1279,10 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
               handleSave={handleSave}
               handleCancel={handleCancel}
               isTextDragging={isTextDragging}
+              textColor={textColor}
+              setTextColor={setTextColor}
+              textBgColor={textBgColor}
+              cycleTextBg={cycleTextBg}
               // setShowCropConfirm={setShowCropConfirm}
               applyCrop={applyCrop}
               confirmToolOptions={confirmToolOptions}
@@ -1464,7 +1512,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
           </div>
 
           {/* ── Canvas area ── */}
-          <div className="flex-1 flex items-center justify-center bg-black lg:bg-gray-100 min-h-0 relative overflow-hidden">
+          <div className="flex-1 flex items-center justify-center bg-black lg:bg-gray-100 min-h-0 relative overflow-hidden px-2 pb-[80px] lg:p-0">
             <div
               className="relative lg:border-2 lg:border-gray-300 w-full h-full lg:w-[420px] lg:h-[750px]"
               id="drawing-canvas"
@@ -1562,6 +1610,10 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
                     <TextEditor
                       ref={textEditorRef}
                       {...sharedKonvaProps}
+                      color={textColor}
+                      setColor={setTextColor}
+                      backgroundColor={textBgColor}
+                      setBackgroundColor={setTextBgColor}
                       active={true}
                       allowCreate={true}
                       fontSize={fontSize}
@@ -1628,6 +1680,10 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
                     <TextEditor
                       ref={textEditorRef}
                       {...sharedKonvaProps}
+                      color={textColor}
+                      setColor={setTextColor}
+                      backgroundColor={textBgColor}
+                      setBackgroundColor={setTextBgColor}
                       active={isMobile && activeTool === null}
                       allowCreate={false}
                       fontSize={fontSize}
@@ -1727,10 +1783,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
           </div>
 
           {/* ── Bottom black spacer (mobile only) ── */}
-          <div
-            className="lg:hidden bg-black flex-shrink-0"
-            style={{ minHeight: "15vh" }}
-          />
+          <div className="lg:hidden bg-black flex-shrink-0 pb-[env(safe-area-inset-bottom)]" />
         </div>
 
         {/* ── Footer ── */}

@@ -43,6 +43,10 @@ const MobileView = ({
   handleSave,
   handleCancel,
   isTextDragging,
+  textColor,
+  setTextColor,
+  textBgColor,
+  cycleTextBg,
 }) => {
   const [level, setLevel] = useState(null); // null | "pencil" | "text" | "crop" | "sticker"
 
@@ -100,11 +104,6 @@ const MobileView = ({
     if (ctx) ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     backToLevel1();
   };
-
-  const undoCrop = useCallback(() => {
-    const prev = cropHistoryRef.current.pop();
-    setCropArea(prev ?? null);
-  }, [setCropArea]);
 
   const barClass =
     "flex items-center justify-between px-3 w-full flex-shrink-0";
@@ -188,12 +187,30 @@ const MobileView = ({
               onChange={(e) => setBrushSize(Number(e.target.value))}
               className="w-20 accent-white"
             />
-            <input
-              type="color"
-              value={currentColor}
-              onChange={(e) => setCurrentColor(e.target.value)}
-              className="w-7 h-7 rounded-full border-0 cursor-pointer"
-            />
+            <label
+              className="relative w-6 h-6 rounded-full flex-shrink-0 cursor-pointer overflow-hidden"
+              style={{
+                background: currentColor,
+                border: "2px solid rgba(255,255,255,0.7)",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.6)",
+              }}
+            >
+              <input
+                type="color"
+                value={currentColor}
+                onChange={(e) => setCurrentColor(e.target.value)}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  opacity: 0,
+                  width: "100%",
+                  height: "100%",
+                  cursor: "pointer",
+                  border: "none",
+                  padding: 0,
+                }}
+              />
+            </label>
           </div>
         </div>
       )}
@@ -211,33 +228,71 @@ const MobileView = ({
           <button onClick={confirmText} title="Confirm">
             <Check className="h-5 w-5 text-green-400" />
           </button>
-          <input
-            type="color"
-            value={currentColor}
-            onChange={(e) => setCurrentColor(e.target.value)}
-            className="w-7 h-7 rounded-full border-0 cursor-pointer"
-          />
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={cycleTextBg}
+              title="Text background"
+              className="relative w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
+              style={{
+                background:
+                  textBgColor === "transparent"
+                    ? "repeating-conic-gradient(#666 0% 25%, #333 0% 50%) 50% / 8px 8px"
+                    : textBgColor,
+                border: "2px solid rgba(255,255,255,0.7)",
+              }}
+            >
+              <span
+                className="text-xs font-semibold"
+                style={{
+                  color:
+                    textBgColor === "#ffffff"
+                      ? "#000"
+                      : textBgColor === "transparent"
+                        ? "#fff"
+                        : "#fff",
+                }}
+              >
+                A
+              </span>
+            </button>
+
+            <label
+              className="relative w-6 h-6 rounded-full flex-shrink-0 cursor-pointer overflow-hidden"
+              style={{
+                background: textColor,
+                border: "2px solid rgba(255,255,255,0.7)",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.6)",
+              }}
+            >
+              <input
+                type="color"
+                value={textColor}
+                onChange={(e) => setTextColor(e.target.value)}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  opacity: 0,
+                  width: "100%",
+                  height: "100%",
+                  cursor: "pointer",
+                  border: "none",
+                  padding: 0,
+                }}
+              />
+            </label>
+          </div>
         </div>
       )}
 
       {/* ── Level 2: Crop ────────────────────────────────────────────────── */}
       {level === "crop" && (
         <div className={barClass} style={barStyle}>
-          <div className="flex items-center gap-3">
-            <button onClick={confirmCrop} disabled={!cropArea} title="Confirm">
-              <Check
-                className={`h-5 w-5 ${cropArea ? "text-green-400" : "text-gray-500"}`}
-              />
-            </button>
-            <button
-              onClick={undoCrop}
-              disabled={cropHistoryRef.current.length === 0}
-              className="disabled:opacity-30"
-              title="Undo crop"
-            >
-              <Undo2 className="h-5 w-5" />
-            </button>
-          </div>
+          <button onClick={confirmCrop} disabled={!cropArea} title="Confirm">
+            <Check
+              className={`h-5 w-5 ${cropArea ? "text-green-400" : "text-gray-500"}`}
+            />
+          </button>
           <button
             onClick={discardCrop}
             className="text-sm opacity-80"
@@ -280,6 +335,30 @@ const MobileView = ({
                 {icon}
               </button>
             ))}
+            <label
+              className="relative w-6 h-6 rounded-full flex-shrink-0 cursor-pointer overflow-hidden"
+              style={{
+                background: currentColor,
+                border: "2px solid rgba(255,255,255,0.7)",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.6)",
+              }}
+            >
+              <input
+                type="color"
+                value={currentColor}
+                onChange={(e) => setCurrentColor(e.target.value)}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  opacity: 0,
+                  width: "100%",
+                  height: "100%",
+                  cursor: "pointer",
+                  border: "none",
+                  padding: 0,
+                }}
+              />
+            </label>
           </div>
         </div>
       )}
