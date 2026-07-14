@@ -51,15 +51,61 @@ import CurveArrowTool from "./CurveArrowTool";
 import MobileView from "./MobileView";
 import { useHistoryManager } from "@/hooks/useHistoryManager";
 import { ActionCreators } from "@/utils/actionCreators";
+import {
+  resolveImageSource,
+  getImageSourceKey,
+} from "@/utils/resolveImageSource";
+import { buildImageEditResult } from "@/utils/buildImageEditResult";
 
 const minBrushSize = 1;
 const maxBrushSize = 20;
 
+/**
+ * @typedef {
+ *   | { kind: "url", url: string, name?: string }
+ *   | { kind: "file", file: File, name?: string }
+ *   | { kind: "blob", blob: Blob, name?: string }
+ *   | { kind: "dataUrl", dataUrl: string, name?: string }
+ * } EditableImageSource
+ *
+ * @typedef {{
+ *   blob: Blob,
+ *   file: File,
+ *   dataUrl: string,
+ *   width: number,
+ *   height: number,
+ * }} ImageEditResult
+ */
+
+/**
+ * @param {object} props
+ * @param {boolean} props.isOpen
+ * @param {() => void} props.onClose
+ * @param {EditableImageSource} props.image - accepts a remote url, a File, a Blob, or a dataUrl
+ * @param {(result: ImageEditResult) => void} props.onSave - receives the edited image as a Blob/File/dataUrl bundle
+ */
 export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
   const { toast } = useToast();
 
   const baseCanvasRef = useRef(null);
   const drawingCanvasRef = useRef(null);
+
+  // ── resolved image source (handles url / file / blob / dataUrl uniformly) ──
+  const [resolvedImage, setResolvedImage] = useState({
+    src: null,
+    name: undefined,
+  });
+
+  useEffect(() => {
+    if (!image) {
+      setResolvedImage({ src: null, name: undefined });
+      return;
+    }
+    const { src, name, cleanup } = resolveImageSource(image);
+    setResolvedImage({ src, name });
+    return cleanup;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getImageSourceKey(image)]);
 
   const [activeTool, setActiveTool] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -248,12 +294,18 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     const drawingCtx = drawingCanvas?.getContext("2d");
     if (!baseCanvas || !baseCtx || !drawingCanvas || !drawingCtx) return;
 
+    if (!resolvedImage.src) return;
+
     const img = new Image();
-    img.crossOrigin = "anonymous";
-    const cacheBustedUrl =
-      image.url + (image.url.includes("?") ? "&" : "?") + "cb=" + Date.now();
-    img.src = cacheBustedUrl;
-    img.src = cacheBustedUrl;
+    // Cache-busting for real network URLs;
+    const isRemoteUrl = image?.kind === "url";
+    if (isRemoteUrl) img.crossOrigin = "anonymous";
+    img.src = isRemoteUrl
+      ? resolvedImage.src +
+        (resolvedImage.src.includes("?") ? "&" : "?") +
+        "cb=" +
+        Date.now()
+      : resolvedImage.src;
     img.onload = () => {
       const container = baseCanvas.parentElement;
       if (!container) return;
@@ -301,16 +353,16 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
       });
     };
     img.onerror = () => console.error("Failed to load image for editing.");
-  }, [image.url]);
+  }, [resolvedImage.src, image?.kind]);
 
   useEffect(() => {
-    if (!isOpen || !image.url) return;
+    if (!isOpen || !resolvedImage.src) return;
     const t = setTimeout(() => {
       if (baseCanvasRef.current && drawingCanvasRef.current)
         drawImageOnCanvas();
     }, 0);
     return () => clearTimeout(t);
-  }, [isOpen, image.url, drawImageOnCanvas]);
+  }, [isOpen, resolvedImage.src, drawImageOnCanvas]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -903,7 +955,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     ctx.drawImage(baseCanvas, 0, 0);
     ctx.drawImage(drawingCanvas, 0, 0);
     const a = document.createElement("a");
-    a.download = `edited-${image.name || "image"}.png`;
+    a.download = `edited-${resolvedImage.name || "image"}.png`;
     a.href = tmp.toDataURL("image/png");
     a.click();
   };
@@ -1103,7 +1155,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
 
   // ── save / cancel ──────────────────────────────────────────────────────────
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (cropArea) return;
     konvaRectRef.current?.flatten();
     konvaCircleRef.current?.flatten();
@@ -1120,7 +1172,20 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     if (!ctx) return;
     ctx.drawImage(baseCanvas, 0, 0);
     ctx.drawImage(drawingCanvas, 0, 0);
-    onSave(tmp.toDataURL("image/png"));
+
+    try {
+      const result = await buildImageEditResult(tmp, {
+        fileName: `edited-${resolvedImage.name || "image"}.png`,
+      });
+      onSave(result);
+    } catch (err) {
+      console.error("Failed to build image edit result:", err);
+      toast({
+        title: "Save failed",
+        description: "Could not export the edited image. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCancel = () => {
@@ -1241,7 +1306,9 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
       >
         {/* Header */}
         <div className="p-4 border-b hidden lg:flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Edit Image: {image?.name}</h2>
+          <h2 className="text-lg font-semibold">
+            Edit Image: {resolvedImage.name}
+          </h2>
         </div>
 
         {/* Body */}

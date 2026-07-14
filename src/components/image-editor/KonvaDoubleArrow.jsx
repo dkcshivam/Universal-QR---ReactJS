@@ -49,6 +49,16 @@ const KonvaDoubleArrow = forwardRef(
       },
     }));
 
+    // Clears selections instantly when the tool is deactivated or switched
+    useEffect(() => {
+      if (!active) {
+        setSelectedId(null);
+        if (onElementDeselect) {
+          onElementDeselect();
+        }
+      }
+    }, [active, onElementDeselect]);
+
     useEffect(() => {
       if (stageRef.current) {
         const stage = stageRef.current;
@@ -59,15 +69,20 @@ const KonvaDoubleArrow = forwardRef(
     }, [width, height]);
 
     useEffect(() => {
-      const handleKeyDown = (e) => {
-        if ((e.key === "Delete" || e.key === "Backspace") && selectedId) {
-          setArrows((arrs) => arrs.filter((a) => a.id !== selectedId));
-          setSelectedId(null);
+      if (trRef.current && stageRef.current) {
+        if (selectedId) {
+          const node = stageRef.current.findOne(`#${selectedId}`);
+          if (node) {
+            trRef.current.nodes([node]);
+          } else {
+            trRef.current.nodes([]);
+          }
+        } else {
+          trRef.current.nodes([]);
         }
-      };
-      window.addEventListener("keydown", handleKeyDown);
-      return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [selectedId, setArrows]);
+        trRef.current.getLayer().batchDraw();
+      }
+    }, [selectedId, arrows]);
 
     useEffect(() => {
       if (trRef.current && selectedId && stageRef.current) {
@@ -162,6 +177,12 @@ const KonvaDoubleArrow = forwardRef(
         setArrows((arrs) => [...arrs, newArrow]);
         if (onAdd) {
           onAdd(newArrow);
+        }
+      } else {
+        // Discarded drawing gesture: Remove selection nodes to prevent ghost outlines
+        setSelectedId(null);
+        if (onElementDeselect) {
+          onElementDeselect();
         }
       }
       setNewArrow(null);
@@ -439,7 +460,7 @@ const KonvaDoubleArrow = forwardRef(
               "bottom-left",
               "bottom-right",
             ]}
-            anchorSize={isMobile ? 18 : 8}
+            anchorSize={8}
             borderDash={[4, 4]}
           />
         </Layer>

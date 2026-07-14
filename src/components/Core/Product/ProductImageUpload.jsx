@@ -1,7 +1,7 @@
 import axios from "axios";
 import React, { useRef, useState } from "react";
 import { FaPlus, FaTimes, FaTrash } from "react-icons/fa";
-import { FiEdit2 } from 'react-icons/fi';
+import { FiEdit2 } from "react-icons/fi";
 import { useParams } from "react-router-dom";
 import DeleteImageModal from "./DeleteConfirmation";
 import { toast } from "react-toastify";
@@ -104,19 +104,21 @@ const ProductImageUpload = ({
   const handleEditClick = (img) => {
     setEditingImage({
       id: img.id,
+      kind: "url",
       url: img.image, // the Django-served image URL
       name: img.image?.split("/").pop() || "image.png",
     });
     setIsEditorOpen(true);
   };
 
-  const handleEditorSave = async (newImageDataUrl) => {
+  const handleEditorSave = async (editResult) => {
     if (!editingImage) return;
 
-    // Convert base64 data URL → File object
-    const res = await fetch(newImageDataUrl);
-    const blob = await res.blob();
-    const file = new File([blob], editingImage.name, { type: "image/png" });
+    // editResult is { blob, file, dataUrl, width, height } — the modal
+    // already built a File for us, so no fetch()/blob conversion needed.
+    const file = new File([editResult.blob], editingImage.name, {
+      type: "image/png",
+    });
 
     // Use the existing onUpload prop to upload the edited file
     // This keeps the same upload pipeline (presigned URL / multipart etc.)
