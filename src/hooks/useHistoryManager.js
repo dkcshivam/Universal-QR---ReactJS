@@ -132,41 +132,83 @@ export function useHistoryManager({ drawingCanvasRef, baseCanvasRef }) {
   // ── Internal: undo a single base-canvas action ────────────────────────────
   const undoBaseAction = useCallback(
     (action) => {
-      const canvas = baseCanvasRef.current;
-      const ctx = canvas?.getContext("2d");
-      if (!canvas || !ctx) return;
+      const baseCanvas = baseCanvasRef.current;
+      const baseCtx = baseCanvas?.getContext("2d");
+      const drawingCanvas = drawingCanvasRef.current;
+      const drawingCtx = drawingCanvas?.getContext("2d");
+      if (!baseCanvas || !baseCtx) return;
 
       if (action.type === "APPLY_FILTER") {
         const id = action.payload?.previousImageData;
-        if (id) ctx.putImageData(id, 0, 0);
+        if (id) baseCtx.putImageData(id, 0, 0);
       }
+
       if (action.type === "CROP_IMAGE") {
-        // Restore pre-crop canvas (dimensions may differ)
-        const id = action.payload?.imageData;
-        if (id) {
-          canvas.width = id.width;
-          canvas.height = id.height;
-          ctx.putImageData(id, 0, 0);
+        const { prevWidth, prevHeight, baseImageData, drawingImageData } =
+          action.payload || {};
+        if (baseImageData && prevWidth && prevHeight) {
+          baseCanvas.width = prevWidth;
+          baseCanvas.height = prevHeight;
+          baseCtx.putImageData(baseImageData, 0, 0);
+        }
+        // Keep the drawing (annotation) layer's buffer in lockstep with the
+        // base layer — mismatched dimensions is what causes distorted strokes.
+        if (drawingCanvas && drawingCtx && prevWidth && prevHeight) {
+          drawingCanvas.width = prevWidth;
+          drawingCanvas.height = prevHeight;
+          if (drawingImageData) drawingCtx.putImageData(drawingImageData, 0, 0);
         }
       }
     },
-    [baseCanvasRef],
+    [baseCanvasRef, drawingCanvasRef],
   );
 
   const redoBaseAction = useCallback(
     (action) => {
-      const canvas = baseCanvasRef.current;
-      const ctx = canvas?.getContext("2d");
-      if (!canvas || !ctx) return;
+      const baseCanvas = baseCanvasRef.current;
+      const baseCtx = baseCanvas?.getContext("2d");
+      const drawingCanvas = drawingCanvasRef.current;
+      const drawingCtx = drawingCanvas?.getContext("2d");
+      if (!baseCanvas || !baseCtx) return;
 
       if (action.type === "APPLY_FILTER") {
         const id = action.payload?.newImageData;
-        if (id) ctx.putImageData(id, 0, 0);
+        if (id) baseCtx.putImageData(id, 0, 0);
       }
-      // CROP_IMAGE redo: the crop was already applied; nothing to replay here
-      // (re-applying would require re-running applyCrop logic)
+
+      if (action.type === "CROP_IMAGE") {
+        const { cropArea: v } = action.payload || {};
+        if (!v) return;
+        const tmpBase = document.createElement("canvas");
+        tmpBase.width = v.width;
+        tmpBase.height = v.height;
+        const tmpCtx = tmpBase.getContext("2d");
+        if (!tmpCtx) return;
+        tmpCtx.drawImage(
+          baseCanvas,
+          v.x,
+          v.y,
+          v.width,
+          v.height,
+          0,
+          0,
+          v.width,
+          v.height,
+        );
+
+        baseCanvas.width = v.width;
+        baseCanvas.height = v.height;
+        baseCtx.clearRect(0, 0, v.width, v.height);
+        baseCtx.drawImage(tmpBase, 0, 0);
+
+        if (drawingCanvas && drawingCtx) {
+          drawingCanvas.width = v.width;
+          drawingCanvas.height = v.height;
+          drawingCtx.clearRect(0, 0, v.width, v.height);
+        }
+      }
     },
-    [baseCanvasRef],
+    [baseCanvasRef, drawingCanvasRef],
   );
 
   // ── Public API ────────────────────────────────────────────────────────────

@@ -227,6 +227,10 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     else setBrushSize(3);
   }, [activeTool]);
 
+  // useEffect(() => {
+  //   console.log("[activeTool changed] ->", activeTool);
+  // }, [activeTool]);
+
   useEffect(() => {
     const check = () =>
       setShowTrashIcon(window.innerWidth < 1024 && selectedElementId !== null);
@@ -250,17 +254,17 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
   }, []);
 
   // debug
-  useEffect(() => {
-    console.log("History state updated:", {
-      totalActions: historyState.actions.length,
-      konvaActions: historyState.actions.filter((a) => a.target === "konva")
-        .length,
-      drawingActions: historyState.actions.filter((a) => a.target === "drawing")
-        .length,
-      baseActions: historyState.actions.filter((a) => a.target === "base")
-        .length,
-    });
-  }, [historyState.actions]);
+  // useEffect(() => {
+  //   console.log("History state updated:", {
+  //     totalActions: historyState.actions.length,
+  //     konvaActions: historyState.actions.filter((a) => a.target === "konva")
+  //       .length,
+  //     drawingActions: historyState.actions.filter((a) => a.target === "drawing")
+  //       .length,
+  //     baseActions: historyState.actions.filter((a) => a.target === "base")
+  //       .length,
+  //   });
+  // }, [historyState.actions]);
 
   // ── keyboard shortcuts ─────────────────────────────────────────────────────
 
@@ -841,13 +845,23 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     const drawingCanvas = drawingCanvasRef.current;
     const baseCtx = baseCanvas.getContext("2d");
     const drawingCtx = drawingCanvas?.getContext("2d");
-    const imageData = baseCtx?.getImageData(
+    if (!baseCtx || !drawingCtx || !drawingCanvas) return;
+
+    // Snapshot BOTH layers + their dimensions before resizing, for undo.
+    const prevBaseImageData = baseCtx.getImageData(
       0,
       0,
       baseCanvas.width,
       baseCanvas.height,
     );
-    if (!baseCtx || !drawingCtx || !drawingCanvas) return;
+    const prevDrawingImageData = drawingCtx.getImageData(
+      0,
+      0,
+      drawingCanvas.width,
+      drawingCanvas.height,
+    );
+    const prevWidth = baseCanvas.width;
+    const prevHeight = baseCanvas.height;
 
     const v = {
       x: Math.max(0, Math.min(cropArea.x, baseCanvas.width)),
@@ -855,17 +869,24 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
       width: Math.min(cropArea.width, baseCanvas.width - cropArea.x),
       height: Math.min(cropArea.height, baseCanvas.height - cropArea.y),
     };
-    if (imageData)
-      addAction(createAction("base", "CROP_IMAGE", { cropArea: v, imageData }));
 
+    addAction(
+      createAction("base", "CROP_IMAGE", {
+        cropArea: v,
+        prevWidth,
+        prevHeight,
+        baseImageData: prevBaseImageData,
+        drawingImageData: prevDrawingImageData,
+      }),
+    );
+
+    // Crop only the base (photo) layer — the drawing layer at this point
+    // holds nothing but the crop-selection overlay, which we discard.
     const tmpBase = document.createElement("canvas");
-    const tmpDrawing = document.createElement("canvas");
-    tmpBase.width = tmpDrawing.width = v.width;
-    tmpBase.height = tmpDrawing.height = v.height;
+    tmpBase.width = v.width;
+    tmpBase.height = v.height;
     const tmpBaseCtx = tmpBase.getContext("2d");
-    const tmpDrawingCtx = tmpDrawing.getContext("2d");
-    if (!tmpBaseCtx || !tmpDrawingCtx) return;
-
+    if (!tmpBaseCtx) return;
     tmpBaseCtx.drawImage(
       baseCanvas,
       v.x,
@@ -878,28 +899,6 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
       v.height,
     );
 
-    const dId = drawingCtx.getImageData(
-      0,
-      0,
-      drawingCanvas.width,
-      drawingCanvas.height,
-    );
-    const hasActualDrawing = dId.data.some(
-      (val, i) => i % 4 === 3 && val === 255,
-    );
-    if (!hasActualDrawing)
-      tmpDrawingCtx.drawImage(
-        baseCanvas,
-        v.x,
-        v.y,
-        v.width,
-        v.height,
-        0,
-        0,
-        v.width,
-        v.height,
-      );
-
     baseCanvas.width = drawingCanvas.width = v.width;
     baseCanvas.height = drawingCanvas.height = v.height;
     baseCtx.clearRect(0, 0, v.width, v.height);
@@ -907,7 +906,6 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     baseCtx.globalCompositeOperation = "source-over";
     drawingCtx.globalCompositeOperation = "source-over";
     baseCtx.drawImage(tmpBase, 0, 0);
-    if (hasActualDrawing) drawingCtx.drawImage(tmpDrawing, 0, 0);
 
     setCanvasDimensions({ width: v.width, height: v.height });
     setCropArea(null);
@@ -1229,18 +1227,32 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
   };
 
   const handleToolChange = (tool) => {
+    console.log(
+      "[handleToolChange] called with:",
+      tool,
+      "current activeTool:",
+      activeTool,
+    );
     if (activeTool === "eraser") setBrushSize(10);
     else if (activeTool === "pencil") setBrushSize(3);
+
     if (tool === "crop") {
+      try {
+        konvaRectRef.current?.flatten();
+        konvaCircleRef.current?.flatten();
+        konvaArrowRef.current?.flatten();
+        konvaDoubleArrowRef.current?.flatten();
+        textEditorRef.current?.flatten();
+        flattenLayers();
+        console.log("[handleToolChange] flatten block completed OK");
+      } catch (err) {
+        console.error("[handleToolChange] flatten block THREW:", err);
+      }
       setCropArea(null);
       setIsCropping(false);
       setDragStart(null);
-      const ctx = drawingCanvasRef.current?.getContext("2d");
-      if (ctx) {
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        ctx.globalCompositeOperation = "source-over";
-      }
     }
+
     if (tool === "text") {
       setTextInputPosition(null);
       setText("");
@@ -1250,9 +1262,9 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     setShowTrashIcon(false);
     setIsDraggedOverTrash(false);
     setIsTextToolActive(tool === "text");
+    console.log("[handleToolChange] calling setActiveTool with:", tool);
     setActiveTool(tool);
   };
-
   // ── shared Konva props factory ─────────────────────────────────────────────
 
   const sharedKonvaProps = {
@@ -1289,6 +1301,18 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     },
     [createAction, addAction],
   );
+
+  const handleUndo = useCallback(() => {
+    undo();
+    const c = drawingCanvasRef.current;
+    if (c) setCanvasDimensions({ width: c.width, height: c.height });
+  }, [undo]);
+
+  const handleRedo = useCallback(() => {
+    redo();
+    const c = drawingCanvasRef.current;
+    if (c) setCanvasDimensions({ width: c.width, height: c.height });
+  }, [redo]);
 
   if (!isOpen) return null;
 
@@ -1362,7 +1386,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
             <div className="flex justify-between gap-2">
               <Button
                 variant="outline"
-                onClick={undo}
+                onClick={handleUndo}
                 disabled={!canUndo}
                 title={`Undo (${actionCount} actions)`}
                 className="flex items-center gap-2 p-3"
@@ -1371,7 +1395,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
               </Button>
               <Button
                 variant="outline"
-                onClick={redo}
+                onClick={handleRedo}
                 disabled={!canRedo}
                 title="Redo"
                 className="flex items-center gap-2 p-3"
@@ -1409,19 +1433,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
               {/* Crop — with confirm guard */}
               <Button
                 variant={activeTool === "crop" ? "secondary" : "ghost"}
-                onClick={() => {
-                  const c = drawingCanvasRef.current;
-                  const ctx = c?.getContext("2d");
-                  if (!c || !ctx) return;
-                  const hasChanges = ctx
-                    .getImageData(0, 0, c.width, c.height)
-                    .data.some((p, i) => i % 4 === 3 && p !== 0);
-                  if (hasChanges && activeTool !== "crop") {
-                    setShowCropConfirm(true);
-                    setShowCurveArrowConfirm(false);
-                    setShowCurveConfirm(false);
-                  } else handleToolChange("crop");
-                }}
+                onClick={() => handleToolChange("crop")}
                 className="!flex !flex-col !px-2 !py-1 !gap-1 min-w-[45%] !h-max"
               >
                 <Crop className="h-4 w-4" /> Crop
