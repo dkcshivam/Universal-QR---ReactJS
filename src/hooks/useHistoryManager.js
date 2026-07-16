@@ -294,6 +294,48 @@ export function useHistoryManager({ drawingCanvasRef, baseCanvasRef }) {
   const canRedo = currentStepRef.current < allActionsRef.current.length - 1;
   const actionCount = currentStepRef.current + 1;
 
+  const resetHistoryTo = useCallback(
+    (action) => {
+      allActionsRef.current = action ? [action] : [];
+      currentStepRef.current = action ? 0 : -1;
+      forceUpdate();
+    },
+    [forceUpdate],
+  );
+
+  const removeKonvaActionsByType = useCallback(
+    (elementType) => {
+      const all = allActionsRef.current;
+      const isTarget = (a) =>
+        a.target === "konva" && a.payload?.elementType === elementType;
+
+      const removedBeforeStep = all
+        .slice(0, currentStepRef.current + 1)
+        .filter(isTarget).length;
+
+      allActionsRef.current = all.filter((a) => !isTarget(a));
+      currentStepRef.current = currentStepRef.current - removedBeforeStep;
+      forceUpdate();
+    },
+    [forceUpdate],
+  );
+
+  const removeActionsByTarget = useCallback(
+    (target) => {
+      const all = allActionsRef.current;
+      const isTarget = (a) => a.target === target;
+
+      const removedBeforeStep = all
+        .slice(0, currentStepRef.current + 1)
+        .filter(isTarget).length;
+
+      allActionsRef.current = all.filter((a) => !isTarget(a));
+      currentStepRef.current = currentStepRef.current - removedBeforeStep;
+      forceUpdate();
+    },
+    [forceUpdate],
+  );
+
   return {
     // History
     historyState,
@@ -323,5 +365,8 @@ export function useHistoryManager({ drawingCanvasRef, baseCanvasRef }) {
     konvaArrowRef,
     konvaDoubleArrowRef,
     textEditorRef,
+    resetHistoryTo,
+    removeKonvaActionsByType,
+    removeActionsByTarget
   };
 }

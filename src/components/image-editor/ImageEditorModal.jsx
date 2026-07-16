@@ -89,6 +89,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
 
   const baseCanvasRef = useRef(null);
   const drawingCanvasRef = useRef(null);
+  const canvasAreaRef = useRef(null);
 
   // ── resolved image source (handles url / file / blob / dataUrl uniformly) ──
   const [resolvedImage, setResolvedImage] = useState({
@@ -185,6 +186,9 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     konvaArrowRef,
     konvaDoubleArrowRef,
     textEditorRef,
+    resetHistoryTo,
+    removeKonvaActionsByType,
+    removeActionsByTarget,
   } = useHistoryManager({ drawingCanvasRef, baseCanvasRef });
 
   // ── lifecycle ──────────────────────────────────────────────────────────────
@@ -227,10 +231,6 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     else setBrushSize(3);
   }, [activeTool]);
 
-  // useEffect(() => {
-  //   console.log("[activeTool changed] ->", activeTool);
-  // }, [activeTool]);
-
   useEffect(() => {
     const check = () =>
       setShowTrashIcon(window.innerWidth < 1024 && selectedElementId !== null);
@@ -252,21 +252,6 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
       return () => ro.disconnect();
     }
   }, []);
-
-  // debug
-  // useEffect(() => {
-  //   console.log("History state updated:", {
-  //     totalActions: historyState.actions.length,
-  //     konvaActions: historyState.actions.filter((a) => a.target === "konva")
-  //       .length,
-  //     drawingActions: historyState.actions.filter((a) => a.target === "drawing")
-  //       .length,
-  //     baseActions: historyState.actions.filter((a) => a.target === "base")
-  //       .length,
-  //   });
-  // }, [historyState.actions]);
-
-  // ── keyboard shortcuts ─────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!isOpen) return;
@@ -311,12 +296,12 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
         Date.now()
       : resolvedImage.src;
     img.onload = () => {
-      const container = baseCanvas.parentElement;
-      if (!container) return;
       const isMobile = window.innerWidth < 1024;
       let canvasWidth, canvasHeight;
       if (isMobile) {
-        const r = container.getBoundingClientRect();
+        const measureEl = canvasAreaRef.current || baseCanvas.parentElement;
+        if (!measureEl) return;
+        const r = measureEl.getBoundingClientRect();
         canvasWidth = r.width;
         canvasHeight = r.height;
       } else {
@@ -370,7 +355,10 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
 
   useEffect(() => {
     if (!isOpen) return;
+    let lastWidth = window.innerWidth;
     const handleResize = () => {
+      if (window.innerWidth === lastWidth) return;
+      lastWidth = window.innerWidth;
       if (baseCanvasRef.current && drawingCanvasRef.current)
         drawImageOnCanvas();
     };
@@ -518,235 +506,63 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
   // ── flatten callbacks ──────────────────────────────────────────────────────
 
   const handleKonvaRectFlatten = useCallback(
-    (rects) => {
+    (canvasEl) => {
       const ctx = drawingCanvasRef.current?.getContext("2d");
-      if (!ctx) return;
-      rects.forEach((r) => {
-        ctx.save();
-        ctx.strokeStyle = r.stroke;
-        ctx.lineWidth = r.strokeWidth;
-        if (r.dash?.length > 0) ctx.setLineDash(r.dash);
-        if (r.fill) {
-          ctx.fillStyle = r.fill;
-          ctx.fillRect(r.x, r.y, r.width, r.height);
-        }
-        ctx.strokeRect(r.x, r.y, r.width, r.height);
-        ctx.restore();
-      });
+      if (ctx && canvasEl) {
+        ctx.drawImage(canvasEl, 0, 0, ctx.canvas.width, ctx.canvas.height);
+      }
       setRectangles([]);
+      removeKonvaActionsByType("rectangle");
     },
-    [setRectangles],
+    [setRectangles, removeKonvaActionsByType],
   );
 
   const handleKonvaCircleFlatten = useCallback(
-    (circleShapes) => {
+    (canvasEl) => {
       const ctx = drawingCanvasRef.current?.getContext("2d");
-      if (!ctx) return;
-      circleShapes.forEach((c) => {
-        ctx.save();
-        ctx.strokeStyle = c.stroke;
-        ctx.lineWidth = c.strokeWidth ?? 1;
-        if (c.dash?.length > 0) ctx.setLineDash(c.dash);
-        else ctx.setLineDash([]);
-        ctx.beginPath();
-        ctx.arc(c.x, c.y, c.radius, 0, 2 * Math.PI);
-        if (c.fill && c.fill !== "transparent") {
-          ctx.fillStyle = c.fill;
-          ctx.fill();
-        }
-        ctx.stroke();
-        ctx.restore();
-      });
+      if (ctx && canvasEl) {
+        ctx.drawImage(canvasEl, 0, 0, ctx.canvas.width, ctx.canvas.height);
+      }
       setCircles([]);
+      removeKonvaActionsByType("circle");
     },
-    [setCircles],
+    [setCircles, removeKonvaActionsByType],
   );
 
   const handleKonvaArrowFlatten = useCallback(
-    (arrowShapes) => {
-      if (!drawingCanvasRef.current || !imageDrawParams) return;
-      const ctx = drawingCanvasRef.current.getContext("2d");
-      if (!ctx) return;
-      const {
-        offsetX,
-        offsetY,
-        drawWidth,
-        drawHeight,
-        naturalWidth,
-        naturalHeight,
-      } = imageDrawParams;
-      const scaleX = drawWidth / naturalWidth;
-      const scaleY = drawHeight / naturalHeight;
-      arrowShapes.forEach((a) => {
-        const [x1, y1, x2, y2] = a.points;
-        const drawX1 = offsetX + ((x1 - offsetX) / scaleX) * scaleX;
-        const drawY1 = offsetY + ((y1 - offsetY) / scaleY) * scaleY;
-        const drawX2 = offsetX + ((x2 - offsetX) / scaleX) * scaleX;
-        const drawY2 = offsetY + ((y2 - offsetY) / scaleY) * scaleY;
-        ctx.save();
-        ctx.strokeStyle = a.stroke;
-        ctx.lineWidth = a.strokeWidth ?? 1;
-        switch (strokeStyle) {
-          case "dashed":
-            ctx.setLineDash([brushSize * 3, brushSize * 2]);
-            break;
-          case "dotted":
-            ctx.setLineDash([brushSize, brushSize]);
-            break;
-          default:
-            ctx.setLineDash([]);
-        }
-        ctx.beginPath();
-        ctx.moveTo(drawX1, drawY1);
-        ctx.lineTo(drawX2, drawY2);
-        ctx.stroke();
-        const headlen = 15;
-        const angle = Math.atan2(drawY2 - drawY1, drawX2 - drawX1);
-        ctx.setLineDash([]);
-        ctx.beginPath();
-        ctx.moveTo(drawX2, drawY2);
-        ctx.lineTo(
-          drawX2 - headlen * Math.cos(angle - Math.PI / 7),
-          drawY2 - headlen * Math.sin(angle - Math.PI / 7),
-        );
-        ctx.lineTo(
-          drawX2 - headlen * Math.cos(angle + Math.PI / 7),
-          drawY2 - headlen * Math.sin(angle + Math.PI / 7),
-        );
-        ctx.lineTo(drawX2, drawY2);
-        ctx.stroke();
-        ctx.fillStyle = a.stroke;
-        ctx.fill();
-        ctx.restore();
-      });
+    (canvasEl) => {
+      const ctx = drawingCanvasRef.current?.getContext("2d");
+      if (ctx && canvasEl) {
+        ctx.drawImage(canvasEl, 0, 0, ctx.canvas.width, ctx.canvas.height);
+      }
       setArrows([]);
+      removeKonvaActionsByType("arrow");
     },
-    [imageDrawParams, setArrows, strokeStyle, brushSize],
+    [setArrows, removeKonvaActionsByType],
   );
 
   const handleKonvaDoubleArrowFlatten = useCallback(
-    (arrowShapes) => {
-      if (!drawingCanvasRef.current || !imageDrawParams) return;
-      const ctx = drawingCanvasRef.current.getContext("2d");
-      if (!ctx) return;
-      const {
-        offsetX,
-        offsetY,
-        drawWidth,
-        drawHeight,
-        naturalWidth,
-        naturalHeight,
-      } = imageDrawParams;
-      const scaleX = drawWidth / naturalWidth;
-      const scaleY = drawHeight / naturalHeight;
-      arrowShapes.forEach((a) => {
-        const [x1, y1, x2, y2] = a.points;
-        const drawX1 = offsetX + ((x1 - offsetX) / scaleX) * scaleX;
-        const drawY1 = offsetY + ((y1 - offsetY) / scaleY) * scaleY;
-        const drawX2 = offsetX + ((x2 - offsetX) / scaleX) * scaleX;
-        const drawY2 = offsetY + ((y2 - offsetY) / scaleY) * scaleY;
-        ctx.save();
-        ctx.strokeStyle = a.stroke;
-        ctx.lineWidth = a.strokeWidth ?? 1;
-        switch (strokeStyle) {
-          case "dashed":
-            ctx.setLineDash([brushSize * 3, brushSize * 2]);
-            break;
-          case "dotted":
-            ctx.setLineDash([brushSize, brushSize]);
-            break;
-          default:
-            ctx.setLineDash([]);
-        }
-        ctx.beginPath();
-        ctx.moveTo(drawX1, drawY1);
-        ctx.lineTo(drawX2, drawY2);
-        ctx.stroke();
-        const headlen = 15;
-        const angle = Math.atan2(drawY2 - drawY1, drawX2 - drawX1);
-        ctx.setLineDash([]);
-        // first head
-        ctx.beginPath();
-        ctx.moveTo(drawX1, drawY1);
-        ctx.lineTo(
-          drawX1 + headlen * Math.cos(angle - Math.PI / 6),
-          drawY1 + headlen * Math.sin(angle - Math.PI / 6),
-        );
-        ctx.lineTo(
-          drawX1 + headlen * Math.cos(angle + Math.PI / 6),
-          drawY1 + headlen * Math.sin(angle + Math.PI / 6),
-        );
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        // second head
-        ctx.beginPath();
-        ctx.moveTo(drawX2, drawY2);
-        ctx.lineTo(
-          drawX2 + headlen * Math.cos(angle - Math.PI + Math.PI / 6),
-          drawY2 + headlen * Math.sin(angle - Math.PI + Math.PI / 6),
-        );
-        ctx.lineTo(
-          drawX2 + headlen * Math.cos(angle - Math.PI - Math.PI / 6),
-          drawY2 + headlen * Math.sin(angle - Math.PI - Math.PI / 6),
-        );
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-      });
+    (canvasEl) => {
+      const ctx = drawingCanvasRef.current?.getContext("2d");
+      if (ctx && canvasEl) {
+        ctx.drawImage(canvasEl, 0, 0, ctx.canvas.width, ctx.canvas.height);
+      }
       setDoubleArrows([]);
+      removeKonvaActionsByType("double-arrow");
     },
-    [imageDrawParams, setDoubleArrows, strokeStyle, brushSize],
+    [setDoubleArrows, removeKonvaActionsByType],
   );
 
   const handleTextFlatten = useCallback(
-    (textShapes) => {
+    (canvasEl) => {
       const ctx = drawingCanvasRef.current?.getContext("2d");
-      if (!ctx) return;
-      textShapes.forEach((t) => {
-        ctx.save();
-        const scaleX = t.scaleX || 1;
-        const scaleY = t.scaleY || 1;
-        const scaledFontSize = t.fontSize * scaleY;
-        const padding = 6 * Math.min(scaleX, scaleY);
-        const span = document.createElement("span");
-        span.innerText = t.text;
-        span.style.cssText = `font-size:${scaledFontSize}px;font-family:${t.fontFamily};position:absolute;visibility:hidden`;
-        document.body.appendChild(span);
-        const width = (span.offsetWidth + padding * 2) * scaleX;
-        const height = (span.offsetHeight + padding * 2) * scaleY;
-        document.body.removeChild(span);
-        if (t.backgroundColor && t.backgroundColor !== "transparent") {
-          ctx.fillStyle = t.backgroundColor;
-          const radius = 10 * Math.min(scaleX, scaleY);
-          const { x, y } = t;
-          ctx.beginPath();
-          ctx.moveTo(x + radius, y);
-          ctx.lineTo(x + width - radius, y);
-          ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-          ctx.lineTo(x + width, y + height - radius);
-          ctx.quadraticCurveTo(
-            x + width,
-            y + height,
-            x + width - radius,
-            y + height,
-          );
-          ctx.lineTo(x + radius, y + height);
-          ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-          ctx.lineTo(x, y + radius);
-          ctx.quadraticCurveTo(x, y, x + radius, y);
-          ctx.closePath();
-          ctx.fill();
-        }
-        ctx.font = `${scaledFontSize}px ${t.fontFamily}`;
-        ctx.fillStyle = t.fill;
-        ctx.fillText(t.text, t.x + padding, t.y + padding + scaledFontSize);
-        ctx.restore();
-      });
+      if (ctx && canvasEl) {
+        ctx.drawImage(canvasEl, 0, 0, ctx.canvas.width, ctx.canvas.height);
+      }
       setTexts([]);
+      removeKonvaActionsByType("text");
     },
-    [setTexts],
+    [setTexts, removeKonvaActionsByType],
   );
 
   // ── misc helpers ───────────────────────────────────────────────────────────
@@ -784,16 +600,6 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
       .getImageData(0, 0, c.width, c.height)
       .data.some((p, i) => i % 4 === 3 && p !== 0);
   }, []);
-
-  const hasUnsavedChanges =
-    hasDrawingCanvasContent() ||
-    rectangles.length > 0 ||
-    texts.length > 0 ||
-    arrows.length > 0 ||
-    circles.length > 0 ||
-    doubleArrows.length > 0 ||
-    textInputPosition !== null ||
-    cropArea !== null;
 
   // ── crop ──────────────────────────────────────────────────────────────────
 
@@ -870,15 +676,14 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
       height: Math.min(cropArea.height, baseCanvas.height - cropArea.y),
     };
 
-    addAction(
-      createAction("base", "CROP_IMAGE", {
-        cropArea: v,
-        prevWidth,
-        prevHeight,
-        baseImageData: prevBaseImageData,
-        drawingImageData: prevDrawingImageData,
-      }),
-    );
+    const cropAction = createAction("base", "CROP_IMAGE", {
+      cropArea: v,
+      prevWidth,
+      prevHeight,
+      baseImageData: prevBaseImageData,
+      drawingImageData: prevDrawingImageData,
+    });
+    resetHistoryTo(cropAction);
 
     // Crop only the base (photo) layer — the drawing layer at this point
     // holds nothing but the crop-selection overlay, which we discard.
@@ -975,7 +780,8 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     baseCtx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
     baseCtx.drawImage(tmp, 0, 0);
     drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
-  }, []);
+    removeActionsByTarget("drawing");
+  }, [removeActionsByTarget]);
 
   // ── mouse / touch drawing ──────────────────────────────────────────────────
 
@@ -1187,7 +993,16 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
   };
 
   const handleCancel = () => {
-    if (hasUnsavedChanges) setShowCancelConfirm(true);
+    const unsaved =
+      hasDrawingCanvasContent() ||
+      rectangles.length > 0 ||
+      texts.length > 0 ||
+      arrows.length > 0 ||
+      circles.length > 0 ||
+      doubleArrows.length > 0 ||
+      textInputPosition !== null ||
+      cropArea !== null;
+    if (unsaved) setShowCancelConfirm(true);
     else onClose();
   };
 
@@ -1591,10 +1406,19 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
           </div>
 
           {/* ── Canvas area ── */}
-          <div className="flex-1 flex items-center justify-center bg-black lg:bg-gray-100 min-h-0 relative overflow-hidden px-2 pb-[80px] lg:p-0">
+          <div
+            ref={canvasAreaRef}
+            className="flex-1 flex items-center justify-center bg-black lg:bg-gray-100 min-h-0 relative overflow-hidden px-2 pb-[80px] lg:p-0"
+          >
             <div
-              className="relative lg:border-2 lg:border-gray-300 w-full h-full lg:w-[420px] lg:h-[750px]"
+              className="relative lg:border-2 lg:border-gray-300"
               id="drawing-canvas"
+              style={{
+                width: canvasDimensions.width,
+                height: canvasDimensions.height,
+                maxWidth: "100%",
+                maxHeight: "100%",
+              }}
             >
               <canvas
                 ref={baseCanvasRef}
