@@ -50,7 +50,7 @@ const KonvaRectangle = forwardRef(
           const canvasEl = stageRef.current.toCanvas({ pixelRatio: 1 });
           onFlatten(canvasEl);
         }
-        if (setRectangles) setRectangles([]);
+        
         setSelectedId(null);
       },
     }));
@@ -409,4 +409,4 @@ const KonvaRectangle = forwardRef(
   },
 );
 
-export default KonvaRectangle;
+export default React.memo(KonvaRectangle);

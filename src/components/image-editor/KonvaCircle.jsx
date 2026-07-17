@@ -47,8 +47,19 @@ const KonvaCircle = forwardRef(
           trRef.current.getLayer().batchDraw();
         }
         if (stageRef.current) {
-          const canvasEl = stageRef.current.toCanvas({ pixelRatio: 1 });
-          onFlatten(canvasEl);
+          // Export at exact logical dimensions, then blit with explicit sizes
+          // to avoid any bilinear resampling on the destination canvas.
+          const stageCanvas = stageRef.current.toCanvas({ pixelRatio: 1 });
+          const out = document.createElement("canvas");
+          out.width = width;
+          out.height = height;
+          const outCtx = out.getContext("2d");
+          outCtx.drawImage(
+            stageCanvas,
+            0, 0, stageCanvas.width, stageCanvas.height,
+            0, 0, width, height,
+          );
+          onFlatten(out);
         }
         setCircles([]);
         setSelectedId(null);
@@ -75,6 +86,19 @@ const KonvaCircle = forwardRef(
       return () => window.removeEventListener("keydown", handleKeyDown);
     }, [selectedId, setCircles]);
 
+    /**
+     * Returns pointer position in the Stage's logical coordinate space,
+     * accounting for CSS scaling of the container (not via stage.scale()).
+     */
+    const getScaledPointerPosition = (stage) => {
+      const pos = stage.getPointerPosition();
+      if (!pos) return null;
+      const rect = stage.container().getBoundingClientRect();
+      const cssScaleX = rect.width  / stage.width();
+      const cssScaleY = rect.height / stage.height();
+      return { x: pos.x / cssScaleX, y: pos.y / cssScaleY };
+    };
+
     const handleStageClick = (e) => {
       if (!active) return;
       if (e.evt) {
@@ -91,7 +115,7 @@ const KonvaCircle = forwardRef(
         }
       }
 
-      const pos = e.target.getStage().getPointerPosition();
+      const pos = getScaledPointerPosition(e.target.getStage());
       if (!pos) return;
 
       const id = `circle-${Date.now()}`;
@@ -119,7 +143,7 @@ const KonvaCircle = forwardRef(
         e.evt.preventDefault();
       }
 
-      const pos = e.target.getStage().getPointerPosition();
+      const pos = getScaledPointerPosition(e.target.getStage());
       if (!pos) return;
 
       const dx = pos.x - newCircle.x;
@@ -206,10 +230,12 @@ const KonvaCircle = forwardRef(
       const node = e.target;
       const { x, y } = node.position();
 
-      const stageContainer = stage.container();
-      const stageRect = stageContainer.getBoundingClientRect();
-      const screenX = stageRect.left + x;
-      const screenY = stageRect.top + y;
+      const stageRect = stage.container().getBoundingClientRect();
+      // x/y are logical coords — convert to screen coords via CSS scale
+      const cssScaleX = stageRect.width  / stage.width();
+      const cssScaleY = stageRect.height / stage.height();
+      const screenX = stageRect.left + x * cssScaleX;
+      const screenY = stageRect.top  + y * cssScaleY;
 
       if (checkTrashZoneCollision && updateTrashZoneState) {
         const isOverTrash = checkTrashZoneCollision(screenX, screenY);
@@ -228,10 +254,11 @@ const KonvaCircle = forwardRef(
         updateTrashZoneState(false);
       }
 
-      const stageContainer = stage.container();
-      const stageRect = stageContainer.getBoundingClientRect();
-      const screenX = stageRect.left + x;
-      const screenY = stageRect.top + y;
+      const stageRect = stage.container().getBoundingClientRect();
+      const cssScaleX = stageRect.width  / stage.width();
+      const cssScaleY = stageRect.height / stage.height();
+      const screenX = stageRect.left + x * cssScaleX;
+      const screenY = stageRect.top  + y * cssScaleY;
 
       if (
         checkTrashZoneCollision &&
@@ -270,34 +297,47 @@ const KonvaCircle = forwardRef(
       }
     }, [selectedId, circles]);
 
-    useEffect(() => {
-      if (selectedId) {
-        setCircles((cs) =>
-          cs.map((c) =>
-            c.id === selectedId
-              ? {
-                  ...c,
-                  stroke: color,
-                  strokeWidth: brushSize,
-                  strokeStyle: strokeStyle,
-                  dash: getDashPattern(strokeStyle, brushSize),
-                  ...(backgroundColor &&
-                    backgroundColor !== "transparent" && {
-                      fill: backgroundColor,
-                    }),
-                }
-              : c,
-          ),
+      useEffect(() => {
+    if (selectedId && color && setCircles) {
+      setCircles((items) => {
+        const target = items.find((item) => item.id === selectedId);
+        if (!target) return items;
+        const newDash = getDashPattern(strokeStyle, brushSize);
+        let newFill = backgroundColor || "transparent";
+        if (backgroundColor && backgroundColor !== "transparent") {
+          newFill = backgroundColor;
+        } else if (!backgroundColor || backgroundColor === "transparent") {
+          newFill = "transparent";
+        }
+        const hasStrokeChanged = target.stroke !== color;
+        const hasWidthChanged = target.strokeWidth !== brushSize;
+        const hasStyleChanged = target.strokeStyle !== strokeStyle;
+        const hasFillChanged = target.fill !== newFill;
+        
+        if (!hasStrokeChanged && !hasWidthChanged && !hasStyleChanged && !hasFillChanged) return items;
+
+        return items.map((item) =>
+          item.id === selectedId
+            ? {
+                ...item,
+                stroke: color,
+                strokeWidth: brushSize,
+                strokeStyle: strokeStyle,
+                dash: newDash,
+                fill: newFill,
+              }
+            : item
         );
-      }
-    }, [
-      color,
-      backgroundColor,
-      selectedId,
-      strokeStyle,
-      brushSize,
-      setCircles,
-    ]);
+      });
+    }
+  }, [
+    color,
+    backgroundColor,
+    selectedId,
+    strokeStyle,
+    brushSize,
+    setCircles
+  ]);
 
     return (
       <Stage
@@ -388,4 +428,4 @@ const KonvaCircle = forwardRef(
   },
 );
 
-export default KonvaCircle;
+export default React.memo(KonvaCircle);

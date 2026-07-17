@@ -49,8 +49,17 @@ const ArrowKonva = forwardRef(
           trRef.current.getLayer().batchDraw();
         }
         if (stageRef.current) {
-          const canvasEl = stageRef.current.toCanvas({ pixelRatio: 1 });
-          onFlatten(canvasEl);
+          const stageCanvas = stageRef.current.toCanvas({ pixelRatio: 1 });
+          const out = document.createElement("canvas");
+          out.width = width;
+          out.height = height;
+          const outCtx = out.getContext("2d");
+          outCtx.drawImage(
+            stageCanvas,
+            0, 0, stageCanvas.width, stageCanvas.height,
+            0, 0, width, height,
+          );
+          onFlatten(out);
         }
         setArrows([]);
         setSelectedId(null);
@@ -93,25 +102,61 @@ const ArrowKonva = forwardRef(
     }, [selectedId, arrows]);
 
     // ── live colour / size update on selected arrow ────────────────────────
-    useEffect(() => {
-      if (selectedId) {
-        setArrows((arrs) =>
-          arrs.map((a) =>
-            a.id === selectedId
-              ? {
-                  ...a,
-                  stroke: color,
-                  strokeWidth: brushSize,
-                  strokeStyle,
-                  dash: getDashPattern(strokeStyle, brushSize),
-                }
-              : a,
-          ),
+      useEffect(() => {
+    if (selectedId && color && setArrows) {
+      setArrows((items) => {
+        const target = items.find((item) => item.id === selectedId);
+        if (!target) return items;
+        const newDash = getDashPattern(strokeStyle, brushSize);
+        let newFill = target.fill;
+        if (backgroundColor && backgroundColor !== "transparent") {
+          newFill = backgroundColor;
+        } else if (!backgroundColor || backgroundColor === "transparent") {
+          newFill = "transparent";
+        }
+        const hasStrokeChanged = target.stroke !== color;
+        const hasWidthChanged = target.strokeWidth !== brushSize;
+        const hasStyleChanged = target.strokeStyle !== strokeStyle;
+        const hasFillChanged = target.fill !== newFill;
+        
+        if (!hasStrokeChanged && !hasWidthChanged && !hasStyleChanged && !hasFillChanged) return items;
+
+        return items.map((item) =>
+          item.id === selectedId
+            ? {
+                ...item,
+                stroke: color,
+                strokeWidth: brushSize,
+                strokeStyle: strokeStyle,
+                dash: newDash,
+                fill: newFill,
+              }
+            : item
         );
-      }
-    }, [color, selectedId, brushSize, strokeStyle]);
+      });
+    }
+  }, [
+    color,
+    selectedId,
+    brushSize,
+    strokeStyle
+  ]);
 
     // ── helpers ────────────────────────────────────────────────────────────
+    /**
+     * Corrects Konva's raw pointer position for CSS scaling of the container.
+     * Konva reports pointer in its internal pixel space; when the container is
+     * CSS-shrunk we must divide by the CSS scale factor to get logical coords.
+     */
+    const getScaledPointerPosition = (stage) => {
+      const pos = stage.getPointerPosition();
+      if (!pos) return null;
+      const rect = stage.container().getBoundingClientRect();
+      const cssScaleX = rect.width  / stage.width();
+      const cssScaleY = rect.height / stage.height();
+      return { x: pos.x / cssScaleX, y: pos.y / cssScaleY };
+    };
+
     const constrainToBounds = (points, canvasWidth, canvasHeight) => {
       const [x1, y1, x2, y2] = points;
       return [
@@ -146,7 +191,7 @@ const ArrowKonva = forwardRef(
         onElementDeselect?.();
       }
 
-      const pos = e.target.getStage().getPointerPosition();
+      const pos = getScaledPointerPosition(e.target.getStage());
       if (!pos) return;
 
       const id = `arrow-${Date.now()}`;
@@ -166,7 +211,7 @@ const ArrowKonva = forwardRef(
       if (!active || !newArrow) return;
       if (e.evt) e.evt.preventDefault();
 
-      const pos = e.target.getStage().getPointerPosition();
+      const pos = getScaledPointerPosition(e.target.getStage());
       if (!pos) return;
 
       setNewArrow({
@@ -336,8 +381,13 @@ const ArrowKonva = forwardRef(
       const cx = (pts[0] + pts[2]) / 2;
       const cy = (pts[1] + pts[3]) / 2;
       const rect = stage.container().getBoundingClientRect();
+      const cssScaleX = rect.width  / stage.width();
+      const cssScaleY = rect.height / stage.height();
       updateTrashZoneState(
-        checkTrashZoneCollision(rect.left + cx + x, rect.top + cy + y),
+        checkTrashZoneCollision(
+          rect.left + (cx + x) * cssScaleX,
+          rect.top  + (cy + y) * cssScaleY,
+        ),
       );
     };
 
@@ -354,8 +404,10 @@ const ArrowKonva = forwardRef(
       const pts = node.points();
       const cx = (pts[0] + pts[2]) / 2 + x;
       const cy = (pts[1] + pts[3]) / 2 + y;
+      const cssScaleX = rect.width  / stage.width();
+      const cssScaleY = rect.height / stage.height();
 
-      if (checkTrashZoneCollision?.(rect.left + cx, rect.top + cy)) {
+      if (checkTrashZoneCollision?.(rect.left + cx * cssScaleX, rect.top + cy * cssScaleY)) {
         setArrows((arrs) => arrs.filter((a) => a.id !== id));
         setSelectedId(null);
         onElementDeselect?.();
@@ -486,4 +538,4 @@ const ArrowKonva = forwardRef(
 );
 
 ArrowKonva.displayName = "ArrowKonva";
-export default ArrowKonva;
+export default React.memo(ArrowKonva);

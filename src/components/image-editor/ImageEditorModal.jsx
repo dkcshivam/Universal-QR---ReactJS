@@ -1,5 +1,6 @@
 import React, {
   useState,
+  useMemo,
   useRef,
   useEffect,
   useCallback,
@@ -1082,9 +1083,19 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
   };
   // ── shared Konva props factory ─────────────────────────────────────────────
 
-  const sharedKonvaProps = {
-    width: getCurrentCanvasDimensions().width,
-    height: getCurrentCanvasDimensions().height,
+  const handleElementSelect = useCallback((id, type) => {
+    setSelectedElementId(id);
+    setSelectedElementType(type);
+  }, []);
+
+  const handleElementDeselect = useCallback(() => {
+    setSelectedElementId(null);
+    setSelectedElementType(null);
+  }, []);
+
+  const sharedKonvaProps = useMemo(() => ({
+    width: canvasDimensions.width,
+    height: canvasDimensions.height,
     color: currentColor,
     setColor: setCurrentColor,
     brushSize,
@@ -1093,17 +1104,22 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     setStrokeStyle,
     backgroundColor,
     setBackgroundColor,
-    onElementSelect: (id, type) => {
-      setSelectedElementId(id);
-      setSelectedElementType(type);
-    },
-    onElementDeselect: () => {
-      setSelectedElementId(null);
-      setSelectedElementType(null);
-    },
+    onElementSelect: handleElementSelect,
+    onElementDeselect: handleElementDeselect,
     checkTrashZoneCollision,
     updateTrashZoneState,
-  };
+  }), [
+    canvasDimensions.width,
+    canvasDimensions.height,
+    currentColor,
+    brushSize,
+    strokeStyle,
+    backgroundColor,
+    handleElementSelect,
+    handleElementDeselect,
+    checkTrashZoneCollision,
+    updateTrashZoneState
+  ]);
 
   const handleKonvaTextDelete = useCallback(
     (id) => {
@@ -1414,10 +1430,12 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
               className="relative lg:border-2 lg:border-gray-300"
               id="drawing-canvas"
               style={{
-                width: canvasDimensions.width,
-                height: canvasDimensions.height,
-                maxWidth: "100%",
-                maxHeight: "100%",
+                width: canvasDimensions.width || "auto",
+                height: canvasDimensions.height || "auto",
+                maxHeight: "70vh",
+                aspectRatio: canvasDimensions.width && canvasDimensions.height
+                  ? `${canvasDimensions.width} / ${canvasDimensions.height}`
+                  : "auto",
               }}
             >
               <canvas

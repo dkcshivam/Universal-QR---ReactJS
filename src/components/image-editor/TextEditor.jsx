@@ -57,8 +57,17 @@ const TextEditor = forwardRef(
           trRef.current.getLayer().batchDraw();
         }
         if (stageRef.current) {
-          const canvasEl = stageRef.current.toCanvas({ pixelRatio: 1 });
-          onFlatten(canvasEl);
+          const stageCanvas = stageRef.current.toCanvas({ pixelRatio: 1 });
+          const out = document.createElement("canvas");
+          out.width = width;
+          out.height = height;
+          const outCtx = out.getContext("2d");
+          outCtx.drawImage(
+            stageCanvas,
+            0, 0, stageCanvas.width, stageCanvas.height,
+            0, 0, width, height,
+          );
+          onFlatten(out);
         }
         setTexts([]);
         setSelectedId(null);
@@ -167,15 +176,29 @@ const TextEditor = forwardRef(
       }
     };
 
+    /**
+     * Returns pointer position in the Stage's logical coordinate space,
+     * accounting for CSS scaling of the container (not via stage.scale()).
+     */
+    const getScaledPointerPosition = (stage) => {
+      const pos = stage.getPointerPosition();
+      if (!pos) return null;
+      const rect = stage.container().getBoundingClientRect();
+      const cssScaleX = rect.width  / stage.width();
+      const cssScaleY = rect.height / stage.height();
+      return { x: pos.x / cssScaleX, y: pos.y / cssScaleY };
+    };
+
     const handleDragMove = (e, id) => {
       const stage = e.target.getStage();
       const node = e.target;
       const { x, y } = node.position();
 
-      const stageContainer = stage.container();
-      const stageRect = stageContainer.getBoundingClientRect();
-      const screenX = stageRect.left + x;
-      const screenY = stageRect.top + y;
+      const stageRect = stage.container().getBoundingClientRect();
+      const cssScaleX = stageRect.width  / stage.width();
+      const cssScaleY = stageRect.height / stage.height();
+      const screenX = stageRect.left + x * cssScaleX;
+      const screenY = stageRect.top  + y * cssScaleY;
 
       if (checkTrashZoneCollision && updateTrashZoneState) {
         const isOverTrash = checkTrashZoneCollision(screenX, screenY);
@@ -198,10 +221,11 @@ const TextEditor = forwardRef(
         updateTrashZoneState(false);
       }
 
-      const stageContainer = stage.container();
-      const stageRect = stageContainer.getBoundingClientRect();
-      const screenX = stageRect.left + x;
-      const screenY = stageRect.top + y;
+      const stageRect = stage.container().getBoundingClientRect();
+      const cssScaleX = stageRect.width  / stage.width();
+      const cssScaleY = stageRect.height / stage.height();
+      const screenX = stageRect.left + x * cssScaleX;
+      const screenY = stageRect.top  + y * cssScaleY;
 
       if (
         checkTrashZoneCollision &&
@@ -299,7 +323,8 @@ const TextEditor = forwardRef(
     const handleStageDblClick = (e) => {
       if (!allowCreate) return;
       if (e.target !== e.target.getStage()) return;
-      const pos = e.target.getStage().getPointerPosition();
+      const pos = getScaledPointerPosition(e.target.getStage());
+      if (!pos) return;
       setEditingText({
         id: null,
         x: pos.x,
@@ -577,4 +602,4 @@ const TextEditor = forwardRef(
   },
 );
 
-export default TextEditor;
+export default React.memo(TextEditor);

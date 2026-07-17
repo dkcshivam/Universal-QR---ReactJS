@@ -48,8 +48,17 @@ const KonvaDoubleArrow = forwardRef(
           trRef.current.getLayer().batchDraw();
         }
         if (stageRef.current) {
-          const canvasEl = stageRef.current.toCanvas({ pixelRatio: 1 });
-          onFlatten(canvasEl);
+          const stageCanvas = stageRef.current.toCanvas({ pixelRatio: 1 });
+          const out = document.createElement("canvas");
+          out.width = width;
+          out.height = height;
+          const outCtx = out.getContext("2d");
+          outCtx.drawImage(
+            stageCanvas,
+            0, 0, stageCanvas.width, stageCanvas.height,
+            0, 0, width, height,
+          );
+          onFlatten(out);
         }
         setArrows([]);
         setSelectedId(null);
@@ -122,6 +131,19 @@ const KonvaDoubleArrow = forwardRef(
       }
     }, [color, selectedId, brushSize, strokeStyle, setArrows]);
 
+    /**
+     * Returns pointer position in the Stage's logical coordinate space,
+     * accounting for CSS scaling of the container (not via stage.scale()).
+     */
+    const getScaledPointerPosition = (stage) => {
+      const pos = stage.getPointerPosition();
+      if (!pos) return null;
+      const rect = stage.container().getBoundingClientRect();
+      const cssScaleX = rect.width  / stage.width();
+      const cssScaleY = rect.height / stage.height();
+      return { x: pos.x / cssScaleX, y: pos.y / cssScaleY };
+    };
+
     const handleStageClick = (e) => {
       if (!active) return;
       if (e.evt && e.evt.cancelable) {
@@ -138,7 +160,7 @@ const KonvaDoubleArrow = forwardRef(
         }
       }
 
-      const pos = e.target.getStage().getPointerPosition();
+      const pos = getScaledPointerPosition(e.target.getStage());
       if (!pos) return;
 
       const id = `double-arrow-${Date.now()}`;
@@ -160,7 +182,7 @@ const KonvaDoubleArrow = forwardRef(
         e.evt.preventDefault();
       }
 
-      const pos = e.target.getStage().getPointerPosition();
+      const pos = getScaledPointerPosition(e.target.getStage());
       if (!pos) return;
 
       setNewArrow({
@@ -295,11 +317,12 @@ const KonvaDoubleArrow = forwardRef(
       const centerX = (oldPoints[0] + oldPoints[2]) / 2;
       const centerY = (oldPoints[1] + oldPoints[3]) / 2;
 
-      const stageContainer = stage.container();
-      const stageRect = stageContainer.getBoundingClientRect();
+      const stageRect = stage.container().getBoundingClientRect();
+      const cssScaleX = stageRect.width  / stage.width();
+      const cssScaleY = stageRect.height / stage.height();
 
-      const screenX = stageRect.left + centerX + x;
-      const screenY = stageRect.top + centerY + y;
+      const screenX = stageRect.left + (centerX + x) * cssScaleX;
+      const screenY = stageRect.top  + (centerY + y) * cssScaleY;
 
       if (checkTrashZoneCollision && updateTrashZoneState) {
         const isOverTrash = checkTrashZoneCollision(screenX, screenY);
@@ -319,15 +342,16 @@ const KonvaDoubleArrow = forwardRef(
         updateTrashZoneState(false);
       }
 
-      const stageContainer = stage.container();
-      const stageRect = stageContainer.getBoundingClientRect();
+      const stageRect = stage.container().getBoundingClientRect();
 
       const oldPoints = node.points();
       const centerX = (oldPoints[0] + oldPoints[2]) / 2;
       const centerY = (oldPoints[1] + oldPoints[3]) / 2;
 
-      const screenX = stageRect.left + centerX + x;
-      const screenY = stageRect.top + centerY + y;
+      const cssScaleX = stageRect.width  / stage.width();
+      const cssScaleY = stageRect.height / stage.height();
+      const screenX = stageRect.left + (centerX + x) * cssScaleX;
+      const screenY = stageRect.top  + (centerY + y) * cssScaleY;
 
       if (
         checkTrashZoneCollision &&
@@ -476,4 +500,4 @@ const KonvaDoubleArrow = forwardRef(
   },
 );
 
-export default KonvaDoubleArrow;
+export default React.memo(KonvaDoubleArrow);
