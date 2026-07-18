@@ -47,7 +47,30 @@ const KonvaRectangle = forwardRef(
           trRef.current.getLayer().batchDraw();
         }
         if (onFlatten && stageRef.current) {
+          const stage = stageRef.current;
+          const containerRect = stage.container().getBoundingClientRect();
+          // eslint-disable-next-line no-console
+          console.log("[KonvaRectangle.flatten] DEBUG", {
+            "stage.width()/height()": [stage.width(), stage.height()],
+            "prop width/height": [width, height],
+            "container getBoundingClientRect": {
+              w: containerRect.width,
+              h: containerRect.height,
+            },
+            "rectangles (x,y,w,h)": rectangles.map((r) => ({
+              id: r.id,
+              x: r.x,
+              y: r.y,
+              width: r.width,
+              height: r.height,
+            })),
+            devicePixelRatio: window.devicePixelRatio,
+          });
           const canvasEl = stageRef.current.toCanvas({ pixelRatio: 1 });
+          // eslint-disable-next-line no-console
+          console.log("[KonvaRectangle.flatten] toCanvas() output size", {
+            "canvasEl.width/height": [canvasEl.width, canvasEl.height],
+          });
           onFlatten(canvasEl);
         }
         if (setRectangles) setRectangles([]);

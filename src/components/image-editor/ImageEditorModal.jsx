@@ -298,16 +298,16 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     img.onload = () => {
       const isMobile = window.innerWidth < 1024;
       let canvasWidth, canvasHeight;
-      if (isMobile) {
-        const measureEl = canvasAreaRef.current || baseCanvas.parentElement;
-        if (!measureEl) return;
-        const r = measureEl.getBoundingClientRect();
-        canvasWidth = r.width;
-        canvasHeight = r.height;
-      } else {
-        canvasWidth = 420;
-        canvasHeight = 750;
-      }
+      const measureEl = canvasAreaRef.current || baseCanvas.parentElement;
+      if (!measureEl) return;
+      const r = measureEl.getBoundingClientRect();
+      const cs = window.getComputedStyle(measureEl);
+      const paddingX =
+        parseFloat(cs.paddingLeft || 0) + parseFloat(cs.paddingRight || 0);
+      const paddingY =
+        parseFloat(cs.paddingTop || 0) + parseFloat(cs.paddingBottom || 0);
+      canvasWidth = Math.round(r.width - paddingX);
+      canvasHeight = Math.round(r.height - paddingY);
       baseCanvas.width = canvasWidth;
       baseCanvas.height = canvasHeight;
       drawingCanvas.width = canvasWidth;
@@ -509,19 +509,36 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     (canvasEl) => {
       const ctx = drawingCanvasRef.current?.getContext("2d");
       if (ctx && canvasEl) {
-        ctx.drawImage(canvasEl, 0, 0, ctx.canvas.width, ctx.canvas.height);
+        const destRect = drawingCanvasRef.current.getBoundingClientRect();
+        // eslint-disable-next-line no-console
+        console.log("[handleKonvaRectFlatten] DEBUG", {
+          "ctx.canvas.width/height (destination buffer)": [
+            ctx.canvas.width,
+            ctx.canvas.height,
+          ],
+          "drawingCanvas getBoundingClientRect": {
+            w: destRect.width,
+            h: destRect.height,
+          },
+          "canvasEl.width/height (source snapshot)": [
+            canvasEl.width,
+            canvasEl.height,
+          ],
+          "canvasDimensions state": canvasDimensions,
+        });
+        ctx.drawImage(canvasEl, 0, 0);
       }
       setRectangles([]);
       removeKonvaActionsByType("rectangle");
     },
-    [setRectangles, removeKonvaActionsByType],
+    [setRectangles, removeKonvaActionsByType, canvasDimensions],
   );
 
   const handleKonvaCircleFlatten = useCallback(
     (canvasEl) => {
       const ctx = drawingCanvasRef.current?.getContext("2d");
       if (ctx && canvasEl) {
-        ctx.drawImage(canvasEl, 0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.drawImage(canvasEl, 0, 0);
       }
       setCircles([]);
       removeKonvaActionsByType("circle");
@@ -533,7 +550,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     (canvasEl) => {
       const ctx = drawingCanvasRef.current?.getContext("2d");
       if (ctx && canvasEl) {
-        ctx.drawImage(canvasEl, 0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.drawImage(canvasEl, 0, 0);
       }
       setArrows([]);
       removeKonvaActionsByType("arrow");
@@ -545,7 +562,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     (canvasEl) => {
       const ctx = drawingCanvasRef.current?.getContext("2d");
       if (ctx && canvasEl) {
-        ctx.drawImage(canvasEl, 0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.drawImage(canvasEl, 0, 0);
       }
       setDoubleArrows([]);
       removeKonvaActionsByType("double-arrow");
@@ -557,7 +574,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     (canvasEl) => {
       const ctx = drawingCanvasRef.current?.getContext("2d");
       if (ctx && canvasEl) {
-        ctx.drawImage(canvasEl, 0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.drawImage(canvasEl, 0, 0);
       }
       setTexts([]);
       removeKonvaActionsByType("text");
