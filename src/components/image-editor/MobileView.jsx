@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useRef, useCallback } from "react";
 import {
   X,
@@ -41,6 +43,7 @@ const MobileView = ({
   textEditorRef,
   downloadImage,
   handleSave,
+  isSaving,
   handleCancel,
   isTextDragging,
   textColor,
@@ -147,12 +150,25 @@ const MobileView = ({
             >
               <Pencil className="h-5 w-5" />
             </button>
+            {/* Exporting the canvas and uploading it both take a moment on a
+                phone, so the tick has to stop accepting taps for the whole
+                round trip — otherwise an impatient second tap uploads the
+                same photo twice. Same box size as the icon so the bar
+                doesn't shift when it swaps. */}
             <button
               onClick={handleSave}
-              title="Send"
-              className="bg-green-700 p-1 rounded-full"
+              disabled={isSaving}
+              title={isSaving ? "Sending…" : "Send"}
+              aria-busy={isSaving}
+              className={`bg-green-700 p-1 rounded-full ${
+                isSaving ? "opacity-60 cursor-not-allowed" : ""
+              }`}
             >
-              <Check className="h-5 w-5 text-white-400 font-bold" />
+              {isSaving ? (
+                <span className="block h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+              ) : (
+                <Check className="h-5 w-5 text-white-400 font-bold" />
+              )}
             </button>
           </div>
         </div>

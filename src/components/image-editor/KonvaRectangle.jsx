@@ -1,3 +1,4 @@
+"use client";
 import React, {
   useRef,
   useState,
@@ -6,6 +7,8 @@ import React, {
   useImperativeHandle,
 } from "react";
 import { Stage, Layer, Rect, Transformer } from "react-konva";
+import { snapshotStage } from "@/utils/konvaSnapshot";
+import { useKonvaSelection } from "@/hooks/useKonvaSelection";
 import { getDashPattern } from "@/utils/getStrokePattern";
 import { KONVA_THRESHOLDS } from "@/utils/konvaThreshold";
 
@@ -32,6 +35,7 @@ const KonvaRectangle = forwardRef(
       checkTrashZoneCollision,
       updateTrashZoneState,
       onMove,
+      onDelete,
     },
     ref,
   ) => {
@@ -47,30 +51,7 @@ const KonvaRectangle = forwardRef(
           trRef.current.getLayer().batchDraw();
         }
         if (onFlatten && stageRef.current) {
-          const stage = stageRef.current;
-          const containerRect = stage.container().getBoundingClientRect();
-          // eslint-disable-next-line no-console
-          console.log("[KonvaRectangle.flatten] DEBUG", {
-            "stage.width()/height()": [stage.width(), stage.height()],
-            "prop width/height": [width, height],
-            "container getBoundingClientRect": {
-              w: containerRect.width,
-              h: containerRect.height,
-            },
-            "rectangles (x,y,w,h)": rectangles.map((r) => ({
-              id: r.id,
-              x: r.x,
-              y: r.y,
-              width: r.width,
-              height: r.height,
-            })),
-            devicePixelRatio: window.devicePixelRatio,
-          });
-          const canvasEl = stageRef.current.toCanvas({ pixelRatio: 1 });
-          // eslint-disable-next-line no-console
-          console.log("[KonvaRectangle.flatten] toCanvas() output size", {
-            "canvasEl.width/height": [canvasEl.width, canvasEl.height],
-          });
+          const canvasEl = snapshotStage(stageRef.current);
           onFlatten(canvasEl);
         }
         if (setRectangles) setRectangles([]);
@@ -91,12 +72,13 @@ const KonvaRectangle = forwardRef(
     useEffect(() => {
       const handleKeyDown = (e) => {
         if ((e.key === "Delete" || e.key === "Backspace") && selectedId) {
-          const targeted = rectangles.find((r) => r.id === selectedId);
-          if (onMove && targeted) {
-            onMove(selectedId, null, targeted, "DELETE");
-          } else if (setRectangles) {
+          // Record a DELETE_ELEMENT action. The old path called
+          // onMove(id, null, prev, "DELETE"), which the parent turned into a
+          // MOVE_ELEMENT with a null payload — a no-op that left the shape on
+          // screen. The 4th "DELETE" argument was never read by anyone.
+          if (onDelete) onDelete(selectedId);
+          else if (setRectangles)
             setRectangles((rects) => rects.filter((r) => r.id !== selectedId));
-          }
           setSelectedId(null);
 
           if (trRef.current) {
@@ -109,23 +91,17 @@ const KonvaRectangle = forwardRef(
       };
       window.addEventListener("keydown", handleKeyDown);
       return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [selectedId, rectangles, setRectangles, onElementDeselect, onMove]);
+    }, [selectedId, setRectangles, onElementDeselect, onDelete]);
 
-    // Transformer Selection Synchronizer
-    useEffect(() => {
-      if (trRef.current && stageRef.current) {
-        if (selectedId) {
-          const node = stageRef.current.findOne(`#${selectedId}`);
-          if (node) {
-            trRef.current.nodes([node]);
-            trRef.current.getLayer().batchDraw();
-            return;
-          }
-        }
-        trRef.current.nodes([]);
-        trRef.current.getLayer().batchDraw();
-      }
-    }, [selectedId, rectangles]);
+    // Transformer sync + stale-selection cleanup
+    useKonvaSelection({
+      stageRef,
+      trRef,
+      selectedId,
+      setSelectedId,
+      elements: rectangles,
+      onElementDeselect,
+    });
 
     // Property panel changes dynamic observer
     useEffect(() => {
@@ -280,12 +256,10 @@ const KonvaRectangle = forwardRef(
         checkTrashZoneCollision &&
         checkTrashZoneCollision(screenX, screenY)
       ) {
-        if (onMove && previousRect) {
-          onMove(id, null, previousRect, "DELETE");
-        } else if (setRectangles) {
+        if (onDelete) onDelete(id);
+        else if (setRectangles)
           setRectangles((rects) => rects.filter((r) => r.id !== id));
-          setSelectedId(null);
-        }
+        setSelectedId(null);
         if (trRef.current) trRef.current.nodes([]);
         if (onElementDeselect) onElementDeselect();
         return;
@@ -411,7 +385,7 @@ const KonvaRectangle = forwardRef(
           {active && (
             <Transformer
               ref={trRef}
-              rotateEnabled={false}
+              rotateEnabled
               enabledAnchors={[
                 "top-left",
                 "top-right",
@@ -422,7 +396,7 @@ const KonvaRectangle = forwardRef(
                 "top-center",
                 "bottom-center",
               ]}
-              anchorSize={8}
+              anchorSize={10}
               borderDash={[4, 4]}
             />
           )}

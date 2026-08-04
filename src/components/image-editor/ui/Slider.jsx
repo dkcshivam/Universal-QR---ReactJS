@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 
 export function Slider({ min, max, step, value, onValueChange, className = "", id }) {
